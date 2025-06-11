@@ -4,7 +4,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev & npx next-video sync -w",
+    
     "build": "next build",
     "postbuild": "next-sitemap",
     "start": "next start",
@@ -41,7 +41,6 @@
     "next": "12.2.5",
     "next-auth": "^4.18.7",
     "next-sitemap": "^3.1.22",
-    "next-video": "^1.0.6",
     "nextjs-cors": "^2.2.0",
     "num2persian": "^3.2.2",
     "persianjs": "^0.4.0",
