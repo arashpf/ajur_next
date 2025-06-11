@@ -1,4 +1,4 @@
-// const { withNextVideo } = require('next-video/process')
+const { withNextVideo } = require('next-video/process')
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
@@ -8,6 +8,12 @@ const nextConfig = {
     domains: ["api.ajur.app", "www.api.ajur.app"],
     loader: 'akamai',
     path: '',
+  },
+  // For next-video optimization
+  experimental: {
+    outputFileTracingIncludes: {
+      '/': ['./node_modules/next-video/**/*']
+    }
   },
   async headers() {
     return [
@@ -20,12 +26,19 @@ const nextConfig = {
           }
         ],
       },
+      // Add caching headers for video files
+      {
+        source: '/_next-video/:path*',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=31536000, immutable'
+          }
+        ]
+      }
     ]
   },
-  publicRuntimeConfig: {
-    staticFolder: '/public',
-  }
+  // Remove publicRuntimeConfig as it's not needed for static files
 }
 
-// Export without video optimization for now
-module.exports = nextConfig
+module.exports = withNextVideo(nextConfig)
