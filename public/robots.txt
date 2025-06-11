@@ -7,10 +7,10 @@ User-agent: *
 Allow: /
 
 # Host
-Host: https://ajur.app/
+Host: undefined
 
 # Sitemaps
-Sitemap: https://ajur.app/sitemap.xml
-Sitemap: https://ajur.app/server-sitemap.xml
-Sitemap: https://ajur.app/cities-sitemap.xml
-Sitemap: https://ajur.app/cities-categories-sitemap.xml
+Sitemap: undefined/sitemap.xml
+Sitemap: undefinedserver-sitemap.xml
+Sitemap: undefinedcities-sitemap.xml
+Sitemap: undefinedcities-categories-sitemap.xml
