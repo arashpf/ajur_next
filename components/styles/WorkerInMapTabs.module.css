@@ -1,0 +1,30 @@
+.worker-in-map-image {
+  height: 150px;
+  width : 150px;
+}
+
+.worker-in-map-image:hover {
+  cursor: pointer;
+
+}
+
+.worker-in-map-fullscreen-image {
+
+   padding: 10px;
+}
+
+.modal-body {
+  padding-left: 100px;
+  padding-right: 100px;
+  padding-bottom: 100px;
+  background: black;
+  text-align: center;
+}
+
+.modal_content {
+  padding: 20px;
+  height: 90vh;
+  width: 90vh;
+  text-align: center !important;
+  justify-content: center !important;
+}

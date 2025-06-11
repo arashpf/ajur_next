@@ -1,0 +1,40 @@
+.box-wrapper {
+  display: flex;
+  width: 100%;
+  text-align: right;
+  height: 10vh;
+  background: #777;
+  display: flex;
+  flex-direction: row;
+    border: 2px solid white;
+    margin-bottom: 10px;
+    border-radius: 2px;
+
+}
+
+.box-wrapper p{
+  background: #f4f4f4;
+  padding: 20px;
+  font-size: 1.3em;
+  color: #555;
+  height: 100%;
+}
+
+.box-left {
+  width: 50%;
+  text-align: center;
+
+}
+
+
+
+.box-right {
+  width: 50%;
+  text-align: center;
+
+}
+
+.box-right p {
+
+
+}

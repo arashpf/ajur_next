@@ -1,0 +1,19 @@
+.spinner-modal-wrapper {
+    display: 'flex';
+      alignItems: 'center';
+      justifyContent: 'center';
+      height: '70vh';
+      z-Index:1;
+  
+  }
+  
+  .spinner-modal-single{
+  
+    display: flex;
+   align-items: center;
+   justify-content: center;
+   height: 70vh;
+    
+  
+  }
+  

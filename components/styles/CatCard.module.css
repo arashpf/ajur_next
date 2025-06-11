@@ -1,0 +1,104 @@
+@import url(https://fonts.googleapis.com/css?family=Open+Sans:200);
+@import url(https://code.ionicframework.com/ionicons/2.0.1/css/ionicons.min.css);
+
+
+.snip1578 {
+  font-family: 'Open Sans', Arial, sans-serif;
+  position: relative;
+  display: inline-block;
+  margin: 10px;
+  padding: 10px;
+  min-width: 100px;
+  max-width: 200px;
+  width: 100%;
+  color: #000;
+  text-align: left;
+  font-size: 16px;
+  background: #aa6047;
+  border-radius: 5px;
+  font-family: iransans;
+}
+
+
+.snip1578 .snip-image {
+  max-width: 35%;
+  margin-top: -20px;
+  margin-left: 60%;
+  margin-bottom: 15px;
+  backface-visibility: hidden;
+  vertical-align: top;
+  border-radius: 5px;
+  opacity: .7;
+}
+
+.snip1578:hover  {
+  opacity: 1;
+  background-color: #333;
+  transform: scale(1.05);
+  cursor: pointer;
+
+
+}
+.snip1578:hover .snip-image  {
+  opacity: 1;
+  transform: scale(1.1);
+
+
+}
+
+
+
+.snip1578 h3 {
+    margin: 0;
+    font-size: 1em;
+    font-weight: normal;
+    color: white;
+    text-align: right;
+    font-family: iransans;
+
+}
+
+.snip1578 .icons {
+  font-size: 1.6rem;
+}
+
+.snip1578 .icons a {
+  color: #ccc;
+}
+
+.snip1578 .icons a:hover {
+  color: #2980b9;
+}
+
+@media (max-width: 600px) {
+
+  .snip1578 figcaption {
+
+    padding: 5px;
+    height: 10px;
+  }
+  .snip-image{
+    display: none !important;
+  }
+
+
+  .snip1578 h3 {
+    size : 1em;
+    text-align: center
+  }
+
+
+}
+
+@media (min-width: 600px) {
+  .snip1578 figcaption {
+    position: absolute;
+    top: 0;
+    right: 7%;
+    left: 0;
+    bottom: 0;
+    padding: 15px;
+  }
+
+  
+}

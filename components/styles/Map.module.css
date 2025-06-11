@@ -1,0 +1,9 @@
+
+.top-box-wrapper  {
+    display: flex;
+    background-color: rgb(255, 166, 0);
+    height: 50px;
+    align-items: center;
+    justify-content: center;
+    
+}
