@@ -1,0 +1,62 @@
+
+.worker-realstate-card-wrapper {
+    padding: 2px;
+  
+    margin: 20px;
+    border: 2px solid #888;
+    text-align: center;
+  
+  
+    background: #f5f5f5;
+  }
+  
+  .worker-realstate-stars-and-shares {
+    /* background: purple; */
+    display: flex;
+    flex-direction: row;
+    justify-content: space-around;
+    text-align: center;
+  
+  
+  
+  }
+  
+  .worker-realstate-stars-and-shares .worker-realestate-stars-wrappers {
+    padding: 25px;
+  }
+  
+  .worker-realstate-card-wrapper span:first-child{
+    font-family: iransans;
+    font-size: 1.3em;
+    text-decoration: none !important;
+    color: #444;
+    text-decoration: underline white !important;
+  }
+  
+  .worker-realstate-card-wrapper span:nth-child(2){
+    font-family: iransans;
+    font-size: 1em;
+    text-decoration: underline white !important;
+  }
+  
+  
+  
+  @media (max-width: 600px) {
+  
+    .modal-wrapper {
+      max-height: 120%;
+      
+      overflow-y: scroll;
+      padding: 20% 10%;
+    }
+  }
+  
+  @media (min-width: 600px) {
+  
+    .modal-wrapper {
+     max-height: 120%;
+      overflow-y: scroll;
+      padding: 3% ;
+    }
+  }
+  

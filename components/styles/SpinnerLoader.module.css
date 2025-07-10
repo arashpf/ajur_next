@@ -1,0 +1,18 @@
+.spinner-wrapper {
+  display: 'flex';
+    alignItems: 'center';
+    justifyContent: 'center';
+    height: '100vh';
+    z-Index:1;
+
+}
+
+.spinner-single{
+
+  display: flex;
+ align-items: center;
+ justify-content: center;
+ height: 100vh;
+  
+
+}

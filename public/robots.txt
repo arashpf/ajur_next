@@ -1,0 +1,16 @@
+# *
+User-agent: *
+Disallow: /404
+
+# *
+User-agent: *
+Allow: /
+
+# Host
+Host: undefined
+
+# Sitemaps
+Sitemap: undefined/sitemap.xml
+Sitemap: undefinedserver-sitemap.xml
+Sitemap: undefinedcities-sitemap.xml
+Sitemap: undefinedcities-categories-sitemap.xml

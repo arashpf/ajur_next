@@ -1,0 +1,83 @@
+.voiceControl {
+  position: fixed;
+  top: 20px;
+  left: 20px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: rgba(0, 0, 0, 0.7);
+  padding: 8px 16px;
+  border-radius: 30px;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  z-index: 1000;
+  direction: rtl;
+}
+
+.voiceButton {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.1);
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.voiceButton:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.voiceIcon {
+  width: 20px;
+  height: 20px;
+  stroke: #00f2ff;
+  fill: none;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.voiceButton.muted .voiceIcon {
+  stroke: #b92a31;
+}
+
+.voiceStatus {
+  color: white;
+  font-family: 'Segoe UI', Tahoma, sans-serif;
+  font-size: 14px;
+  min-width: 80px;
+}
+
+.mutedText {
+  color: #b92a31;
+}
+
+.activeText {
+  color: #00f2ff;
+}
+
+.soundWave {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  height: 20px;
+}
+
+.soundWave span {
+  display: inline-block;
+  width: 3px;
+  height: 10px;
+  background: #00f2ff;
+  border-radius: 3px;
+  animation: wave 1s infinite ease-in-out;
+  animation-delay: var(--delay);
+}
+
+@keyframes wave {
+  0%, 100% { transform: scaleY(0.5); }
+  50% { transform: scaleY(1.5); }
+}
