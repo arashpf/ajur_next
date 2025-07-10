@@ -1,8 +1,8 @@
-.wrapper{
+.wrapper {
   background-color: white;
 }
 
-.realstate-items-wrapper{
+.realstate-items-wrapper {
   background: #f9f9f9;
   min-height: 400px;
 }
@@ -27,18 +27,18 @@
 
   .title {
     padding: 20px;
-    margin : 20px;
+    margin: 20px;
     font-size: 16px;
     text-align: right;
-  
+
   }
-  
+
   .title h2 {
-  
-    color : #666;
+
+    color: #666;
     font-size: 1.4em;
-    
-  
+
+
   }
 }
 
@@ -51,29 +51,30 @@
     width: 100%;
     background: white;
     box-shadow: 0px 10px 5px #888, 0px -5px 5px #e8e6e6;
-  
+
   }
-    /* background-color: blue; */
+
+  /* background-color: blue; */
 
 
-    .title {
-      padding: 20px;
-      margin : 20px;
-      font-size: 16px;
-      text-align: center;
-    
-    }
-    
-    .title h2 {
-    
-      color : #666;
-      font-size: 1.2em;
-      
-    
-    }
-    
-  
-  
+  .title {
+    padding: 20px;
+    margin: 20px;
+    font-size: 16px;
+    text-align: center;
+
+  }
+
+  .title h2 {
+
+    color: #666;
+    font-size: 1.2em;
+
+
+  }
+
+
+
 
   .modal-wrapper {
     background-color: white;
@@ -92,15 +93,15 @@
 
 }
 
-.wrapper{
+.wrapper {
   text-align: right;
 }
 
 @media (min-width: 600px) {
 
-  .wrapper{
-      padding: 50px;
-      background-color: white;
+  .wrapper {
+    padding: 50px;
+    background-color: white;
   }
 
   .wrapper_h1 {
@@ -117,10 +118,10 @@
 
 @media (max-width: 600px) {
 
-  .wrapper{
-      padding: 20px;
-      padding-bottom: 50px;
-      background-color: white;
+  .wrapper {
+    padding: 20px;
+    padding-bottom: 50px;
+    background-color: white;
   }
 
   .wrapper_h1 {
@@ -133,5 +134,3 @@
   }
 
 }
-
-
