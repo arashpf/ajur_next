@@ -47,19 +47,19 @@ export default function RealstateCard(props) {
         title={realstate.name + " " + realstate.family}
         subheader={realstate.description}
       />
-        <Stars amount={realstate.stars} />
+      <Stars amount={realstate.stars} />
       <div className={Styles["worker-realstate-stars-and-shares"]}>
         <div>
           <RealEstateShare realstate={realstate} slug={slug} />
         </div>
-        <div style={{padding:10}}>
-        <QrCodeGenerator  url={"https://ajur.app/realestates/" + realstate.id + "?slug=" + slug}  title='اسکن کنید'/>
+        <div style={{ padding: 10 }}>
+          <QrCodeGenerator url={"https://ajur.app/realestates/" + realstate.id + "?slug=" + slug} title='اسکن کنید' />
         </div>
-       
+
       </div>
-      
-      
-      
+
+
+
     </div>
   );
 }
