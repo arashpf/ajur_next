@@ -1,23 +1,3 @@
-<<<<<<< HEAD
-import { useEffect, useState } from "react"
-import PropTypes from "prop-types"
-import Link from "next/link"
-import { useRouter } from "next/router"
-import Cookies from "js-cookie"
-import styles from "../styles/SearchDiv.module.css"
-import InfoIcon from "@mui/icons-material/Info"
-import { createTheme, ThemeProvider, styled } from "@mui/material/styles"
-import Tooltip, { tooltipClasses } from "@mui/material/Tooltip"
-import ClickAwayListener from "@mui/material/ClickAwayListener"
-import Button from "@mui/material/Button"
-import { Swiper, SwiperSlide } from "swiper/react"
-import { Pagination, Navigation } from "swiper"
-import SmartSearchBox from "./SmartSearchBox"
-import "swiper/css"
-import "swiper/css/pagination"
-import "swiper/css/navigation"
-import "font-awesome/css/font-awesome.min.css"
-=======
 import { useEffect, useState } from "react";
 import PropTypes from "prop-types";
 import Form from "react-bootstrap/Form";
@@ -41,7 +21,6 @@ import { Swiper, SwiperSlide } from "swiper/react";
 import "swiper/css";
 import "swiper/css/pagination";
 import "swiper/css/navigation";
->>>>>>> a6b1c29616623faba10577384ad1bca1dcbff403
 
 const CustomWidthTooltip = styled(({ className, ...props }) => (
   <Tooltip {...props} classes={{ popper: className }} />
@@ -50,15 +29,9 @@ const CustomWidthTooltip = styled(({ className, ...props }) => (
     minWidth: 300,
     maxWidth: 500,
   },
-<<<<<<< HEAD
-})
-
-const defaultTheme = createTheme()
-=======
 });
 
 const defaultTheme = createTheme();
->>>>>>> a6b1c29616623faba10577384ad1bca1dcbff403
 const theme = createTheme({
   components: {
     MuiTooltip: {
@@ -74,77 +47,6 @@ const theme = createTheme({
       },
     },
   },
-<<<<<<< HEAD
-})
-
-export default function SearchDiv({ the_city, the_neighborhoods, loading }) {
-  const router = useRouter()
-  const [open, setOpen] = useState(false)
-  const [selected_city, set_selected_city] = useState("robat")
-
-  useEffect(() => {
-    const selected = Cookies.get("selected_city")
-    set_selected_city(selected || "robat")
-  }, [])
-
-  const handleTooltipClose = () => setOpen(false)
-  const handleTooltipOpen = () => setOpen(true)
-
-const handleSmartSearch = (filters) => {
-  loading?.()
-
-  const category = filters.category_name || "فروش خانه"
-  const city = filters.city || selected_city
-
-  console.log("SmartSearch detected:", filters)
-  console.log("Using city:", city)
-
-  let url = `/${city}/${encodeURIComponent(category)}?city=${city}`
-
-  if (filters.neighbor) url += `&neighbor=${filters.neighbor}`
-  if (filters.price) url += `&priceMax=${filters.price}`
-  if (filters.area) url += `&minArea=${filters.area}`
-  if (filters.rooms) url += `&rooms=${filters.rooms}`
-  if (filters.parking) url += `&features=پارکینگ`
-
-  router.push(url)
-}
-
-
-  const renderNeighborhoods = () =>
-    the_neighborhoods.map((neighbor) => (
-      <SwiperSlide key={neighbor.id} onClick={loading}>
-        <Link
-          href={`/${the_city.title}/فروش%20خانه?neighbor=${neighbor.name}&city=${selected_city}`}
-        >
-          <Button
-            variant="contained"
-            size="small"
-            fullWidth
-            style={{ background: "#b92a31" }}
-          >
-            <p>{neighbor.name}</p>
-          </Button>
-        </Link>
-      </SwiperSlide>
-    ))
-
-  const rendertooltip = () => (
-    <div>
-      <p style={{ color: "#e2e2e2" }}>{the_city.description}</p>
-      {the_city.link && <a href={the_city.link}>اطلاعات بیشتر</a>}
-    </div>
-  )
-
-  return (
-    <ThemeProvider theme={defaultTheme}>
-      <div
-        className={styles["search-div-wrapper"]}
-        style={{
-          backgroundImage: !the_city.video
-            ? `url(${the_city.avatar_url})`
-            : null,
-=======
 });
 
 const SearchDiv = (props) => {
@@ -193,39 +95,28 @@ const SearchDiv = (props) => {
 
       set_search(title);
 
-      const filtered = the_neighborhoods.filter(nb => nb.name.includes(title));
-
-      console.log('the filtered now is --------');
-      console.log(filtered);
-      set_search_places(filtered);
-      set_location_li(true);
-
-      
-
       /* fetch the places using axios and neshan */
 
-    //   axios({
-    //     method: "get",
-    //     url: "https://api.neshan.org/v1/search",
-    //     headers: {
-    //       "api-key": "service.UylIa21mMdoxUKtQ9nnS7b3dE5sJfgKWPpRVoyPV",
-    //     },
-    //     params: {
-    //       term: title,
-    //       lat: 35,
-    //       lng: 52,
-    //     },
-    //   }).then(function (response) {
-    //     set_search_places(response.data.items);
-    //     console.log(response.data);
-    //   });
-    //   /* end of fetching data */
-    // } else {
-    //   set_location_li(true);
-    //   set_search("");
-     }else{
-      set_search(null);
-     }
+      axios({
+        method: "get",
+        url: "https://api.neshan.org/v1/search",
+        headers: {
+          "api-key": "service.UylIa21mMdoxUKtQ9nnS7b3dE5sJfgKWPpRVoyPV",
+        },
+        params: {
+          term: title,
+          lat: 35,
+          lng: 52,
+        },
+      }).then(function (response) {
+        set_search_places(response.data.items);
+        console.log(response.data);
+      });
+      /* end of fetching data */
+    } else {
+      set_location_li(true);
+      set_search("");
+    }
   };
 
   function handleCurrentLocationClicked() {
@@ -313,46 +204,25 @@ const SearchDiv = (props) => {
     console.log(place.location);
   };
 
-  // const renderSearchPlaces = () => {
-  //   return search_places.map((place) =>
-  //     place.region == the_city.region ? (
-  //       <Link href={`/search/${place.title}`} key={place.id}>
-  //         <div
-  //           className={styles["singleSearchResault"]}
-  //           onClick={() => handleSingleLocationClicked({ place })}
-  //         >
-  //           <p>
-  //             {place.title} ({place.region})
-  //           </p>
-  //           <p></p>
-  //         </div>
-  //       </Link>
-  //     ) : (
-  //       <div></div>
-  //     )
-  //   );
-  // };
-
-  const alterLoadingForPlaceClick = () =>{
-    console.log('alter loading now');
-    loading();
-  }
-
-
   const renderSearchPlaces = () => {
     return search_places.map((place) =>
-      <div onClick={alterLoadingForPlaceClick}>
-      <Link
-      key={place.id}
-    href={`/${the_city.title}/فروش%20خانه?neighbor=${place.name}&city=${selected_city}`}
-  >
-         <p>
-        {place.name} 
-     </p>
-      </Link>
-      </div>
-     
-    )}
+      place.region == the_city.region ? (
+        <Link href={`/search/${place.title}`} key={place.id}>
+          <div
+            className={styles["singleSearchResault"]}
+            onClick={() => handleSingleLocationClicked({ place })}
+          >
+            <p>
+              {place.title} ({place.region})
+            </p>
+            <p></p>
+          </div>
+        </Link>
+      ) : (
+        <div></div>
+      )
+    );
+  };
 
   const searchResults = () => {
     if (search) {
@@ -369,7 +239,6 @@ const SearchDiv = (props) => {
           </div>
           <div className={styles["search-location-text"]}>
             {renderSearchPlaces()}
-           
           </div>
         </div>
       );
@@ -398,10 +267,10 @@ const SearchDiv = (props) => {
       return the_neighborhoods.map((neighbor) => (
         <SwiperSlide key={neighbor.id} onClick={AlterParentloading}>
           <Link
-            href={`/${the_city.title}/فروش%20خانه?neighbor=${neighbor.name}&city=${selected_city}`}
+            href={`/categories/فروش%20خانه?neighbor=${neighbor.name}&city=${selected_city}`}
           >
-            <Button variant="contained" size="small" fullWidth style={{background:'#b92a31'}}>
-            <p> {neighbor.name}</p> 
+            <Button variant="contained" size="small">
+              {neighbor.name}
             </Button>
           </Link>
         </SwiperSlide>
@@ -419,20 +288,10 @@ const SearchDiv = (props) => {
             ? `url(${the_city.avatar_url})`
             : null,
 
->>>>>>> a6b1c29616623faba10577384ad1bca1dcbff403
           backgroundPosition: "center",
           backgroundSize: "cover",
           backgroundRepeat: "no-repeat",
         }}
-<<<<<<< HEAD
-      >
-        <div className={styles["navbar-about-place"]}>
-          <ThemeProvider theme={theme}>
-            <ClickAwayListener onClickAway={handleTooltipClose}>
-              <div>
-                <CustomWidthTooltip
-                  PopperProps={{ disablePortal: true }}
-=======
         className={styles["search-div-wrapper"]}
       >
         <div className={styles["navbar-about-place"]}>
@@ -457,7 +316,6 @@ const SearchDiv = (props) => {
                   PopperProps={{
                     disablePortal: true,
                   }}
->>>>>>> a6b1c29616623faba10577384ad1bca1dcbff403
                   onClose={handleTooltipClose}
                   open={open}
                   disableFocusListener
@@ -469,13 +327,9 @@ const SearchDiv = (props) => {
                     onClick={handleTooltipOpen}
                     enterTouchDelay={0}
                     style={{ margin: 10, cursor: "pointer" }}
-<<<<<<< HEAD
-                  />
-=======
                   >
                     Arrow
                   </InfoIcon>
->>>>>>> a6b1c29616623faba10577384ad1bca1dcbff403
                 </CustomWidthTooltip>
               </div>
             </ClickAwayListener>
@@ -483,16 +337,6 @@ const SearchDiv = (props) => {
           <p>{the_city.avatar_title}</p>
         </div>
 
-<<<<<<< HEAD
-        <div
-          className={`${styles["navar-brand-center"]} ${styles["navbar-serach"]}`}
-          style={{ padding: "8px 0", maxWidth: "600px", margin: "0 auto" }}
-        >
-          <div className={styles["search-box-wrapper"]}>
-            <SmartSearchBox onSearch={handleSmartSearch} />
-          </div>
-        </div>
-=======
         <Form
           className={`'d-flex' ${styles["navar-brand-center"]} ${styles["navbar-serach"]} `}
         >
@@ -509,43 +353,14 @@ const SearchDiv = (props) => {
             <i className="fa fa-search"></i>
           </div>
         </Form>
-        {/* {locationLi()} */}
+        {locationLi()}
         {searchResults()}
->>>>>>> a6b1c29616623faba10577384ad1bca1dcbff403
 
         <div className={styles["neighborhoods-wrapper"]}>
           <Swiper
             slidesPerView={1}
-            spaceBetween={5}
-<<<<<<< HEAD
-            navigation={false}
-            pagination={{ clickable: true, enabled: true }}
-            autoplay={{
-              delay: 5000,
-              disableOnInteraction: false,
-              pauseOnMouseEnter: true,
-            }}
-        breakpoints={{
-  200: { slidesPerView: 3, spaceBetween: 3 },
-  640: { slidesPerView: 6, spaceBetween: 3 },
-  768: { slidesPerView: 7, spaceBetween: 3 },
-  1024: { slidesPerView: 7, spaceBetween: 3 },
-}}
-
-=======
-             navigation={false}
-             
-             pagination={{ 
-              clickable: true,
-              enabled: true
-
-              }}
-
-            autoplay={{
-              delay: 5000,
-              disableOnInteraction: false,
-              pauseOnMouseEnter :true,
-          }}
+            spaceBetween={3}
+            navigation
             breakpoints={{
               200: {
                 slidesPerView: 3,
@@ -561,11 +376,10 @@ const SearchDiv = (props) => {
                 spaceBetween: 3,
               },
               1024: {
-                slidesPerView: 7,
+                slidesPerView: 8,
                 spaceBetween: 3,
               },
             }}
->>>>>>> a6b1c29616623faba10577384ad1bca1dcbff403
             modules={[Pagination, Navigation]}
             className={styles["neighborh-swiper"]}
           >
@@ -574,12 +388,7 @@ const SearchDiv = (props) => {
         </div>
       </div>
     </ThemeProvider>
-<<<<<<< HEAD
-  )
-}
-=======
   );
 };
 
 export default SearchDiv;
->>>>>>> a6b1c29616623faba10577384ad1bca1dcbff403

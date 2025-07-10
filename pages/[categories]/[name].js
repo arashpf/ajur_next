@@ -208,6 +208,7 @@ const SingleCategory = (props) => {
         defalut_neighborhood,
       ]);
 
+<<<<<<< HEAD
       if (defalut_neighborhood) {
   set_selected_neighborhoods_array([
     ...selected_neighborhoods_array,
@@ -218,6 +219,12 @@ const SingleCategory = (props) => {
   // Optionally show a fallback UI here or skip setting state
 }
 
+=======
+      set_selected_neighborhoods_array([
+        ...selected_neighborhoods_array,
+        defalut_neighborhood.id,
+      ]);
+>>>>>>> a6b1c29616623faba10577384ad1bca1dcbff403
     } else {
       set_selected_neighborhoods(neighborhoods);
 
@@ -1364,6 +1371,7 @@ export async function getServerSideProps(context) {
 
   const neighbor = context.query.neighbor ? context.query.neighbor : null;
 
+<<<<<<< HEAD
   let data = {}
 try {
   const res = await fetch(
@@ -1404,6 +1412,28 @@ return {
   },
 };
 
+=======
+  const res = await fetch(
+    `https://api.ajur.app/api/main-category-workers?subcat=${subcat}&catname=${name}&city=${city}`
+  );
+  const data = await res.json();
+  return {
+    props: {
+      details: data.details,
+      workers: data.workers,
+      all_workers: data.workers,
+      specials: data.specials,
+      uppers: data.uppers,
+      subcategories: data.subcategories,
+      main_cats: data.main_cats,
+      name: name,
+      city: city,
+      neighborhoods: data.the_neighborhoods,
+      neighbor: neighbor,
+      subcat: subcat,
+    }, // will be passed to the page component as props
+  };
+>>>>>>> a6b1c29616623faba10577384ad1bca1dcbff403
 }
 
 export default SingleCategory;

@@ -5,7 +5,11 @@ const nextConfig = {
   images: {
     domains: ["api.ajur.app", "www.api.ajur.app"],
     loader: 'akamai',
+<<<<<<< HEAD
     path: '/',
+=======
+    path: '',
+>>>>>>> a6b1c29616623faba10577384ad1bca1dcbff403
   },
   async headers() {
     return [
@@ -19,6 +23,7 @@ const nextConfig = {
         ],
       }
     ]
+<<<<<<< HEAD
   },
  webpack(config) {
   config.module.rules.push({
@@ -32,3 +37,9 @@ const nextConfig = {
 }
 
 module.exports = nextConfig;
+=======
+  }
+}
+
+module.exports = nextConfig
+>>>>>>> a6b1c29616623faba10577384ad1bca1dcbff403

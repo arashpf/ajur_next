@@ -12,12 +12,20 @@
   },
   "dependencies": {
     "@emotion/react": "^11.14.0",
+<<<<<<< HEAD
     "@emotion/styled": "^11.14.1",
+=======
+    "@emotion/styled": "^11.14.0",
+>>>>>>> a6b1c29616623faba10577384ad1bca1dcbff403
     "@ffmpeg/ffmpeg": "^0.12.10",
     "@ffmpeg/util": "^0.12.1",
     "@mui/icons-material": "5.17.1",
     "@mui/lab": "5.0.0-alpha.85",
+<<<<<<< HEAD
     "@mui/material": "^5.17.1",
+=======
+    "@mui/material": "5.17.1",
+>>>>>>> a6b1c29616623faba10577384ad1bca1dcbff403
     "@mui/styles": "5.17.1",
     "@mui/system": "5.17.1",
     "@mui/x-date-pickers": "5.0.20",
@@ -25,13 +33,20 @@
     "@react-three/drei": "9.86.4",
     "@react-three/fiber": "8.13.0",
     "animate.css": "^4.1.1",
+<<<<<<< HEAD
     "axios": "^1.10.0",
+=======
+    "axios": "^1.2.2",
+>>>>>>> a6b1c29616623faba10577384ad1bca1dcbff403
     "bootstrap": "^5.3.6",
     "canvas2image-2": "^2.3.0",
     "date-fns": "^2.29.2",
     "dropzone": "^6.0.0-beta.2",
     "font-awesome": "^4.7.0",
+<<<<<<< HEAD
     "fuse.js": "^7.1.0",
+=======
+>>>>>>> a6b1c29616623faba10577384ad1bca1dcbff403
     "heic2any": "^0.0.4",
     "html-to-image": "^1.11.11",
     "html5-file-selector": "^2.1.0",
@@ -44,7 +59,10 @@
     "next-sitemap": "^3.1.22",
     "nextjs-cors": "^2.2.0",
     "num2persian": "^3.2.2",
+<<<<<<< HEAD
     "persian-tools2": "^1.5.0",
+=======
+>>>>>>> a6b1c29616623faba10577384ad1bca1dcbff403
     "persianjs": "^0.4.0",
     "react": "18.2.0",
     "react-bootstrap": "^2.10.10",
@@ -67,16 +85,23 @@
     "react-share": "^4.4.1",
     "react-slick": "^0.29.0",
     "react-spinkit": "^3.0.0",
+<<<<<<< HEAD
     "react-spinners": "^0.17.0",
     "react-spinners-kit": "^1.9.1",
     "recharts": "^2.2.0",
     "slick-carousel": "^1.8.1",
     "string-similarity": "^4.0.4",
+=======
+    "react-spinners-kit": "^1.9.1",
+    "recharts": "^2.2.0",
+    "slick-carousel": "^1.8.1",
+>>>>>>> a6b1c29616623faba10577384ad1bca1dcbff403
     "swiper": "^8.3.2",
     "three": "0.152.0",
     "video-react": "^0.16.0"
   },
   "devDependencies": {
+<<<<<<< HEAD
     "@svgr/webpack": "^8.1.0",
     "eslint": "8.23.0",
     "eslint-config-next": "12.2.5"
@@ -89,4 +114,9 @@
   "keywords": [],
   "author": "",
   "license": "ISC"
+=======
+    "eslint": "8.23.0",
+    "eslint-config-next": "12.2.5"
+  }
+>>>>>>> a6b1c29616623faba10577384ad1bca1dcbff403
 }
