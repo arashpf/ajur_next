@@ -1,197 +1,269 @@
-const express = require("express");
-const bodyParser = require("body-parser");
-const cors = require("cors");
-const axios = require("axios");
+// index.js
+const express          = require("express");
+const cors             = require("cors");
+const axios            = require("axios");
 const stringSimilarity = require("string-similarity");
-const synonyms = require("./synonyms");
 
 const app = express();
-app.use(cors());
-app.use(bodyParser.json());
+app.use(cors({
+  origin: "http://localhost:3000",
+  methods: ["POST"],
+  credentials: true
+}));
 
-const LIVE_API = "https://api.ajur.app/api/ai/v1";
+app.use(express.json());
 
-const cityAliases = {
-  "پرند": "شهر جدید پرند", "رباط": "رباط کریم", "چاف": "چاف و چمخانه",
-  "لاهیجان": "لاهیجان", "نوشهر": "نوشهر", "مشهد": "مشهد", "رامسر": "رامسر",
-  "آستانه اشرفیه": "آستانه اشرفیه", "اندیشه": "اندیشه"
-};
+const AI_API = "https://api.ajur.app/api/ai/v1";
 
-const neighborhoods = [
-  "شهرک جانبازان", "شهرک شهرداری", "مرکز شهر", "رباط قدیم", "گلدشت",
-  "خلیج فارس", "عطر یاس", "بخشداری- شهرک فداییان", "نیرو انتظامی", "آبرسانی",
-  "انقلاب 1 تا 13", "داودیه", "تقی آباد", "وحیدیه", "گرجی", "طالقانی-امینی",
-  "وهن آباد", "حکیم آباد-شهرستانک", "اشکانیه و بازارک", "منجیل آباد", "کیکاور",
-  "اصغرآباد", "سفیدار", "شترخوار", "الارد-پرندک", "حصار مهتر", "شهرآباد", "انجم آباد",
-  "پیغمبر", "شهرک خانه", "آبشناسان", "ملکی", "مصلی", "فرهنگیان"
-];
+let cities        = [];
+let neighborhoods = [];
+let categories    = [];
 
-function digitsFaToEn(str) {
-  return str.replace(/[۰-۹]/g, d => "۰۱۲۳۴۵۶۷۸۹".indexOf(d));
+/**
+ * Load metadata (cities, neighborhoods, categories)
+ * from the single combined AI_API endpoint.
+ */
+async function loadMetadata() {
+  try {
+    const resp = await axios.get(AI_API);
+    const json = resp.data;
+
+    const citiesArr = Array.isArray(json.cities) ? json.cities : [];
+    const hoodsArr  = Array.isArray(json.neighborhoods) ? json.neighborhoods : [];
+
+    let listingsArr = [];
+    for (const key of Object.keys(json)) {
+      if (
+        Array.isArray(json[key]) &&
+        json[key].length > 0 &&
+        typeof json[key][0] === "object" &&
+        "category_name" in json[key][0]
+      ) {
+        listingsArr = json[key];
+        console.log(`🧩 Found listings under key "${key}" (count: ${listingsArr.length})`);
+        break;
+      }
+    }
+
+    // ✅ Now safe to log sample listing
+    console.log("🧪 Sample listing:", listingsArr[0]);
+
+    const citySet     = new Set();
+    const hoodSet     = new Set();
+    const categorySet = new Set();
+
+    citiesArr.forEach(c => {
+      if (c.title) citySet.add(c.title.trim().toLowerCase());
+    });
+    hoodsArr.forEach(n => {
+      if (n.name) hoodSet.add(n.name.trim().toLowerCase());
+    });
+    listingsArr.forEach(item => {
+      const raw = item.category_name;
+      if (typeof raw === "string") {
+        const cleaned = raw.replace(/[\r\n\t]+/g, " ").trim().toLowerCase();
+        if (cleaned) categorySet.add(cleaned);
+      }
+    });
+
+    cities        = Array.from(citySet);
+    neighborhoods = Array.from(hoodSet);
+    categories    = Array.from(categorySet);
+
+    console.log("✅ Loaded metadata:", {
+      cities: cities.length,
+      neighborhoods: neighborhoods.length,
+      categories: categories.length,
+    });
+    console.log("📁 Sample categories:", categories.slice(0, 20));
+  } catch (err) {
+    console.error("❌ Failed to load metadata:", err.message);
+  }
 }
-function normalize(s) {
-  return (s || "").toString().trim().toLowerCase();
-}
-function featureMap(fa) {
-  return {
-    "پارکینگ": "parking", "انباری": "storage",
-    "آسانسور": "elevator", "تراس": "balcony"
-  }[fa];
+
+
+/**
+ * Normalize text: convert Persian digits to Latin, lowercase & trim.
+ */
+function normalize(str = "") {
+  return str
+    .toString()
+    .replace(/[۰-۹]/g, d => "۰۱۲۳۴۵۶۷۸۹".indexOf(d))
+    .trim()
+    .toLowerCase();
 }
 
-function flattenListing(listing, jsonProps) {
+/**
+ * Flatten a listing’s decoded props into a simple object.
+ */
+function flattenListing(listing, decodedProps = []) {
   const flat = {
-    city: listing.city || "",
-    category_name: listing.category_name || "",
-    neighbor: listing.neighbourhood || "",
-    intent: listing.category_name?.includes("اجاره") || listing.category_name?.includes("رهن") ? "rent" : "buy",
-    name: listing.name || "", description: listing.description || "",
-    price: null, rooms: null, area: null, year: null, floor: null,
-    ownership: "", heating: "", cooling: "", deal: "", furnished: false,
-    parking: false, storage: false, elevator: false, balcony: false,
+    id:           listing.id,
+    name:         listing.name,
+    city:         listing.city,
+    neighborhood: listing.neighbourhood,
+    category:     listing.category_name,
+    price:        null,
+    area:         null,
+    rooms:        null,
+    parking:      false,
+    storage:      false,
+    elevator:     false,
+    balcony:      false,
   };
 
-  jsonProps.forEach((prop) => {
-    const name = normalize(prop.name);
-    const val = prop.value?.toString().trim();
-    if (!val) return;
-
-    if (name.includes("قیمت")) flat.price = val;
-    if (name.includes("متراژ")) flat.area = val;
-    if (name.includes("خواب")) flat.rooms = val;
-    if (name.includes("سال ساخت")) flat.year = val;
-    if (name.includes("طبقه")) flat.floor = val;
-    if (name.includes("مالکیت")) flat.ownership = val;
-    if (name.includes("گرمایش")) flat.heating = val;
-    if (name.includes("سرمایش")) flat.cooling = val;
-    if (name.includes("معاوضه")) flat.deal = "معاوضه";
-    if (name.includes("مبله") || name.includes("اثاث")) flat.furnished = true;
-    if (name.includes("پارکینگ")) flat.parking = val === "1" || val === 1;
-    if (name.includes("انباری")) flat.storage = val === "1" || val === 1;
-    if (name.includes("آسانسور")) flat.elevator = val === "1" || val === 1;
-    if (name.includes("تراس")) flat.balcony = val === "1" || val === 1;
+  decodedProps.forEach(({ name, value }) => {
+    const key = normalize(name);
+    if (/قیمت/.test(key))    flat.price    = Number(value);
+    if (/متراژ/.test(key))    flat.area     = Number(value);
+    if (/خوابه/.test(key))    flat.rooms    = Number(value);
+    if (/پارکینگ/.test(key)) flat.parking  = true;
+    if (/انباری/.test(key))  flat.storage  = true;
+    if (/آسانسور/.test(key)) flat.elevator = true;
+    if (/تراس/.test(key))    flat.balcony  = true;
   });
 
   return flat;
 }
 
+/**
+ * POST /api/search-intent
+ * Receives { query }, returns { filters, chips, suggestions, results }.
+ */
 app.post("/api/search-intent", async (req, res) => {
-  const rawQuery = normalize(digitsFaToEn(req.body.query || ""));
-  const filters = {};
-  const chips = [];
+  const raw         = normalize(req.body.query || "");
+  const filters     = {};
+  const chips       = [];
   const suggestions = [];
 
-   console.log("👉 API hit received with query:", req.body.query);
-  console.log("🔍 Filters detected:", filters);
-console.log("🔍 Chips detected:", chips);
-
-  if (/اجاره|رهن|کرایه/.test(rawQuery)) filters.intent = "rent", chips.push("اجاره");
-  if (/معاوضه/.test(rawQuery)) filters.deal = "معاوضه", chips.push("معاوضه");
-  if (/مبله|اثاث/.test(rawQuery)) filters.furnished = true, chips.push("مبله");
-
-  const areaMatch = rawQuery.match(/(\d+)\s*(?:متر|متراژ|متری)/);
-  if (areaMatch) filters.area = parseInt(areaMatch[1]), chips.push(`${areaMatch[1]} متر`);
-
-  const roomMatch = rawQuery.match(/(?:خانه\s*)?(\d+)\s*خوابه/);
-  if (roomMatch) filters.rooms = parseInt(roomMatch[1]), chips.push(`${roomMatch[1]} خواب`);
-
-  const yearMatch = rawQuery.match(/سال ساخت\s*(\d{4})/);
-  if (yearMatch) filters.year = parseInt(yearMatch[1]), chips.push(`سال ساخت ${yearMatch[1]}`);
-
-  const floorMatch = rawQuery.match(/طبقه\s*(\d+)/);
-  if (floorMatch) filters.floor = parseInt(floorMatch[1]), chips.push(`طبقه ${floorMatch[1]}`);
-
-  const ownershipMatch = rawQuery.match(/مالکیت\s*(\w+)/);
-  if (ownershipMatch) filters.ownership = ownershipMatch[1], chips.push(`مالکیت ${ownershipMatch[1]}`);
-
-  const heatingMatch = rawQuery.match(/گرمایش\s*(\w+)/);
-  if (heatingMatch) filters.heating = heatingMatch[1], chips.push(`گرمایش ${heatingMatch[1]}`);
-
-  const coolingMatch = rawQuery.match(/سرمایش\s*(\w+)/);
-  if (coolingMatch) filters.cooling = coolingMatch[1], chips.push(`سرمایش ${coolingMatch[1]}`);
-
-  const priceMatch = rawQuery.match(/زیر\s*(\d+)\s*(میلیارد|میلیون)?/);
-  if (priceMatch) {
-    let price = parseInt(priceMatch[1]);
-    if (priceMatch[2] === "میلیارد") price *= 1_000_000_000;
-    else if (priceMatch[2] === "میلیون") price *= 1_000_000;
-    filters.price = price;
-    chips.push(`زیر ${priceMatch[1]} ${priceMatch[2] || ""}`);
+  // 1. Rent vs Buy
+  if (/(اجاره|رهن|کرایه)/.test(raw)) {
+    filters.intent = "rent";
+    chips.push("اجاره");
+  } else {
+    filters.intent = "buy";
   }
+  
+  let typeSuggestions = [];
 
-  const fuzzyCity = stringSimilarity.findBestMatch(rawQuery, Object.keys(cityAliases));
-  if (fuzzyCity.bestMatch.rating > 0.4) {
-    filters.city = cityAliases[fuzzyCity.bestMatch.target];
-    chips.push(fuzzyCity.bestMatch.target);
-  }
+if (filters.intent === "buy") {
+  typeSuggestions = categories.filter(cat => 
+    cat.includes("خرید") || cat.includes("فروش")
+  );
+}
 
-  const normalizedNeighborhoods = neighborhoods.map(n => normalize(n));
-  const bestNeighborhoodMatch = stringSimilarity.findBestMatch(rawQuery, normalizedNeighborhoods);
-  if (bestNeighborhoodMatch.bestMatch.rating > 0.6 && rawQuery.includes(bestNeighborhoodMatch.bestMatch.target)) {
-    const originalNeighbor = neighborhoods.find(n => normalize(n) === bestNeighborhoodMatch.bestMatch.target);
-    filters.neighbor = originalNeighbor;
-    chips.push(originalNeighbor);
-  }
+if (filters.intent === "rent") {
+  typeSuggestions = categories.filter(cat => 
+    cat.includes("اجاره") || cat.includes("رهن")
+  );
+}
 
-  for (const hint of Object.keys(synonyms.categories)) {
-    if (rawQuery.includes(hint)) {
-      filters.category_name = synonyms.categories[hint];
-      chips.push(hint);
-      break;
-    }
-  }
 
-  ["پارکینگ", "انباری", "آسانسور", "تراس"].forEach((feature) => {
-    if (rawQuery.includes(feature)) {
-      filters[featureMap(feature)] = true;
-      chips.push(feature);
+  // 2. Feature keywords
+  ["مبله", "پارکینگ", "انباری", "آسانسور", "تراس"].forEach(feat => {
+    if (raw.includes(feat)) {
+      filters[normalize(feat)] = true;
+      chips.push(feat);
     }
   });
 
-  let listings = [];
+  // 3. Numeric filters: area, rooms, price
+  const areaM  = raw.match(/(\d+)\s*متر/);
+  const roomM  = raw.match(/(\d+)\s*خوابه/);
+  const priceM = raw.match(/زیر\s*(\d+)\s*(میلیارد|میلیون)?/);
+
+  if (areaM) {
+    filters.area = Number(areaM[1]);
+    chips.push(`${areaM[1]} متر`);
+  }
+  if (roomM) {
+    filters.rooms = Number(roomM[1]);
+    chips.push(`${roomM[1]} خواب`);
+  }
+  if (priceM) {
+    let p = Number(priceM[1]);
+    if (priceM[2] === "میلیارد") p *= 1_000_000_000;
+    if (priceM[2] === "میلیون")  p *=   1_000_000;
+    filters.price = p;
+    chips.push(`زیر ${priceM[1]} ${priceM[2] || ""}`);
+  }
+
+  // 4. Fuzzy match city, category, neighborhood
+  const cityMatch = stringSimilarity.findBestMatch(raw, cities);
+  if (cityMatch.bestMatch.rating > 0.25) {
+    filters.city = cityMatch.bestMatch.target;
+    chips.push(cityMatch.bestMatch.target);
+  }
+
+  const catMatch = stringSimilarity.findBestMatch(raw, categories);
+  if (catMatch.bestMatch.rating > 0.3) {
+    filters.category_name = catMatch.bestMatch.target;
+    chips.push(catMatch.bestMatch.target);
+  }
+
+  const hoodMatch = stringSimilarity.findBestMatch(raw, neighborhoods);
+  if (hoodMatch.bestMatch.rating > 0.3) {
+    filters.neighborhood = hoodMatch.bestMatch.target;
+    chips.push(hoodMatch.bestMatch.target);
+  }
+
+  // 5. Fetch all listings again and apply filters
   try {
-    const response = await axios.get(LIVE_API);
-    listings = response.data.data || [];
+    const resp = await axios.get(AI_API);
+    const allListings = Array.isArray(resp.data.data)
+      ? resp.data.data
+      : Array.isArray(resp.data.listings)
+        ? resp.data.listings
+        : [];
+    const results = allListings
+      .map(item => flattenListing(item, JSON.parse(item.json_properties || "[]")))
+      .filter(listing =>
+        Object.entries(filters).every(([k, v]) => {
+          const val = listing[k];
+          if (v === true) return Boolean(val);
+          if (typeof v === "number") return val != null && val <= v;
+          return val && val.toString().includes(v.toString());
+        })
+      );
+
+// Auto-suggest categories based on intent keywords
+if (raw.includes("خرید") || raw.includes("فروش")) {
+  const buyCategories = categories.filter(cat =>
+    /خرید|فروش/.test(cat)
+  );
+  suggestions.push(...buyCategories.slice(0, 6));
+}
+
+if (/(اجاره|رهن|کرایه)/.test(raw)) {
+  const rentCategories = categories.filter(cat =>
+    /اجاره|رهن|کرایه/.test(cat)
+  );
+  suggestions.push(...rentCategories.slice(0, 6));
+}
+
+// Fallback generic suggestions
+if (suggestions.length === 0) {
+  suggestions.push("ویلا", "زمین", "آپارتمان", "اجاره", "زیر ۳ میلیارد");
+}
+
+
+    return res.json({
+  filters,
+  chips,
+  suggestions: [...suggestions, ...typeSuggestions.slice(0, 6)],
+  results,
+  confidence: Object.keys(filters).length ? 0.9 : 0.3
+});
+
   } catch (err) {
+    console.error("❌ Failed to fetch listings:", err.message);
     return res.status(500).json({ error: "Failed to fetch listings." });
   }
-
-  const results = listings.filter((listing) => {
-    const jsonProps = JSON.parse(listing.json_properties || "[]");
-    const flat = flattenListing(listing, jsonProps);
-    console.log("🧩 Listing:", flat);
-      console.log("🧩 Flattened listing:", flat);
-
-    return Object.entries(filters).every(([key, value]) => {
-      const listingVal = flat[key];
-      if (listingVal === undefined || listingVal === null) return false;
-         if (typeof value === "boolean") {
-        return listingVal === true || listingVal === "1" || listingVal === 1;
-      }
-      if (typeof value === "number") {
-        return Number(listingVal) <= value;
-      }
-      if (typeof value === "string") {
-        return normalize(listingVal).includes(normalize(value));
-      }
-      return false;
-    });
-  });
-
-  if (!filters.category_name) {
-    suggestions.push("ویلا", "زمین", "آپارتمان", "زیر ۳ میلیارد", "دو خواب");
-  }
-
-  res.json({
-    filters,
-    chips,
-    suggestions,
-    results,
-    confidence: Object.keys(filters).length ? 0.9 : 0.3,
-    suggestedQuery: rawQuery,
-  });
 });
 
-app.listen(8000, () => {
-  console.log("🚀 Smart Search API running at http://localhost:8000");
-});
+// Bootstrap server
+(async () => {
+  await loadMetadata();
+  const port = process.env.PORT || 8000;
+  app.listen(port, () => console.log(`🚀 Smart Search API listening on http://localhost:${port}`));
+})();

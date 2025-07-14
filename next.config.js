@@ -31,4 +31,16 @@ const nextConfig = {
 
 }
 
+module.exports = {
+  async rewrites() {
+    return [
+      {
+        source: "/api/search-intent",
+        destination: "http://localhost:8000/api/search-intent",
+      },
+    ];
+  },
+};
+
+
 module.exports = nextConfig;

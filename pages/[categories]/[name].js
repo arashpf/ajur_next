@@ -1296,10 +1296,8 @@ const SingleCategory = (props) => {
           name="viewport"
           content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
         ></meta>
-        <title>
-          {" "}
-          آجر : {details.name} {city}{" "}
-        </title>
+        <title>{`آجر : ${details?.name || "بدون عنوان"} ${city}`}</title>
+
         <meta name="description" content={"آجر :" + details.name + city} />
         <meta
           name="robots"
@@ -1351,59 +1349,101 @@ const SingleCategory = (props) => {
 };
 
 export async function getServerSideProps(context) {
-  const { params } = context;
+  const { params, query } = context;
 
-  const name = params.name;
-  const categories_city = params.categories;
-
-  // const city = context.query.city ? context.query.city : "رباط کریم";
-
-  const city = categories_city ? categories_city : "رباط کریم";
-
-  const subcat = context.query.subcat ? context.query.subcat : null;
-
-  const neighbor = context.query.neighbor ? context.query.neighbor : null;
-
-  let data = {}
-try {
-  const res = await fetch(
-    `https://api.ajur.app/api/main-category-workers?subcat=${subcat}&catname=${name}&city=${city}`
-  );
-
-  if (!res.ok) {
-    console.error("API returned error:", res.status);
-    throw new Error("API failed");
+  // 🚫 Block bad routes like /api/search-intent
+  if (
+    !params.name ||
+    !params.categories ||
+    params.name === "search-intent" ||
+    params.categories === "api"
+  ) {
+    console.warn("🚫 Invalid route triggered:", params);
+    return { notFound: true };
   }
 
-  const contentType = res.headers.get("content-type");
-  if (!contentType || !contentType.includes("application/json")) {
-    throw new Error("Invalid JSON response");
-  }
 
-  data = await res.json();
-} catch (err) {
-  console.error("Failed to fetch category data:", err);
-  data = { details: [], error: true };
+if (!params.name || !params.categories || params.name === "search-intent" || params.categories === "api") {
+  console.warn("🚫 Invalid route triggered:", params);
+  return {
+    notFound: true,
+  };
 }
 
-return {
-  props: {
-    details: data.details || [],
-    error: data.error || false,
-    workers: data.workers || null,
-    all_workers: Array.isArray(data?.all_workers) ? data.all_workers : [],
-    specials: data.specials || null,          // ✅ fix here
-    uppers: data.uppers || [],
-    subcategories: data.subcategories || [],
-    main_cats: data.main_cats || [],
+
+  // Pull category and city from dynamic route or query
+  const name     = params.name || query.catname || null;
+  const city     = params.categories || query.city || "رباط کریم";
+  const subcat   = query.subcat || null;
+  const neighbor = query.neighbor || null;
+
+  // Build API URL safely
+  const apiUrl = `https://api.ajur.app/api/main-category-workers` +
+    `?catname=${encodeURIComponent(name)}` +
+    `&city=${encodeURIComponent(city)}` +
+    (subcat   ? `&subcat=${encodeURIComponent(subcat)}` : "") +
+    (neighbor ? `&neighbor=${encodeURIComponent(neighbor)}` : "");
+
+  let data = {};
+
+  try {
+    const res = await fetch(apiUrl);
+
+    if (!res.ok) {
+      console.error("❌ API returned error:", res.status);
+      throw new Error("Fetch failed");
+    }
+
+    const contentType = res.headers.get("content-type") || "";
+    if (!contentType.includes("application/json")) {
+      throw new Error("Response is not JSON");
+    }
+
+    data = await res.json();
+    
+    // ⛑️ Retry fetch with lighter filters if no results
+if (!data.details || data.details.length === 0) {
+  console.warn("🔁 No matches. Retrying with base filters only.");
+  const fallbackRes = await fetch(
+    `https://api.ajur.app/api/main-category-workers?catname=${encodeURIComponent(name)}&city=${encodeURIComponent(city)}`
+  );
+  if (fallbackRes.ok) {
+    const fallbackData = await fallbackRes.json();
+    data.details = fallbackData.details || [];
+  }
+}
+
+  } catch (err) {
+    console.error("🔥 Fetch error:", err.message);
+    data = { details: [], workers: [], error: true };
+  }
+
+  // Optional logs for dev:
+  console.log("🔍 Fetched data:", {
     name,
     city,
-    neighborhoods: data.the_neighborhoods || [],
-    neighbor: neighbor || null,
-    subcat: subcat || null,
-  },
-};
+    subcat,
+    neighbor,
+    details: data.details?.length || 0,
+  });
 
+  return {
+    props: {
+      details:         data.details        || [],
+      workers:         data.workers        || [],
+      all_workers:     Array.isArray(data.workers) ? data.workers : [],
+      specials:        data.specials       || [],
+      uppers:          data.uppers         || [],
+      subcategories:   data.subcategories  || [],
+      main_cats:       data.main_cats      || [],
+      neighborhoods:   data.the_neighborhoods || [],
+      name,
+      city,
+      neighbor:        neighbor || null,
+      subcat:          subcat   || null,
+      fallback:        data.error || !data.details || data.details.length === 0,
+    },
+  };
 }
 
 export default SingleCategory;
