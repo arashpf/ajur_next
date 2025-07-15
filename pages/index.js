@@ -15,6 +15,7 @@ import Link from "next/link";
 import FileRequest from "../components/request/FileRequest";
 import Cookies from "js-cookie";
 import { useRouter } from "next/router";
+
 import ForwardIcon from "@mui/icons-material/Forward";
 
 import { Navigation, Pagination, Scrollbar, A11y } from "swiper";
@@ -25,6 +26,7 @@ import "swiper/css";
 import "swiper/css/pagination";
 import "swiper/css/navigation";
 import "swiper/css/autoplay";
+import { display, style } from "@mui/system";
 // import "./styles.css";
 // import required modules
 
@@ -48,11 +50,11 @@ function Home(props) {
 
   const [is_have_favorited, set_is_have_favorited] = useState(false);
   const [is_have_history, set_is_have_history] = useState(false);
- 
+
   const [favorite_workers, set_favorite_workers] = useState([]);
   const [history_workers, set_history_workers] = useState([]);
 
-  
+
 
   useEffect(() => {
     //  Cookies.set('selected_city','');
@@ -127,7 +129,7 @@ function Home(props) {
       },
     }).then(function (response) {
       set_favorite_workers(response.data);
-      
+
       if (response.data.length == 0) {
         console.log("trigered no post error");
         set_is_have_favorited(false);
@@ -160,7 +162,7 @@ function Home(props) {
       },
     }).then(function (response) {
       set_history_workers(response.data);
-      
+
       if (response.data.length == 0) {
         console.log("trigered no post error");
         set_is_have_history(false);
@@ -195,9 +197,8 @@ function Home(props) {
         className={styles["single_cat_swipper"]}
       >
         <Link
-          href={`/${
-            props.trigeredcity ? props.trigeredcity : renderDefaultCity()
-          }/${cat.name}`}
+          href={`/${props.trigeredcity ? props.trigeredcity : renderDefaultCity()
+            }/${cat.name}`}
         >
           <a>
             <MainCatCard key={cat.id} cat={cat} />
@@ -293,19 +294,19 @@ function Home(props) {
   }
 
 
-  const renderHistoryWorkers = () => { 
-    
-    if(1){
-      return(
-      history_workers.length > 0 && (
-          <div style={{paddingBottom:10}}>
+  const renderHistoryWorkers = () => {
+
+    if (1) {
+      return (
+        history_workers.length > 0 && (
+          <div style={{ paddingBottom: 10 }}>
             <div className={styles["title"]}>
 
-           
-                  <h2>آخرین بازدید های شما</h2>
 
-               
-              
+              <h2>آخرین بازدید های شما</h2>
+
+
+
             </div>
             <Swiper
               slidesPerView={1}
@@ -353,7 +354,7 @@ function Home(props) {
             >
               {renderSomeHistoryeWorkers()}
 
-            
+
             </Swiper>
           </div>
         )
@@ -362,19 +363,19 @@ function Home(props) {
   }
 
 
-  const renderFavoriteWorkers = () => { 
-    
-    if(1){
-      return(
-      favorite_workers.length > 0 && (
-        <div style={{paddingBottom:20}}>
+  const renderFavoriteWorkers = () => {
+
+    if (1) {
+      return (
+        favorite_workers.length > 0 && (
+          <div style={{ paddingBottom: 20 }}>
             <div className={styles["title"]}>
 
-           
-                  <h2>آخرین مورد پسند های شما</h2>
 
-               
-              
+              <h2>آخرین مورد پسند های شما</h2>
+
+
+
             </div>
             <Swiper
               slidesPerView={1}
@@ -422,7 +423,7 @@ function Home(props) {
             >
               {renderSomeFavoriteWorkers()}
 
-            
+
             </Swiper>
           </div>
         )
@@ -487,7 +488,7 @@ function Home(props) {
                   },
                 }}
                 modules={[Pagination, Navigation]}
-                // className={styles["cat-swiper"]}
+              // className={styles["cat-swiper"]}
               >
                 {renderSliderCategories()}
               </Swiper>
@@ -496,17 +497,16 @@ function Home(props) {
                 <div>
                   <div className={styles["title"]}>
 
-                  <Link
-                        href={`/${
-                          props.trigeredcity
-                            ? props.trigeredcity
-                            : renderDefaultCity()
+                    <Link
+                      href={`/${props.trigeredcity
+                        ? props.trigeredcity
+                        : renderDefaultCity()
                         }/فروش زمین مسکونی`}
-                      >
-                        <h2>{title1}</h2>
+                    >
+                      <h2>{title1}</h2>
 
-                      </Link>
-                    
+                    </Link>
+
                   </div>
                   <Swiper
                     slidesPerView={1}
@@ -556,11 +556,10 @@ function Home(props) {
 
                     <SwiperSlide>
                       <Link
-                        href={`/${
-                          props.trigeredcity
-                            ? props.trigeredcity
-                            : renderDefaultCity()
-                        }/فروش زمین مسکونی`}
+                        href={`/${props.trigeredcity
+                          ? props.trigeredcity
+                          : renderDefaultCity()
+                          }/فروش زمین مسکونی`}
                       >
                         <div className={styles["more-swiper"]}>
                           <p className={styles["more-swiper-p"]}>
@@ -581,11 +580,10 @@ function Home(props) {
                 <div>
                   <div className={styles["title"]}>
                     <Link
-                      href={`/${
-                        props.trigeredcity
-                          ? props.trigeredcity
-                          : renderDefaultCity()
-                      }/فروش آپارتمان`}
+                      href={`/${props.trigeredcity
+                        ? props.trigeredcity
+                        : renderDefaultCity()
+                        }/فروش آپارتمان`}
                     >
                       <h2>{title2} </h2>
                     </Link>
@@ -636,11 +634,10 @@ function Home(props) {
                     {renderSlidertwo()}
                     <SwiperSlide>
                       <Link
-                        href={`/${
-                          props.trigeredcity
-                            ? props.trigeredcity
-                            : renderDefaultCity()
-                        }/فروش آپارتمان`}
+                        href={`/${props.trigeredcity
+                          ? props.trigeredcity
+                          : renderDefaultCity()
+                          }/فروش آپارتمان`}
                       >
                         <div className={styles["more-swiper"]}>
                           <p className={styles["more-swiper-p"]}>
@@ -660,16 +657,15 @@ function Home(props) {
               {collection3.length > 0 && (
                 <div>
                   <div className={styles["title"]}>
-                  <Link
-                        href={`/${
-                          props.trigeredcity
-                            ? props.trigeredcity
-                            : renderDefaultCity()
+                    <Link
+                      href={`/${props.trigeredcity
+                        ? props.trigeredcity
+                        : renderDefaultCity()
                         }/فروش باغ و باغچه`}
-                      >
-                         <h2>{title3} </h2>
-                        </Link>
-                   
+                    >
+                      <h2>{title3} </h2>
+                    </Link>
+
                   </div>
                   <Swiper
                     slidesPerView={1}
@@ -715,11 +711,10 @@ function Home(props) {
 
                     <SwiperSlide>
                       <Link
-                        href={`/${
-                          props.trigeredcity
-                            ? props.trigeredcity
-                            : renderDefaultCity()
-                        }/فروش باغ و باغچه`}
+                        href={`/${props.trigeredcity
+                          ? props.trigeredcity
+                          : renderDefaultCity()
+                          }/فروش باغ و باغچه`}
                       >
                         <div className={styles["more-swiper"]}>
                           <p className={styles["more-swiper-p"]}>
@@ -756,20 +751,20 @@ function Home(props) {
                   breakpoints={{
                     200: {
                       slidesPerView: 2,
-                      spaceBetween: 5,
+                      spaceBetween: 15,
                     },
 
                     640: {
-                      slidesPerView: 2,
-                      spaceBetween: 10,
+                      slidesPerView: 3,
+                      spaceBetween: 20,
                     },
                     768: {
                       slidesPerView: 5,
-                      spaceBetween: 20,
+                      spaceBetween: 25,
                     },
                     1400: {
                       slidesPerView: 7,
-                      spaceBetween: 30,
+                      spaceBetween: 35,
                     },
                   }}
                   modules={[Pagination, Navigation]}
@@ -792,20 +787,20 @@ function Home(props) {
                   breakpoints={{
                     200: {
                       slidesPerView: 2,
-                      spaceBetween: 5,
+                      spaceBetween: 15,
                     },
 
                     640: {
-                      slidesPerView: 2,
-                      spaceBetween: 10,
+                      slidesPerView: 3,
+                      spaceBetween: 20,
                     },
                     768: {
                       slidesPerView: 5,
-                      spaceBetween: 20,
+                      spaceBetween: 25,
                     },
                     1400: {
                       slidesPerView: 7,
-                      spaceBetween: 30,
+                      spaceBetween: 35,
                     },
                   }}
                   modules={[Pagination, Navigation]}
