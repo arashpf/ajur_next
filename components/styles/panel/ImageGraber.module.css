@@ -1,0 +1,24 @@
+
+.container {
+  background: red;
+  display: none
+}
+.dropzone {
+  padding: 30px;
+}
+
+.dragsection:hover {
+  cursor: pointer;
+
+}
+
+.dragsection  {
+
+  background:white;
+  text-align:center;
+  padding-top:30px;
+  padding-bottom:30px;
+  margin-top:10px;
+  border: 2px dashed gray;
+
+}

@@ -1,0 +1,197 @@
+/* .location-wrapper {
+  height: 400px;
+  width: 100%;
+
+  
+} */
+
+@font-face {
+  font-family: 'iransans';
+  font-weight: 500;
+  src: local('components/fonts'), url(../../fonts/iran-sans.ttf) format('ttf');
+}
+
+.location {
+  min-height: 300px;
+  min-width: 100%;
+  width: 100%;
+  justify-content: center;
+}
+
+.location-info-wrapper{
+  padding-top: 0px;
+ 
+}
+
+
+@media (min-width: 600px) {
+
+  .search_locations_wrapper {
+   
+    padding: 10px;
+    
+  }
+
+
+  .singleSearchResault {
+    /* background-color: rgb(240, 237, 237); */
+    text-align: right;
+    font-size: 14px;
+
+  }
+
+  
+  .search-wrapper {
+    position: fixed;
+    top: 10%;
+    left: 0;
+    width: 60%;
+    left: 20%;
+    right: 0;
+    z-index: 400;
+    
+
+  }
+
+  .search-location-li {
+    background-color: red;
+    z-index: 4;
+    position: relative;
+    top:  90%;
+    height: 50px;
+    width: 50%;
+    left:25%;
+    border: 1px solid gray;
+    overflow: hidden;
+    text-align: right;
+  }
+  
+  .search-location-li .search-location-li-close-icon {
+    position: absolute;
+    left: 10px;
+    padding-top: 15px;
+  
+  }
+  
+  .search-location-li .search-location-li-close-icon:hover {
+    cursor: pointer;
+  
+  
+  }
+  
+  .search-location-li .search-location-text {
+    /* display: flex; */
+    /* flex-direction: row; */
+    /* justify-content: flex-end; */
+    padding-right: 15px;
+    padding-top: 15px;
+    height: auto;
+    z-index: 2222222222;
+  
+    margin-left: 40px;
+  
+  
+  
+  }
+  
+  .search-location-li .search-my-location-text {
+    display: flex;
+    /* flex-direction: row; */
+    justify-content: flex-end;
+    padding-right: 15px;
+    padding-top: 15px;
+    height: auto;
+    z-index: 2222222222;
+  
+    margin-left: 40px;
+  
+  
+  
+  }
+  
+  
+  
+  .search-location-li .search-location-text:hover {
+    cursor: pointer;
+  
+  }
+  
+  
+  
+  .search-location-li .search-location-text p {
+  
+    padding-right: 15px;
+    margin-top: -5px;
+    font-size: 1.3em;
+    font-family: iransans;
+  
+  }
+
+
+  
+
+
+}
+
+
+
+
+@media (max-width: 600px) {
+
+  .location {
+    margin-top: -100px;
+    height: 430px;
+    min-width: 100%;
+    width: 130%;
+    left: -15%;
+    /* justify-content: center; */
+  
+  }
+
+  .search-wrapper {
+    position: fixed;
+    width: 60%;
+    
+    top: 13%;
+    left: 20%;
+    
+    z-index: 400;
+  }
+
+  .search_location_li {
+    /* display: none; */
+    background-color: white;
+    width: 100vw;
+    margin-left: -33%;
+    overflow: scroll;
+   
+  }
+
+  .singleSearchResault {
+    /* background-color: rgb(240, 237, 237); */
+    text-align: right;
+    font-size: 14px;
+
+  }
+
+  .search_location_li_close_icon {
+     
+    
+    
+    
+    margin: 10px ;
+    
+  }
+
+  .search_locations_wrapper {
+   
+    padding: 10px;
+    
+  }
+
+
+
+
+
+}
+

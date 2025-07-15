@@ -1,0 +1,86 @@
+
+ 
+
+  @media (max-width: 600px) {
+
+    .navbar_search {
+        text-align: right;
+        direction: rtl;
+        font-family: iransans;
+        font-size: 3em;
+    
+      }
+
+    .single_city {
+        background-color: white;
+        border: 4px white solid;
+        padding: 3%;
+        margin: 4px;
+        box-shadow: 0 3px 14px rgba(0, 0, 0, 0.4);
+        
+        
+        
+          }
+
+          .all_city {
+            background-color: white;
+        /* border: 4px gray solid; */
+        padding-top: 2%;
+          }
+
+          .base_city {
+            background-color: white;
+            /* border: 4px gray solid; */
+            padding-top: 2%;
+          }
+
+          .cities_wraper {
+            background-color:#f9f9f9;
+            text-align:center;
+            direction:'rtl';
+    
+        }
+  
+  }
+  
+  @media (min-width: 600px) {
+
+    .navbar_search {
+      text-align: right;
+      direction: rtl;
+      font-family: iransans;
+      font-size: 3em;
+  
+    }
+
+  .single_city {
+      background-color: white;
+      border: 4px #f9f9f9 solid;
+      padding: 3%;
+      
+        }
+
+        .all_city {
+          background-color: white;
+      /* border: 4px gray solid; */
+      padding-top: 2%;
+        }
+
+        .base_city {
+          background-color: white;
+      /* border: 4px gray solid; */
+      padding-top: 2%;
+        }
+
+        .cities_wraper {
+          background-color:#f9f9f9;
+          text-align:center;
+          direction:'rtl';
+  
+      }
+
+ 
+ 
+  }
+
+  

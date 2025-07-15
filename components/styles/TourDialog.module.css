@@ -1,0 +1,127 @@
+.tour-dialog-wrapper {
+  flex: auto;
+  height: 75vh;
+  
+  /* background-color: rgb(222, 220, 220); */
+  margin: 10px;
+  justify-content: center;
+  text-align: center;
+}
+
+.tour-dialog-wrapper-header {
+  padding:20px;
+  background: #dd8b00;
+  /* color: #f9f9f9 !important; */
+  font-family: iransans;
+
+}
+
+
+.tour-dialog-wrapper-header span:first-child{
+  font-family: iransans;
+  font-size: 1.3em;
+  text-decoration: none !important;
+  color: #ddd;
+
+}
+
+.tour-dialog-wrapper-header span:nth-child(2){
+  font-family: iransans;
+  font-size: 1em;
+  color: black;
+
+}
+
+.tour-dialog-date-picker-wrapper {
+  padding: 10px;
+}
+
+.tour-dialog-date-picker-wrapper:hover {
+  cursor: pointer;
+}
+
+
+
+.tour-dialog-date-picker-wrapper .date-picker {
+  justify-content: center;
+  text-align: center;
+  vertical-align: center;
+  background: #f9f9f9;
+}
+
+.tour-dialog-date-picker-wrapper .date-picker-active {
+  border: 1px solid blue;
+  background: #fcfcfc;
+
+}
+
+.tour-dialog-date-picker-wrapper .date-picker-deactive {
+
+  border: 0px !important;
+
+}
+
+.tour-dialog-date-picker-wrapper p {
+  font-family: iransans;
+  color: #444;
+}
+
+.tour-dialog-time-picker-wrapper {
+  padding-top: 10px;
+}
+.tour-dialog-submit-wrapper{
+
+  justify-content: center;
+  text-align: center;
+  width: 95%;
+  background: #dd8b00;
+  margin:10px;
+}
+
+.tour-dialog-finish-wrapper{
+
+  justify-content: center;
+  text-align: center;
+  width: 95%;
+  background: #3abc0e;
+  margin:10px;
+}
+
+.tour-dialog-submit-wrapper .submit-button{
+
+  text-align: center;
+  justify-content: center;
+  vertical-align: center;
+}
+
+.tour-dialog-submit-wrapper .submit-button:hover{
+
+  cursor: pointer;
+}
+
+.tour-dialog-submit-wrapper .submit-button p{
+
+
+  text-align: center;
+  font-size: 1.5em;
+  font-family: iransans;
+  color: black;
+}
+
+.worker-active-detail-button {
+  font-weight: 500;
+}
+
+@media (min-width: 600px) {
+
+  .tour-dialog-wrapper {
+   
+    margin-top: 10px;
+    margin-bottom: 10px;
+    height: 90vh;
+   
+ 
+  }
+  
+
+}

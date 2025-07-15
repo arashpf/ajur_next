@@ -1,0 +1,331 @@
+.container {
+
+}
+
+.logo-just-mobile{
+  display: none;
+}
+
+  .navbar {
+    background: white !important;
+        padding: 15px;
+  }
+
+.navar_brand_center {
+  position: absolute;
+  left:45%;
+}
+
+
+
+
+.navbar_second {
+
+  height: 60px;
+  min-width: 100%;
+
+}
+
+.navbar_second input {
+  border: 1px solid black;
+
+}
+
+.image_logo_small {
+
+  padding-top: 20px;
+  padding-bottom: 10px;
+  height: 70%;
+  width: 70%;
+}
+
+.nav_link_wrapper .nav_link {
+ font-family: iransans;
+ font-size: 1em !important;
+ color: #444 !important;
+}
+
+
+.nav-link-wrapper-start {
+display: flex;
+position: absolute;
+justify-content: flex-end;
+
+}
+
+.nav-link-wrapper-end {
+
+  display: flex;
+  justify-content: flex-end;
+
+}
+
+
+.nav_link_wrapper_start .nav_link {
+ font-family: iransans;
+ font-size: 1.1em !important;
+ color: #444 !important;
+}
+
+.search_location_text_in_header {
+  position: fixed;
+  overflow: scroll;
+  background: white;
+  height: 50%;
+  width:50%;
+  left:25%;
+  margin:10px;
+  padding: 10px;
+}
+
+
+
+
+.search-location-li {
+  z-index: 4;
+  position: relative;
+  top:  90%;
+  height: 50px;
+  width: 50%;
+  left:25%;
+  border: 1px solid gray;
+  overflow: hidden;
+  text-align: right;
+}
+
+.search-location-li .search-location-li-close-icon {
+  position: absolute;
+  left: 10px;
+  padding-top: 15px;
+
+}
+
+.search-location-li .search-location-li-close-icon:hover {
+  cursor: pointer;
+
+
+}
+
+.search-location-li .search-location-text {
+  /* display: flex; */
+  /* flex-direction: row; */
+  /* justify-content: flex-end; */
+  padding-right: 15px;
+  padding-top: 15px;
+  height: auto;
+  z-index: 2222222222;
+
+  margin-left: 40px;
+
+
+
+}
+
+.search-location-li .search-my-location-text {
+  display: flex;
+  /* flex-direction: row; */
+  justify-content: flex-end;
+  padding-right: 15px;
+  padding-top: 15px;
+  height: auto;
+  z-index: 2222222222;
+
+  margin-left: 40px;
+
+
+
+}
+
+
+
+.search-location-li .search-location-text:hover {
+  cursor: pointer;
+
+}
+
+
+
+.search-location-li .search-location-text p {
+
+  padding-right: 15px;
+  margin-top: -5px;
+  font-size: 1.3em;
+  font-family: iransans;
+
+}
+
+
+
+@media (min-width: 600px) {
+
+.nav-link-wrapper-end {
+
+  text-align: right;
+  color: #333;
+  width: 100%;
+  font-size: 1.1rem
+  
+
+}
+
+.nav-link-wrapper-start {
+
+  text-align: right;
+  color: #333;
+  width: 90%;
+  font-size: 1.1rem
+
+
+}
+
+
+
+}
+
+
+
+@media (max-width: 600px) {
+
+  .logo-just-mobile{
+    display: flex;
+  justify-content: center;
+  position: absolute ;
+  top: calc(70% - 1em);
+
+  width: 90%;
+
+  }
+
+  .logo-just-mobile-image{
+    justify-content: center !important
+  }
+
+
+
+ 
+
+
+  .nav-link-wrapper-start {
+
+    text-align: right;
+    color: #333;
+    width: 90%;
+    font-size: 1.5rem
+
+
+  }
+
+  .nav-link-wrapper-start p{
+
+    font-size: 18px;
+
+
+
+  }
+
+  .nav-link-wrapper-end {
+
+    text-align: right;
+    color: #333;
+    width: 100%;
+    /* font-size: 1.5rem; */
+    
+
+  }
+
+  .nav-link-wrapper-end p{
+
+    
+    font-size: 18px;
+    padding: 2px 5px;
+    
+
+  }
+
+  
+ 
+
+  .nav-dropdown-item{
+    text-align: center;
+    color: #666;
+    width: 100%;
+    font-size: 1.3rem;
+    border: none !important;
+  }
+
+  
+
+  .search_location_text_in_header {
+    position: fixed;
+    overflow: scroll;
+    background: white;
+    height: 50%;
+    width:90%;
+    left:5%;
+    margin:10px;
+    padding: 10px;
+  }
+
+
+
+
+  .search-location-li {
+    z-index: 4;
+    position: relative;
+    top:  90%;
+    height: 50px;
+    width: 90%;
+    left:5%;
+    border: 1px solid gray;
+    overflow: hidden;
+    text-align: right;
+  }
+
+
+}
+
+@media (min-width: 600px) {
+  .navbar_serach {
+    height: 40px;
+    width: 50%;
+    left:25%;
+    text-align: right;
+    direction: rtl;
+    font-family: iransans;
+    font-size: 3em;
+
+  }
+
+}
+
+@media (max-width: 600px) {
+  .navbar_serach {
+    height: 40px;
+    width: 65%;
+    left:30%;
+    text-align: right;
+    direction: rtl;
+    font-family: iransans;
+    font-size: 3em;
+
+  }
+
+  .nav-dropdown-myaccount {
+    display: none;
+  }
+
+}
+
+.installButton {
+  position: absolute;  /* Position the button absolutely within the container */
+  bottom: 10px;        /* Place the button 10px from the bottom */
+  left: 50%;           /* Align to the center horizontally */
+  transform: translateX(-50%); /* Center the button */
+  background-color: #ff6f61;  /* Example styling */
+  color: white;
+  padding: 10px 20px;
+  border-radius: 5px;
+  font-size: 16px;
+  cursor: pointer;
+  box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
+}

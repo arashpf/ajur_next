@@ -1,0 +1,299 @@
+@font-face {
+  font-family: iransans;
+  src: url(../fonts/iran-sans.ttf);
+}
+@font-face {
+  font-family: Tanha;
+  src: url(../fonts/Tanha.ttf);
+}
+@font-face {
+  font-family: Sahel;
+  src: url(../fonts/Sahel.woff);
+}
+
+
+
+html,
+body {
+  padding: 0;
+  margin: 0;
+  font-family: 'iransans';
+    /* background: #f7f7f7; */
+    background: white;
+}
+
+h1 {
+  font-family: 'iransans';
+}
+
+h2 {
+  font-family: 'iransans';
+}
+
+p {
+  font-family: 'Tanha';
+}
+
+a {
+
+  text-decoration: none !important;
+  font-family: 'iransans';
+}
+
+* {
+  box-sizing: border-box;
+ 
+}
+
+div {
+  font-family: 'iransans';
+  
+}
+
+.search-div-wrapper {
+  border: 1px solid orange;
+  margin-bottom: 50px;
+
+  font-size: 1em;
+
+
+}
+
+.qrcode__container {
+  
+  
+ 
+ 
+  
+}
+
+
+
+.swiper-pagination  {
+  position:unset !important;
+  
+}
+
+
+@media (prefers-color-scheme: dark) {
+  html {
+    color-scheme: dark;
+  }
+  body {
+
+    background: black;
+  }
+}
+
+.spinnerImageView {
+
+  position: fixed;
+  left: 0px;
+  top: 0px;
+  width: 100%;
+  height: 100%;
+  z-index: 9999;
+               background: white;
+
+
+}
+
+.swiper-button-next {
+
+  
+ 
+
+}
+
+
+
+
+/* try to add padding and margin to swipper.js arrows */
+.swiper-button-next, .swiper-button-prev {
+
+  
+ 
+  color: orange !important;
+  /* box-shadow: rgba(0, 0, 0, 0.50) 0px 5px 15px; */
+  
+ 
+
+
+}
+
+
+
+
+
+.swiper-button-prev{
+  left: -3px !important;
+  font-size: 2px !important;
+
+}
+.swiper-button-next{
+  right: -3px !important;
+  color: gray;
+  font-size: 20px;
+
+}
+
+
+
+
+/* TODO: in the moment i dont know to use if statment in dynamic className and using css module
+so for now i put the CatCard2 styles in the global css , but i have to fix it later and move this
+lines of codes to the CatCard2.module.css */
+.cat-card-2-title {
+
+  font-size: 1em;
+
+}
+
+.cat-all-card-2-active {
+  padding: 10px;
+  background: white;
+  margin: 10px;
+  border-radius: 5px;
+  box-shadow: -5px 5px 5px 1px #ddd;
+  background: rgb(188, 186, 184);
+}
+
+.cat-all-card-2-active :hover {
+  cursor: pointer;
+}
+
+.cat-card-2-active {
+
+  padding: 10px;
+  background: white;
+  margin: 10px;
+  border-radius: 5px;
+  box-shadow: -5px 5px 5px 1px #ddd;
+  background: orange;
+
+}
+
+.cat-card-2-active :hover {
+  cursor: pointer;
+}
+
+.clickable :hover {
+  cursor: pointer;
+
+}
+
+
+
+.cat-card-2-disactive {
+  padding: 10px;
+  background: white;
+  margin: 10px;
+  border-radius: 5px;
+  box-shadow: -5px 5px 5px 1px #ddd;
+  text-align: center;
+}
+
+.cat-card-2-disactive :hover {
+  cursor: pointer;
+}
+
+/* TODO: same as upper todo */
+
+
+ .date-picker-active {
+  border: 1px solid blue;
+  color:white;
+  background: rgba(83, 83, 235, 0.081);
+
+}
+
+ .date-picker-deactive {
+
+  border: 0px !important;
+
+}
+
+.tour-dialog-date-picker-wrapper p {
+  font-family: iransans;
+  color: #444;
+}
+
+.tour-dialog-time-picker-wrapper {
+  padding-top: 10px;
+}
+
+.right-slider-open-btn {
+  /* display: none !important; */
+  position: absolute;
+  color: #646262;
+  background-color: #3d4351;
+  color: white;
+  top: 50vh;
+  right: 1%;
+  z-index: 10;
+    border: 2px;
+}
+.leaflet-popup {
+  top: 1% !important;
+}
+
+.leaflet-popup-content-wrapper {
+  height: 400px;
+}
+
+.not-found-wrapper {
+  display: flex;
+  justify-content: center ;
+  vertical-align: center;
+}
+.not-found-image {
+  
+  justify-content: center ;
+  vertical-align: center;
+}
+
+
+@media (max-width: 600px) {
+
+  .spinner-image {
+
+    /* width: 300px;  */
+      height: 40%; /* Or whatever */
+      margin: auto;
+      position: fixed;
+      top: 50%;
+      left: 47%;
+      transform: translate(-50%, -50%);
+      transform: -webkit-translate(-50%, -50%);
+      transform: -moz-translate(-50%, -50%);
+      transform: -ms-translate(-50%, -50%);
+      
+  }
+
+
+
+}
+
+@media (min-width: 600px) {
+
+
+  .swiper {
+    padding: 0 40px !important;
+  }
+
+  .spinner-image {
+
+    /* width: 300px;  */
+      height: 40%; /* Or whatever */
+      margin: auto;
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      transform: -webkit-translate(-50%, -50%);
+      transform: -moz-translate(-50%, -50%);
+      transform: -ms-translate(-50%, -50%);
+      
+  }
+
+}

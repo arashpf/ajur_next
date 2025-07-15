@@ -1,0 +1,36 @@
+# Dependencies
+node_modules/
+.next/
+out/
+
+# Environment variables
+.env*
+!.env.example  # Keep example env files
+
+# Build files
+.next/cache/
+.next/build-manifest.json
+.next/build-id.json
+
+# Debug logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# Local development
+.DS_Store
+*.swp
+.idea/
+.vscode/
+
+# Testing
+coverage/
+.nyc_output/
+
+# Production
+dist/
+.next/static/chunks/**/*.js.map
+.next/static/chunks/**/*.js.br
+.next/static/**/*.js.map
+.next/static/**/*.js.br

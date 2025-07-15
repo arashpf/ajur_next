@@ -1,0 +1,135 @@
+@media only screen and (min-width: 600px) {
+  .worker-details-wrapper{
+    height: 80vh;
+    overflow: scroll;
+
+  }
+
+  
+
+  .worker-details-wrapper::-webkit-scrollbar {
+    width: 5px;
+  }
+
+  /* Track */
+  .worker-details-wrapper::-webkit-scrollbar-track {
+    background: #f1f1f1;
+  }
+
+  /* Handle */
+  .worker-details-wrapper::-webkit-scrollbar-thumb {
+    background: #999;
+  }
+
+  /* Handle on hover */
+  .worker-details-wrapper::-webkit-scrollbar-thumb:hover {
+    background: #555;
+  }
+}
+
+@media only screen and (max-width: 600px) {
+
+  .contact-wrapper {
+    position: fixed;
+    bottom: 0px;
+    z-index: 2000;
+    width: 100%;
+    background: white;
+    box-shadow: 0px 10px 5px #888, 0px -5px 5px #e8e6e6;
+  
+  
+    /* background-color: blue; */
+  
+  }
+
+}
+
+
+
+
+
+.worker-detail-button {
+  font-size: 1.2em !important;
+  font-family: iransans !important;
+
+}
+
+.worker-detail-header {
+  color: #444;
+  text-align: right;
+  direction: rtl;
+  padding-right: 20px;
+  font-family: iransans;
+  font-size: 1.4em;
+  /* display: none; */
+}
+
+.worker-detail-category {
+  text-align: right;
+  direction: rtl;
+  padding-right: 20px;
+  font-family: iransans;
+  font-size: .9em;
+  color: #777;
+}
+
+.worker-detail-category bold {
+  color: #4a3736;
+}
+
+.worker-detail-address {
+  text-align: right;
+  direction: rtl;
+  padding-right: 20px;
+  font-family: iransans;
+  font-size: .9em;
+  color: #777;
+}
+
+
+
+.worker-description {
+
+  text-align: right;
+  direction: rtl;
+  padding-right: 20px;
+  padding-top: 10px;
+  font-family: iransans;
+  font-size: 1.2em;
+  color: #777;
+
+
+
+  width: 100%;
+}
+
+.worker-properties-button {
+  margin: 3px !important;
+
+}
+
+.worker-properties-list {
+  font-family: iransans;
+  margin: 20px;
+
+  border-bottom: 1px dotted gray;
+}
+
+.worker-properties-list-left {
+  width: 50%;
+  float: right;
+  text-align: right;
+  margin-right: 10px;
+}
+
+.worker-properties-list-right {
+
+  text-align: right;
+  margin-right: 10px;
+}
+
+.worker-details-property-grid {
+  justify-content: flex-end;
+}
+
+

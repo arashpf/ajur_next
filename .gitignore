@@ -1,0 +1,6 @@
+node_modules/
+.next/cache/
+.next/cache/
+# Next.js build and cache
+.next/
+out/
