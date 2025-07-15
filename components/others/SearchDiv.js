@@ -1,26 +1,23 @@
-import { useEffect, useState } from "react";
+// components/SearchDiv.jsx
+
+import React, { useEffect, useState } from "react";
 import PropTypes from "prop-types";
-import Form from "react-bootstrap/Form";
-import "font-awesome/css/font-awesome.min.css";
-import styles from "../styles/SearchDiv.module.css";
-import axios from "axios";
 import Link from "next/link";
 import { useRouter } from "next/router";
-import { useGeolocated } from "react-geolocated";
 import Cookies from "js-cookie";
-
+import SmartSearchBox from "./SmartSearchBox";
+import styles from "../styles/SearchDiv.module.css";
 import InfoIcon from "@mui/icons-material/Info";
-
 import { createTheme, ThemeProvider, styled } from "@mui/material/styles";
 import Tooltip, { tooltipClasses } from "@mui/material/Tooltip";
 import ClickAwayListener from "@mui/material/ClickAwayListener";
 import Button from "@mui/material/Button";
-import { Navigation, Pagination, Scrollbar, A11y } from "swiper";
 import { Swiper, SwiperSlide } from "swiper/react";
-// Import Swiper styles
+import { Pagination, Navigation } from "swiper";
 import "swiper/css";
 import "swiper/css/pagination";
 import "swiper/css/navigation";
+import "font-awesome/css/font-awesome.min.css";
 
 const CustomWidthTooltip = styled(({ className, ...props }) => (
   <Tooltip {...props} classes={{ popper: className }} />
@@ -49,381 +46,129 @@ const theme = createTheme({
   },
 });
 
-const SearchDiv = (props) => {
-  const the_city = props.the_city;
-  const loading = props.loading;
+export default function SearchDiv({ the_city, the_neighborhoods, loading }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
-  const [the_neighborhoods, set_the_neighborhoods] = useState(
-    props.the_neighborhoods
-  );
   const [selected_city, set_selected_city] = useState("robat");
+  const [searchResults, setSearchResults] = useState([]);
 
   useEffect(() => {
-    console.log("the neighborhood we catched in search div is---------------");
-    console.log(the_neighborhoods);
-
-    var selected_city_here = Cookies.get("selected_city");
-    set_selected_city(selected_city_here);
+    const selected = Cookies.get("selected_city");
+    set_selected_city(selected || "robat");
   }, []);
 
-  const handleTooltipClose = () => {
-    setOpen(false);
-  };
+  const handleTooltipClose = () => setOpen(false);
+  const handleTooltipOpen = () => setOpen(true);
 
-  const handleTooltipOpen = () => {
-    setOpen(true);
-  };
-
-  const [location_li, set_location_li] = useState(false);
-  const [search, set_search] = useState("");
-  const [search_places, set_search_places] = useState([]);
-  const [user_initial_lat, set_user_initial_lat] = useState(35.7074612);
-
-  const [user_initial_long, set_user_initial_long] = useState(51.3005805);
-
-  const handleOnclickInput = () => {
-    console.log("form clicked");
-    set_location_li(true);
-  };
-
-  const handleChangeInput = (e) => {
-    console.log("form changed");
-    console.log(e.target.value);
-    if (e.target.value) {
-      var title = e.target.value;
-
-      set_search(title);
-
-      const filtered = the_neighborhoods.filter(nb => nb.name.includes(title));
-
-      console.log('the filtered now is --------');
-      console.log(filtered);
-      set_search_places(filtered);
-      set_location_li(true);
-
-      
-
-      /* fetch the places using axios and neshan */
-
-    //   axios({
-    //     method: "get",
-    //     url: "https://api.neshan.org/v1/search",
-    //     headers: {
-    //       "api-key": "service.UylIa21mMdoxUKtQ9nnS7b3dE5sJfgKWPpRVoyPV",
-    //     },
-    //     params: {
-    //       term: title,
-    //       lat: 35,
-    //       lng: 52,
-    //     },
-    //   }).then(function (response) {
-    //     set_search_places(response.data.items);
-    //     console.log(response.data);
-    //   });
-    //   /* end of fetching data */
-    // } else {
-    //   set_location_li(true);
-    //   set_search("");
-     }else{
-      set_search(null);
-     }
-  };
-
-  function handleCurrentLocationClicked() {
-    console.log("current location clicked");
-    set_location_li(false);
-
-    console.log("the location lat is ");
-
-    navigator.geolocation.getCurrentPosition(function (position) {
-      console.log("Latitude is :", position.coords.latitude);
-      console.log("Longitude is :", position.coords.longitude);
-
-      set_user_initial_lat(position.coords.latitude);
-      set_user_initial_long(position.coords.longitude);
-
-      /* fetch the places using axios and neshan  */
-
-      axios({
-        method: "get",
-        url: "https://api.neshan.org/v5/reverse",
-        headers: {
-          "api-key": "service.UylIa21mMdoxUKtQ9nnS7b3dE5sJfgKWPpRVoyPV",
-        },
-        params: {
-          lat: position.coords.latitude,
-          lng: position.coords.longitude,
-        },
-      }).then(function (response) {
-        set_search_places(response.data.items);
-        console.log(response.data);
-        var formatted_address = response.data.formatted_address;
-        var county = response.data.county;
-        var city = response.data.city;
-
-        if (!county) {
-          var title = city;
-        } else {
-          var title = county;
-        }
-
-        router.push("/search/" + title);
-      });
-      /* end of fetching data */
-    });
+const handleSmartSearch = (filters) => {
+  if (!filters || typeof filters !== "object") {
+    console.warn("⚠️ Invalid filters object:", filters);
+    return;
   }
 
-  const onclickCloseButton = () => {
-    set_location_li(false);
-  };
+  const category = filters.category_name?.trim();
+  const city     = filters.city?.trim();
 
-  const onclickPlacesCloseButton = () => {
-    set_search_places([]);
-  };
+  // 🚫 Prevent redirect if filters are malformed
+  if (!category || !city || category === "search-intent" || city === "api") {
+    console.warn("🚫 Blocked redirect due to invalid filter values:", { category, city });
+    return;
+  }
 
-  const locationLi = () => {
-    if (location_li) {
-      return (
-        <div
-          className={styles["search-location-li"]}
-          style={{ background: "#f7f7f7" }}
+  const encodedCity     = encodeURIComponent(city);
+  const encodedCategory = encodeURIComponent(category);
+  const encodedHood     = filters.neighborhood ? encodeURIComponent(filters.neighborhood.trim()) : "";
+
+  let url = `/${encodedCity}/${encodedCategory}?city=${encodedCity}`;
+  if (encodedHood) url += `&neighbor=${encodedHood}`;
+
+  console.log("🚀 Redirecting to:", url);
+  router.push(url);
+};
+
+
+
+  const renderNeighborhoods = () =>
+    the_neighborhoods.map((neighbor) => (
+      <SwiperSlide key={neighbor.id} onClick={loading}>
+        <Link
+          href={`/${the_city.title}/فروش%20خانه?neighbor=${neighbor.name}&city=${selected_city}`}
         >
-          <div
-            onClick={onclickCloseButton}
-            className={styles["search-location-li-close-icon"]}
+          <Button
+            variant="contained"
+            size="small"
+            fullWidth
+            style={{ background: "#b92a31" }}
           >
-            X
-          </div>
-          <div
-            onClick={handleCurrentLocationClicked}
-            className={styles["search-my-location-text"]}
-          >
-            <p>مکان فعلی من</p>
-            <i className="fa fa-map-marker"></i>
-          </div>
-        </div>
-      );
-    }
-  };
+            <p>{neighbor.name}</p>
+          </Button>
+        </Link>
+      </SwiperSlide>
+    ));
 
-  const handleSingleLocationClicked = ({ place }) => {
-    set_search("");
-    console.log("the place is :");
+  const rendertooltip = () => (
+    <div>
+      <p style={{ color: "#e2e2e2" }}>{the_city.description}</p>
+      {the_city.link && <a href={the_city.link}>اطلاعات بیشتر</a>}
+    </div>
+  );
 
-    loading();
-    console.log(place.location);
-  };
-
-  // const renderSearchPlaces = () => {
-  //   return search_places.map((place) =>
-  //     place.region == the_city.region ? (
-  //       <Link href={`/search/${place.title}`} key={place.id}>
-  //         <div
-  //           className={styles["singleSearchResault"]}
-  //           onClick={() => handleSingleLocationClicked({ place })}
-  //         >
-  //           <p>
-  //             {place.title} ({place.region})
-  //           </p>
-  //           <p></p>
-  //         </div>
-  //       </Link>
-  //     ) : (
-  //       <div></div>
-  //     )
-  //   );
-  // };
-
-  const alterLoadingForPlaceClick = () =>{
-    console.log('alter loading now');
-    loading();
-  }
-
-
-  const renderSearchPlaces = () => {
-    return search_places.map((place) =>
-      <div onClick={alterLoadingForPlaceClick}>
-      <Link
-      key={place.id}
-    href={`/${the_city.title}/فروش%20خانه?neighbor=${place.name}&city=${selected_city}`}
-  >
-         <p>
-        {place.name} 
-     </p>
-      </Link>
-      </div>
-     
-    )}
-
-  const searchResults = () => {
-    if (search) {
-      return (
-        <div
-          className={styles["search-location-li"]}
-          style={{ background: "#f7f7f7" }}
-        >
-          <div
-            onClick={onclickPlacesCloseButton}
-            className={styles["search-location-li-close-icon"]}
-          >
-            X
-          </div>
-          <div className={styles["search-location-text"]}>
-            {renderSearchPlaces()}
-           
-          </div>
-        </div>
-      );
-    }
-  };
-
-  const rendertooltip = () => {
-    // return the_city.description;
-
-    return (
-      <div>
-        <p style={{ color: "#e2e2e2" }}>{the_city.description}</p>
-        {the_city.link ? <a href={the_city.link}>اطلاعات بیشتر</a> : null}
-      </div>
-    );
-    // return 'برج تجارت جهانی تبریز با ارتفاع ۱۵۲ متر در سال ۱۳۹۶ افتتاح شده است . این برج با استفاده از فناوری‌های نوین لرزه‌گیر و با قابلیت نصب دستگاه‌های جاذب انرژی زلزله در داخل گنبد ساخته شده‌است ، امیدواریم این برج زیبا نقش قابل توجهی در فرایند جهانی شدن ایران ایفا کند';
-  };
-
-  function AlterParentloading() {
-    console.log("please fire parent loading !!!!!!!!!!!!!!!!!!");
-    loading();
-  }
-
-  const renderNeighborhoods = () => {
-    if (1) {
-      return the_neighborhoods.map((neighbor) => (
-        <SwiperSlide key={neighbor.id} onClick={AlterParentloading}>
-          <Link
-            href={`/${the_city.title}/فروش%20خانه?neighbor=${neighbor.name}&city=${selected_city}`}
-          >
-            <Button variant="contained" size="small" fullWidth style={{background:'#b92a31'}}>
-            <p> {neighbor.name}</p> 
-            </Button>
-          </Link>
-        </SwiperSlide>
-      ));
-    }
-  };
   return (
     <ThemeProvider theme={defaultTheme}>
       <div
+        className={styles["search-div-wrapper"]}
         style={{
-          // backgroundImage: "url(/img/tabriz-trading-center.jpg)" ,
-          // backgroundImage: "url({the_city.avatar_url})" ,
-
           backgroundImage: !the_city.video
             ? `url(${the_city.avatar_url})`
             : null,
-
           backgroundPosition: "center",
           backgroundSize: "cover",
           backgroundRepeat: "no-repeat",
         }}
-        className={styles["search-div-wrapper"]}
       >
         <div className={styles["navbar-about-place"]}>
-          {/* <video autoplay muted loop>
-            <source
-              src="https://api.ajur.app/city/banner/roza.mp4"
-              type="video/mp4"
-            />
-          </video> */}
-
-          
           <ThemeProvider theme={theme}>
-            {/* <Tooltip enterTouchDelay={0} title={rendertooltip()} arrow>
-           <div style={{ marginBottom: "20px" }}>
-              <InfoIcon enterTouchDelay={0} style={{margin:10}}>Arrow</InfoIcon>
-           </div>
-         </Tooltip> */}
-
             <ClickAwayListener onClickAway={handleTooltipClose}>
-              <div>
-                <CustomWidthTooltip
-                  PopperProps={{
-                    disablePortal: true,
-                  }}
-                  onClose={handleTooltipClose}
-                  open={open}
-                  disableFocusListener
-                  disableHoverListener
-                  disableTouchListener
-                  title={rendertooltip()}
-                >
-                  <InfoIcon
-                    onClick={handleTooltipOpen}
-                    enterTouchDelay={0}
-                    style={{ margin: 10, cursor: "pointer" }}
-                  >
-                    Arrow
-                  </InfoIcon>
-                </CustomWidthTooltip>
-              </div>
+              <CustomWidthTooltip
+                PopperProps={{ disablePortal: true }}
+                onClose={handleTooltipClose}
+                open={open}
+                disableFocusListener
+                disableHoverListener
+                disableTouchListener
+                title={rendertooltip()}
+              >
+                <InfoIcon
+                  onClick={handleTooltipOpen}
+                  enterTouchDelay={0}
+                  style={{ margin: 10, cursor: "pointer" }}
+                />
+              </CustomWidthTooltip>
             </ClickAwayListener>
           </ThemeProvider>
           <p>{the_city.avatar_title}</p>
         </div>
 
-        <Form
-          className={`'d-flex' ${styles["navar-brand-center"]} ${styles["navbar-serach"]} `}
-        >
-          <Form.Control
-            type="search"
-            placeholder={" جستجو مناطق " + the_city.title}
-            className={`'me-2' ${styles["search-input"]}  'form-control-lg' `}
-            aria-label="Search"
-            onChange={handleChangeInput}
-            onClick={handleOnclickInput}
-            value={search}
-          />
-          <div className={styles["navbar-serach-icon"]}>
-            <i className="fa fa-search"></i>
-          </div>
-        </Form>
-        {/* {locationLi()} */}
-        {searchResults()}
+        <div className={styles["search-box-wrapper"]}>
+          <SmartSearchBox onSearch={handleSmartSearch} />
+        </div>
 
         <div className={styles["neighborhoods-wrapper"]}>
           <Swiper
             slidesPerView={1}
             spaceBetween={5}
-             navigation={false}
-             
-             pagination={{ 
-              clickable: true,
-              enabled: true
-
-              }}
-
+            navigation={false}
+            pagination={{ clickable: true, enabled: true }}
             autoplay={{
               delay: 5000,
               disableOnInteraction: false,
-              pauseOnMouseEnter :true,
-          }}
+              pauseOnMouseEnter: true,
+            }}
             breakpoints={{
-              200: {
-                slidesPerView: 3,
-                spaceBetween: 3,
-              },
-
-              640: {
-                slidesPerView: 6,
-                spaceBetween: 3,
-              },
-              768: {
-                slidesPerView: 7,
-                spaceBetween: 3,
-              },
-              1024: {
-                slidesPerView: 7,
-                spaceBetween: 3,
-              },
+              200: { slidesPerView: 3, spaceBetween: 3 },
+              640: { slidesPerView: 6, spaceBetween: 3 },
+              768: { slidesPerView: 7, spaceBetween: 3 },
+              1024: { slidesPerView: 7, spaceBetween: 3 },
             }}
             modules={[Pagination, Navigation]}
             className={styles["neighborh-swiper"]}
@@ -431,9 +176,28 @@ const SearchDiv = (props) => {
             {renderNeighborhoods()}
           </Swiper>
         </div>
+
+        {/* Render search results
+        {searchResults.length > 0 && (
+          <div className={styles.resultsGrid}>
+            {searchResults.map((item) => (
+              <div key={item.id} className={styles.resultCard}>
+                <img src={item.image} alt={item.name} />
+                <h3>{item.name}</h3>
+                <p>قیمت: {item.price?.toLocaleString()}</p>
+                <p>متراژ: {item.area} متر</p>
+                <p>اتاق: {item.rooms}</p>
+              </div>
+            ))}
+          </div>
+        )} */}
       </div>
     </ThemeProvider>
   );
-};
+}
 
-export default SearchDiv;
+SearchDiv.propTypes = {
+  the_city: PropTypes.object.isRequired,
+  the_neighborhoods: PropTypes.array.isRequired,
+  loading: PropTypes.func,
+};
