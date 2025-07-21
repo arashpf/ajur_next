@@ -1,11 +1,17 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 @font-face {
   font-family: iransans;
   src: url(../fonts/iran-sans.ttf);
 }
+
 @font-face {
   font-family: Tanha;
   src: url(../fonts/Tanha.ttf);
 }
+
 @font-face {
   font-family: Sahel;
   src: url(../fonts/Sahel.woff);
@@ -18,8 +24,8 @@ body {
   padding: 0;
   margin: 0;
   font-family: 'iransans';
-    /* background: #f7f7f7; */
-    background: white;
+  /* background: #f7f7f7; */
+  background: white;
 }
 
 h1 {
@@ -42,12 +48,12 @@ a {
 
 * {
   box-sizing: border-box;
- 
+
 }
 
 div {
   font-family: 'iransans';
-  
+
 }
 
 .search-div-wrapper {
@@ -59,19 +65,13 @@ div {
 
 }
 
-.qrcode__container {
-  
-  
- 
- 
-  
-}
+.qrcode__container {}
 
 
 
-.swiper-pagination  {
-  position:unset !important;
-  
+.swiper-pagination {
+  position: unset !important;
+
 }
 
 
@@ -79,6 +79,7 @@ div {
   html {
     color-scheme: dark;
   }
+
   body {
 
     background: black;
@@ -93,30 +94,26 @@ div {
   width: 100%;
   height: 100%;
   z-index: 9999;
-               background: white;
+  background: white;
 
 
 }
 
-.swiper-button-next {
-
-  
- 
-
-}
+.swiper-button-next {}
 
 
 
 
 /* try to add padding and margin to swipper.js arrows */
-.swiper-button-next, .swiper-button-prev {
+.swiper-button-next,
+.swiper-button-prev {
 
-  
- 
+
+
   color: orange !important;
   /* box-shadow: rgba(0, 0, 0, 0.50) 0px 5px 15px; */
-  
- 
+
+
 
 
 }
@@ -125,12 +122,13 @@ div {
 
 
 
-.swiper-button-prev{
+.swiper-button-prev {
   left: -3px !important;
   font-size: 2px !important;
 
 }
-.swiper-button-next{
+
+.swiper-button-next {
   right: -3px !important;
   color: gray;
   font-size: 20px;
@@ -200,14 +198,14 @@ lines of codes to the CatCard2.module.css */
 /* TODO: same as upper todo */
 
 
- .date-picker-active {
+.date-picker-active {
   border: 1px solid blue;
-  color:white;
+  color: white;
   background: rgba(83, 83, 235, 0.081);
 
 }
 
- .date-picker-deactive {
+.date-picker-deactive {
 
   border: 0px !important;
 
@@ -231,8 +229,9 @@ lines of codes to the CatCard2.module.css */
   top: 50vh;
   right: 1%;
   z-index: 10;
-    border: 2px;
+  border: 2px;
 }
+
 .leaflet-popup {
   top: 1% !important;
 }
@@ -243,12 +242,13 @@ lines of codes to the CatCard2.module.css */
 
 .not-found-wrapper {
   display: flex;
-  justify-content: center ;
+  justify-content: center;
   vertical-align: center;
 }
+
 .not-found-image {
-  
-  justify-content: center ;
+
+  justify-content: center;
   vertical-align: center;
 }
 
@@ -258,16 +258,17 @@ lines of codes to the CatCard2.module.css */
   .spinner-image {
 
     /* width: 300px;  */
-      height: 40%; /* Or whatever */
-      margin: auto;
-      position: fixed;
-      top: 50%;
-      left: 47%;
-      transform: translate(-50%, -50%);
-      transform: -webkit-translate(-50%, -50%);
-      transform: -moz-translate(-50%, -50%);
-      transform: -ms-translate(-50%, -50%);
-      
+    height: 40%;
+    /* Or whatever */
+    margin: auto;
+    position: fixed;
+    top: 50%;
+    left: 47%;
+    transform: translate(-50%, -50%);
+    transform: -webkit-translate(-50%, -50%);
+    transform: -moz-translate(-50%, -50%);
+    transform: -ms-translate(-50%, -50%);
+
   }
 
 
@@ -284,16 +285,17 @@ lines of codes to the CatCard2.module.css */
   .spinner-image {
 
     /* width: 300px;  */
-      height: 40%; /* Or whatever */
-      margin: auto;
-      position: fixed;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      transform: -webkit-translate(-50%, -50%);
-      transform: -moz-translate(-50%, -50%);
-      transform: -ms-translate(-50%, -50%);
-      
+    height: 40%;
+    /* Or whatever */
+    margin: auto;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    transform: -webkit-translate(-50%, -50%);
+    transform: -moz-translate(-50%, -50%);
+    transform: -ms-translate(-50%, -50%);
+
   }
 
 }
