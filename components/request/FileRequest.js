@@ -4,6 +4,7 @@ import Grid from "@mui/material/Grid";
 import Button from "@mui/material/Button";
 import DoneIcon from "@mui/icons-material/Done";
 import Box from "@mui/material/Box";
+import { Typography } from "@mui/material";
 import TourOutlinedIcon from "@mui/icons-material/TourOutlined";
 import CallIcon from "@mui/icons-material/Call";
 import Modal from "@mui/material/Modal";
@@ -17,8 +18,10 @@ import MenuItem from "@mui/material/MenuItem";
 import Snackbar from "@mui/material/Snackbar";
 import MuiAlert from "@mui/material/Alert";
 import Form from "react-bootstrap/Form";
-
 import axios from "axios";
+import FileRequestAnimation from "../animations/FileRequestAnimation";
+import { useRouter } from "next/router";
+
 
 const Alert = React.forwardRef(function Alert(props, ref) {
   return <MuiAlert elevation={6} ref={ref} variant="filled" {...props} />;
@@ -41,6 +44,12 @@ const FileRequest = (props) => {
   const [phone, set_phone] = React.useState();
   const [digits, set_digits] = React.useState();
   const [property_request_id, set_property_request_id] = React.useState(0);
+
+  const router = useRouter();
+
+  const onClickRequestPage = () => {
+    router.push("/file-request");
+  }
 
   useEffect(() => {
     axios({
@@ -119,7 +128,7 @@ const FileRequest = (props) => {
           </p>{" "}
         </div>
       );
-    }else if (modal_level == 4) {
+    } else if (modal_level == 4) {
       return (
         <div onClick={() => set_modal_level(3)}>
           {" "}
@@ -236,20 +245,20 @@ const FileRequest = (props) => {
     console.log("the code in finish part is:::");
     console.log(code);
 
-    if(!digits){
+    if (!digits) {
       console.log("the digits must be 5 number");
       setProblem("ابتدا کد دریافتی از اس ام اس را وارد کنید");
 
       setOpenSnackBar(true)
       return;
-    }else if (digits.length != 5) {
+    } else if (digits.length != 5) {
       console.log("the digits must be 5 number");
       setProblem("کد تایید باید ۵ رقم باشد");
 
       setOpenSnackBar(true);
     } else {
 
-  
+
       axios({
         method: "post",
         url: "https://api.ajur.app/webauth/property-request-verify",
@@ -257,15 +266,15 @@ const FileRequest = (props) => {
           phone: phone,
           code: code,
           password: "ddr007",
-          property_request_id:property_request_id
+          property_request_id: property_request_id
         },
       }).then(function (response) {
         console.log('testing response');
         console.log(response.data.status);
-       
-          
+
+
         if (response.data.status == "success") {
-          
+
           console.log("code is right and thanks");
           set_modal_level(5);
         } else if (response.data.status == "useless") {
@@ -289,6 +298,7 @@ const FileRequest = (props) => {
   const renderModalBody = () => {
     if (modal_level == 1) {
       return (
+
         <Grid container spacing={3}>
           <Grid item xs={0} md={3} lg={3}></Grid>
           <Grid item xs={12} md={6} lg={6}>
@@ -476,7 +486,7 @@ const FileRequest = (props) => {
                 placeholder="09********"
                 onChange={handleChangeInput}
                 style={{ marginBottom: 20 }}
-                // value= {phone}
+              // value= {phone}
               />
               <Form.Text className="text-muted">
                 با وارد کردن شماره شما اجازه تماس از سمت همکاران آجر را خواهید
@@ -492,58 +502,58 @@ const FileRequest = (props) => {
     } else if (modal_level == 4) {
       return (
         <div>
-          
-            <Form.Group className="mb-3" controlId="formvalidationCode">
-              <Form.Label>
-                <p>   کد تایید ۵ رقمی ارسال شده به شماره  {phone}  خود را وارد کنید</p>
-             
-              </Form.Label>
-              <Form.Control
-                type="number"
-                placeholder="- - - - -"
-               
-                onChange={handleChangeInput2}
-                
-                style={{ marginBottom: 20 }}
-              />
-              <Form.Text className="text-muted"></Form.Text>
-              <Button onClick={onClickFinish} fullWidth variant="contained">
-                تایید و ثبت نهایی
-              </Button>
-            </Form.Group>
-          
+
+          <Form.Group className="mb-3" controlId="formvalidationCode">
+            <Form.Label>
+              <p>   کد تایید ۵ رقمی ارسال شده به شماره  {phone}  خود را وارد کنید</p>
+
+            </Form.Label>
+            <Form.Control
+              type="number"
+              placeholder="- - - - -"
+
+              onChange={handleChangeInput2}
+
+              style={{ marginBottom: 20 }}
+            />
+            <Form.Text className="text-muted"></Form.Text>
+            <Button onClick={onClickFinish} fullWidth variant="contained">
+              تایید و ثبت نهایی
+            </Button>
+          </Form.Group>
+
         </div>
       );
-    }else if (modal_level == 5) {
+    } else if (modal_level == 5) {
       return (
         <div>
-          
+
           <Grid container spacing={3}>
-          <Grid item xs={0} md={3} lg={3}></Grid>
-          <Grid item xs={12} md={6} lg={6}>
-            <img
-              src="/img/marketing/invite_realestate.jpg"
-              alt="دعوت به مشارکت در بازاریابی آجر"
-              // width={1000}
-              // height={667}
-              style={{ width: "100%" }}
-            />
-             <p style={{ textAlign: "center" ,color:'green',paddingTop:20}}>درخواست شما با موفقیت ثبت شد</p>
-            <p style={{ textAlign: "right", fontSize: 12, color: "gray" }}>
-           در بعضی موارد به خاطر حجم بالای درخواست ها ممکن است تا ۴۸ ساعت زمان نیاز داشته باشیم 
-             تا درخواست شما را برسی کنیم ،لطفا شماره 
-           { ' ' }  {phone}  { ' ' } 
+            <Grid item xs={0} md={3} lg={3}></Grid>
+            <Grid item xs={12} md={6} lg={6}>
+              <img
+                src="/img/marketing/invite_realestate.jpg"
+                alt="دعوت به مشارکت در بازاریابی آجر"
+                // width={1000}
+                // height={667}
+                style={{ width: "100%" }}
+              />
+              <p style={{ textAlign: "center", color: 'green', paddingTop: 20 }}>درخواست شما با موفقیت ثبت شد</p>
+              <p style={{ textAlign: "right", fontSize: 12, color: "gray" }}>
+                در بعضی موارد به خاطر حجم بالای درخواست ها ممکن است تا ۴۸ ساعت زمان نیاز داشته باشیم
+                تا درخواست شما را برسی کنیم ،لطفا شماره
+                {' '}  {phone}  {' '}
 
-          را روشن و در دسترس داشته باشید
-            </p>
+                را روشن و در دسترس داشته باشید
+              </p>
 
-          <p style={{textAlign:'center'}}>با تشکر از اعتماد شما ، تیم برسی فایل آجر</p>
+              <p style={{ textAlign: 'center' }}>با تشکر از اعتماد شما ، تیم برسی فایل آجر</p>
+            </Grid>
+
+            <Button onClick={resetFormAndCloseModal} fullWidth variant="contained">بستن این صفحه</Button>
           </Grid>
-        
-          <Button onClick={resetFormAndCloseModal} fullWidth variant="contained">بستن این صفحه</Button>
-          </Grid>
-          
-          
+
+
         </div>
       );
     }
@@ -580,51 +590,87 @@ const FileRequest = (props) => {
       <Box
         component="div"
         sx={{
-          p: 2,
-          border: "1px dashed grey",
-          margin: "5px",
+          p: { xs: 3, md: 5 },
+          border: "1px dashed #ccc",
+          borderRadius: 3,
+          my: 6,
           textAlign: "center",
+          backgroundColor: "#fff",
+          fontFamily: `"IranYekan", "Segoe UI", "sans-serif"`,
+          boxShadow: "0 4px 16px rgba(0,0,0,0.04)",
         }}
       >
-           <img
-              src="/img/marketing/property_request.jpg"
-              alt="سیستم یکپارچه فایل درخواستی آجر"
-              className={Styles["entroImg"]}
-              
-            />
-          
-        <Grid container spacing={1}>
-          <Grid item xs={12} md={12}>
-            <p style={{fontSize:13}}>فایل مورد نظرتان را پیدا نکردید و یا موردی برای سپردن به آجر دارید</p>
-            
-            <p style={{fontSize:14}}>
-              با سیستم یکپارچه مشاورین ما در منطقه ، یک بار بسپارید بقیش با آجر
-            </p>
-          </Grid>
-          <Grid item xs={6} md={6}>
+        <Typography
+          variant="h5"
+          sx={{
+            fontWeight: 700,
+            color: "#333",
+            mb: 4,
+          }}
+        >
+          فایل موردنظر خود را پیدا نکردید؟
+        </Typography>
+
+        <Box sx={{ maxWidth: 400, mx: "auto", mb: 3 }}>
+          <InViewAnimationWrapper />
+        </Box>
+
+        <Typography variant="body2" sx={{ fontSize: 14, color: "#555", mb: 1 }}>
+          هنوز فایل دلخواهتان را نیافتید یا موردی برای سپردن دارید؟
+        </Typography>
+
+        <Typography variant="body1" sx={{ fontSize: 15, color: "#444", mb: 4 }}>
+          فقط کافیه درخواست خودتون رو اینجا ثبت کنید - از اینجا به بعدش با آجر
+        </Typography>
+
+        <Grid container spacing={2} justifyContent="center">
+          <Grid item xs={12} sm={6}>
             <Button
               fullWidth
-              onClick={onclickRequestModal}
+              onClick={onClickRequestPage}
               variant="contained"
               startIcon={<TourOutlinedIcon />}
+              sx={{
+                backgroundColor: "#bc323a",
+                color: "#fff",
+                py: 1.4,
+                fontWeight: 600,
+                fontSize: 15,
+                "&:hover": {
+                  backgroundColor: "#a72b32",
+                },
+              }}
             >
               ثبت درخواست
             </Button>
           </Grid>
-          <Grid item xs={6} md={6}>
+
+          <Grid item xs={12} sm={6}>
             <Button
               fullWidth
-              href={"tel:+989124161970"}
-              className={Styles["worker-detail-button"]}
+              href="tel:+989124161970"
               variant="outlined"
               startIcon={<CallIcon />}
+              sx={{
+                borderColor: "#bc323a",
+                color: "#bc323a",
+                py: 1.4,
+                fontWeight: 600,
+                fontSize: 15,
+                "&:hover": {
+                  backgroundColor: "#fef0f1",
+                  borderColor: "#a72b32",
+                  color: "#a72b32",
+                },
+              }}
             >
-              {" "}
-              09124161970{" "}
+              ۰۹۱۲۴۱۶۱۹۷۰
             </Button>
           </Grid>
         </Grid>
       </Box>
+
+
 
       {renderModal()}
 
@@ -641,11 +687,33 @@ const FileRequest = (props) => {
           {problem}
         </Alert>
       </Snackbar>
-    </div>
+    </div >
   );
 };
 
+
 export default FileRequest;
+
+// Simple Intersection Observer wrapper for animation
+function InViewAnimationWrapper() {
+  const [inView, setInView] = React.useState(false);
+  const ref = React.useRef();
+
+  React.useEffect(() => {
+    const observer = new window.IntersectionObserver(
+      ([entry]) => setInView(entry.isIntersecting),
+      { threshold: 0.2 }
+    );
+    if (ref.current) observer.observe(ref.current);
+    return () => { if (ref.current) observer.unobserve(ref.current); };
+  }, []);
+
+  return (
+    <div ref={ref}>
+      {inView ? <FileRequestAnimation /> : null}
+    </div>
+  );
+}
 
 const style = {
   position: "absolute",

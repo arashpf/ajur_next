@@ -54,23 +54,23 @@ function Header() {
   const [selected_city, set_selected_city] = useState("");
   var city = Cookies.get("selected_city");
   useEffect(() => {
-    if(city){
+    if (city) {
       set_selected_city(city);
-    }else{
+    } else {
       set_selected_city('رباط کریم');
     }
-   
+
   }, [city]);
 
   useEffect(() => {
-    
+
     // Detect if the app can be installed (only on mobile)
     const handler = (e) => {
       e.preventDefault();
       deferredPrompt = e;
       setInstallPrompt(true);
     };
-    
+
     window.addEventListener('beforeinstallprompt', handler);
     return () => window.removeEventListener('beforeinstallprompt', handler);
   }, []);
@@ -87,8 +87,8 @@ function Header() {
 
   const renderInstallButton = () => {
     if (installPrompt && /Mobi|Android/i.test(navigator.userAgent)) {
-    // if ( /Mobi|Android/i.test(navigator.userAgent)) {
-    // if (1) {
+      // if ( /Mobi|Android/i.test(navigator.userAgent)) {
+      // if (1) {
       return (
         <Button
           variant="primary"
@@ -150,15 +150,15 @@ function Header() {
       //   href={`/categories/فروش%20خانه?city=${selected_city}`}
       //   key={place.id}
       // >
-        <div
-          className={styles.ingleSearchResault}
-          onClick={() => handleSingleLocationClicked({ place })}
-        >
-          <p>
-            {place.title} ({place.region})
-          </p>
-          <p></p>
-        </div>
+      <div
+        className={styles.ingleSearchResault}
+        onClick={() => handleSingleLocationClicked({ place })}
+      >
+        <p>
+          {place.title} ({place.region})
+        </p>
+        <p></p>
+      </div>
       // </Link>
     ));
   };
@@ -296,11 +296,15 @@ function Header() {
     router.push("/support");
   };
 
+  const onClickGAds = () => {
+    router.push("G-ads/landing-page")
+  }
+
   const onClickDownlaod = () => {
     router.push("/download");
   };
 
-  
+
 
   const onClickCounseling = () => {
     router.push("/Counseling");
@@ -334,7 +338,7 @@ function Header() {
   };
 
   // const onClickMarketing = () => {
-   
+
   //   var token = Cookies.get("id_token");
   //   if (token) {
   //     router.push("/marketing/single");
@@ -352,7 +356,7 @@ function Header() {
     setProblem("با موفقیت خارج شدید");
     set_alert_type("success");
 
-    
+
 
 
 
@@ -371,7 +375,7 @@ function Header() {
     // Cookies.remove("selected_city");
 
     // router.push("/panel/auth/login");
-    router.push("/"); 
+    router.push("/");
   };
 
   const renderSnackBarAlert = () => {
@@ -396,11 +400,11 @@ function Header() {
   };
 
   const onClickSelectCity = () => {
-    
+
     set_loading(true);
     const promise = new Promise((resolve, reject) => {
       setTimeout(() => {
-       
+
         const result = true;
         resolve(result);
       }, 3000);
@@ -409,8 +413,8 @@ function Header() {
     promise.then((result) => {
       if (result) {
         // router.push("/city-selection");
-       
-        
+
+
         router.push("/city-selection");
         set_loading(false);
         //  set_loading(false);
@@ -468,19 +472,19 @@ function Header() {
           >
             {!loading ? (
               <>
-            
-              
-              <Nav.Link
-                style={{
-                  background: "#bc323a",
-                  color: "#f9f9f9",
-                  padding: "5px 12px",
-                  boxShadow: "0 3px 14px rgba(0, 0, 0, 0.4)",
-                }}
-                onClick={onClickSelectCity}
-              >
-                شهر : {selected_city}
-              </Nav.Link>
+
+
+                <Nav.Link
+                  style={{
+                    background: "#bc323a",
+                    color: "#f9f9f9",
+                    padding: "5px 12px",
+                    boxShadow: "0 3px 14px rgba(0, 0, 0, 0.4)",
+                  }}
+                  onClick={onClickSelectCity}
+                >
+                  شهر : {selected_city}
+                </Nav.Link>
 
               </>
             ) : (
@@ -492,7 +496,7 @@ function Header() {
                   boxShadow: "0 3px 14px rgba(0, 0, 0, 0.4)",
                   borderRadius: 5,
                 }}
-                // onClick={onClickSelectCity}
+              // onClick={onClickSelectCity}
               >
                 در حال انتقال
               </Nav.Link>
@@ -525,7 +529,7 @@ function Header() {
             aria-labelledby={`offcanvasNavbarLabel-expand-${expand}`}
             placement="end"
           >
-            <Offcanvas.Header closeButton style={{background:'#bc323a',flexDirection:'row-reverse'}}>
+            <Offcanvas.Header closeButton style={{ background: '#bc323a', flexDirection: 'row-reverse' }}>
               <Offcanvas.Title id={`offcanvasNavbarLabel-expand-${expand}`}>
                 <p
                   style={{
@@ -534,22 +538,22 @@ function Header() {
                     padding: 6,
                     fontSize: 16,
                     textAlign: "center",
-                    color:'white',
-                    borderRadius:'5px',
-                    
+                    color: 'white',
+                    borderRadius: '5px',
+
                   }}
                 >
-                     <img
-                  className={styles["logo-just-mobile-image"]}
-                  src="/img/big-logo-180.png"
-                  alt="لوگوی مشاور املاک آجر"
-                  width={45}
-                  height={45}
-                  style={{marginRight:'5px'}}
+                  <img
+                    className={styles["logo-just-mobile-image"]}
+                    src="/img/big-logo-180.png"
+                    alt="لوگوی مشاور املاک آجر"
+                    width={45}
+                    height={45}
+                    style={{ marginRight: '5px' }}
 
-                />
-                   مشاور املاک هوشمند آجر
-               
+                  />
+                  مشاور املاک هوشمند آجر
+
                 </p>
               </Offcanvas.Title>
             </Offcanvas.Header>
@@ -558,20 +562,23 @@ function Header() {
                 className={`flex-grow-1 pe-3 ${styles["nav-link-wrapper-end"]}  `}
               >
                 <Nav.Link href={"/"} onClick={onClickHome}>
-                 <p>خانه</p>
+                  <p>خانه</p>
                 </Nav.Link>
                 <Nav.Link href="/about" onClick={onClickAboutUs}>
-                 <p>درباره آجر</p> 
+                  <p>درباره آجر</p>
                 </Nav.Link>
                 <Nav.Link href="/support" onClick={onClickSupport}>
                   <p>پشتیبانی</p>
+                </Nav.Link>
+                <Nav.Link href="/G-ads/landing-page" onClick={onClickGAds}>
+                  <p>تبلیغات گوگل</p>
                 </Nav.Link>
 
                 <Nav.Link href="/download" onClick={onClickDownlaod}>
                   <p>دانلود اپلیکیشن</p>
                 </Nav.Link>
 
-                 
+
                 {/* <NavDropdown
                   title= {<bold>حساب من</bold>}
                   id={`offcanvasNavbarDropdown-expand-${expand}`}
@@ -600,7 +607,7 @@ function Header() {
 
               <Nav className={` ${styles["nav-link-wrapper-start"]} pe-3 `}>
                 <Nav.Link href="#" onClick={onClickCounseling}>
-                 <p> درخواست فایل</p>
+                  <p> درخواست فایل</p>
                 </Nav.Link>
 
                 <Nav.Link href="#" onClick={onClickMarketing}>
@@ -622,20 +629,20 @@ function Header() {
           <Nav.Link
             style={{
               background: "#bc323a",
-                  color: "#f9f9f9",
-                  padding: "5px 12px",
-                  boxShadow: "0 3px 14px rgba(0, 0, 0, 0.4)",
+              color: "#f9f9f9",
+              padding: "5px 12px",
+              boxShadow: "0 3px 14px rgba(0, 0, 0, 0.4)",
             }}
             onClick={onClickSelectCity}
           >
-            شهر : {selected_city} 
+            شهر : {selected_city}
           </Nav.Link>
           <Form
             className={`${styles.d_flex} ${styles.navar_brand_center} ${styles.navbar_serach}`}
           >
             <Form.Control
               type="search"
-              placeholder={"جستجو شهر و منظقه" }
+              placeholder={"جستجو شهر و منظقه"}
               className={`'me-2' ${styles["search-input"]}  'form-control-lg' `}
               aria-label="Search"
               onChange={handleChangeInput}

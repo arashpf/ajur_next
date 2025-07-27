@@ -1,215 +1,217 @@
-import React, { useState, useEffect} from "react";
-import Avatar from '@mui/material/Avatar';
-import Button from '@mui/material/Button';
-import CssBaseline from '@mui/material/CssBaseline';
-import TextField from '@mui/material/TextField';
-import Input from '@mui/material/Input';
-import FormControlLabel from '@mui/material/FormControlLabel';
-import Checkbox from '@mui/material/Checkbox';
-import Link from '@mui/material/Link';
-import Grid from '@mui/material/Grid';
-import Box from '@mui/material/Box';
-import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
-import Typography from '@mui/material/Typography';
-import Container from '@mui/material/Container';
-
-import Stack from '@mui/material/Stack';
-
-import Snackbar from '@mui/material/Snackbar';
-import MuiAlert from '@mui/material/Alert';
-import { createTheme, ThemeProvider } from '@mui/material/styles';
-import axios from 'axios';
+// pages/signup.js
+'use client';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
+import {
+    Box,
+    Typography,
+    TextField,
+    Button,
+    Container,
+    FormHelperText,
+    IconButton,
+} from '@mui/material';
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import axios from 'axios';
 import Cookies from 'js-cookie';
-
-const Alert = React.forwardRef(function Alert(props, ref) {
-  return <MuiAlert elevation={6} ref={ref} variant="filled" {...props} />;
-});
-
-function Copyright(props) {
-  return (
-    <Typography variant="body2" color="text.secondary" align="center" {...props}>
-      {'Copyright © '}
-      <Link color="inherit" href="https://ajur.app/">
-        Ajur.app
-      </Link>{' '}
-      {new Date().getFullYear()}
-      {'.'}
-    </Typography>
-  );
-}
-
-const theme = createTheme();
-
-export default function Login() {
-
-  const router = useRouter();
-  const [text, set_text] = useState(2);
-  const [phone, set_phone] = useState(0);
-  const [loading, set_loading] = useState('false');
-  const [open, setOpen] = useState(false);
-  const [problem, setProblem] = useState('test');
+import MarketLayout from '../../../components/layouts/MarketLayout';
 
 
+function Login() {
+    const router = useRouter();
+    const [phoneNumber, setPhoneNumber] = useState('');
+    const [error, setError] = useState('');
+    const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    var token = Cookies.get('id_token');
-    if(token){
-      router.push("/panel");
-    }else{
+    useEffect(() => {
+        const token = Cookies.get('id_token');
+        if (token) {
+            router.push("/panel");
+        }
+    }, []);
 
-    }
-  }, []);
-
-
-
-
-
-  const change_phone = (phone) => {
-    console.log(phone.target.value);
-     set_phone(phone.target.value);
-}
-
-const handleClick = () => {
-   setOpen(true);
- };
+    const RESEND_INTERVAL = 60; // seconds
 
 
- const handleClose = (event, reason) => {
-   if (reason === 'clickaway') {
-     return;
-   }
-   setOpen(false);
- };
+    const handleSubmit = async (e) => {
+        e.preventDefault();
 
-  const handleSubmit = (event) => {
-    event.preventDefault();
-    // const data = new FormData(event.currentTarget);
-    // console.log({
-    //   email: data.get('email'),
-    //   password: data.get('password'),
-    // });
+        const lastRequest = localStorage.getItem('code_requested_at');
+        const now = Math.floor(Date.now() / 1000);
 
+        if (lastRequest && now - lastRequest < RESEND_INTERVAL) {
+            const remaining = RESEND_INTERVAL - (now - lastRequest);
+            setError(`لطفاً ${remaining} ثانیه صبر کنید و سپس دوباره تلاش کنید.`);
+            return;
+        }
 
-    console.log(phone);
+        if (!phoneNumber) {
+            setError('لطفاً شماره تماس خود را وارد کنید');
+            return;
+        }
 
-   if(phone.length != 11 ){
-          setProblem('شماره موبایل باید ۱۱ رقم باشد');
-           console.log('the length of phone');
-           setOpen(true);
-           console.log(phone.length);
-           // toast.show({
-           //   render: () => {
-           //     return <Box bg="orange.700" px="15" py="3" rounded="md" mb={5}>
-           //           <Text style={{color:'white',fontSize:16}}>  فرمت شماره معتبر نیست</Text>
-           //           </Box>;
-           //   }
-           // });
+        if (phoneNumber.length !== 11) {
+            setError('شماره موبایل باید ۱۱ رقم باشد');
+            return;
+        }
 
-    }else{
-      // AsyncStorage.setItem('cellphone', phone);
-      // TODO: set the session of cellphone here
+        setError('');
+        setLoading(true);
 
-      set_loading(true);
-      var ref = Cookies.get('ref');
+        try {
+            const ref = Cookies.get('ref');
 
-      axios({
-            method:'post',
-            url:'https://api.ajur.app/webauth/register',
-            params: {
-             phone: phone,
-             ref: ref,
-              },
+            await axios.post('https://api.ajur.app/webauth/register', null, {
+                params: {
+                    phone: phoneNumber,
+                    ref: ref,
+                },
+            });
 
-      })
-      .then(function (response) {
+            // ✅ Set timestamp for cooldown
+            localStorage.setItem('code_requested_at', now.toString());
 
-       })
-       set_loading('false');
-
-       setProblem('لطفا کد تایید را از اس ام اس ارسالی وارد کنید');
-
-        setOpen(true);
-
-       console.log('please provide the fu..king code we send you !!!');
-
-        Cookies.set('phone', phone);
-
-       router.push("/panel/auth/verify");
-       // toast.show({
-       //   render: () => {
-       //     return <Box bg="green.700" px="15" py="3" rounded="md" mb={5}>
-       //           <Text style={{color:'white',fontSize:16}}>لطفا کد تایید را از اس ام اس دریافتی وارد کنید</Text>
-       //           </Box>;
-       //   },
-       //   placement: "top"
-       // });
-        // navigation.navigate('Rvalidation', {
-        //      phone: phone,
-        //    })
-        // TODO: link to the validation page with phone number
-    }
-
-  };
-
-
-
-
-  return (
-    <ThemeProvider theme={theme} style={{background:'white'}}>
-      <Container component="main" maxWidth="xs" style={{background:'white'}}>
-        <CssBaseline />
-        <Box
-          sx={{
-            marginTop: 8,
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-          }}
+            Cookies.set('phone', phoneNumber);
+            router.push('/panel/auth/verify');
+        } catch (err) {
+            setError('خطایی در ارسال درخواست رخ داد');
+            console.error(err);
+        } finally {
+            setLoading(false);
+        }
+    };
+    return (
+        <Container
+            maxWidth="xs"
+            sx={{
+                minHeight: '100vh',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                backgroundColor: 'white',
+                backgroundImage: "url('/img/SignUp/signupback.png')",
+                backgroundSize: 'cover',
+                backgroundPosition: 'center',
+                backgroundRepeat: 'no-repeat',
+                position: 'relative',
+                px: { xs: 2, sm: 3, md: 4 },
+                py: { xs: 4, sm: 6, md: 8 },
+            }}
         >
-          <Avatar sx={{ m: 1, bgcolor: 'secondary.main' }}>
-            <LockOutlinedIcon />
-          </Avatar>
-          <Typography component="h3" variant="h6">
-             <p>لطفا شماره موبایل خود را وارد کنید</p>
-          </Typography>
-          <Box component="form" onSubmit={handleSubmit} noValidate sx={{ mt: 1 }}>
-            <Input
-             placeholder="09XXXXXXXX"
-             type="tel"
-              style={{fontSize:26}}
-              margin="normal"
-              required
-              fullWidth
-              id="email"
-              label="شماره موبایل"
-              name="email"
-              autoComplete="email"
-              onChange={(phone) => change_phone(phone)}
-              autoFocus
-            />
-
-            <Button
-              type="submit"
-              
-              
-              fullWidth
-              variant="contained"
-              sx={{ mt: 1, mb: 1 }}
+            {/* دکمه برگشت */}
+            <IconButton
+                sx={{
+                    position: 'absolute',
+                    top: { xs: 8, sm: 16, md: 24 },
+                    left: { xs: 8, sm: 16, md: 24 },
+                    color: '#fff',
+                    zIndex: 3,
+                    backgroundColor: 'rgba(0, 0, 0, 0.3)',
+                    '&:hover': {
+                        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+                    },
+                }}
+                onClick={() => router.back()}
             >
-              <div style={{fontSize:18}}>دریافت کد اس ام اسی</div>
-            </Button>
+                <ArrowBackIcon sx={{ fontSize: { xs: 20, sm: 24, md: 28 } }} />
+            </IconButton>
 
-          </Box>
-        </Box>
-        <Copyright sx={{ mt: 8, mb: 4 }} />
-      </Container>
+            <Box
+                sx={{
+                    width: '100%',
+                    zIndex: 2,
+                    textAlign: 'center',
+                    color: '#fff',
+                    mt: { xs: -10, sm: -15, md: -18 },
+                }}
+            >
+                <Typography
+                    variant="h5"
+                    fontWeight="bold"
+                    mb={{ xs: 1.5, sm: 2, md: 2.5 }}
+                    fontSize={{ xs: '20px', sm: '24px', md: '26px' }}
+                >
+                    ورود به پنل شخصی
+                </Typography>
+                <Typography
+                    variant="body2"
+                    mb={1}
+                    fontSize={{ xs: '14px', sm: '16px', md: '17px' }}
+                >
+                    جهت ورود شماره تماس خود را وارد کنید
+                </Typography>
+                <Typography
+                    variant="caption"
+                    display="block"
+                    mb={{ xs: 2, sm: 3, md: 3.5 }}
+                    fontSize={{ xs: '12px', sm: '13px', md: '14px' }}
+                >
+                    شما با وارد کردن شماره خود{' '}
+                    <a href="#" style={{ color: '#add8e6', textDecoration: 'underline' }}>
+                        قوانین و مقررات آجر
+                    </a>{' '}
+                    را قبول می‌کنید
+                </Typography>
 
-      <Snackbar open={open} autoHideDuration={6000} onClose={handleClose}>
-        <Alert onClose={handleClose} severity="warning" sx={{ width: '100%' }}>
-          {problem}
-        </Alert>
-      </Snackbar>
-    </ThemeProvider>
-  );
+                <form onSubmit={handleSubmit}>
+                    <TextField
+                        fullWidth
+                        placeholder="شماره تماس"
+                        variant="standard"
+                        value={phoneNumber}
+                        onChange={(e) => setPhoneNumber(e.target.value)}
+                        error={!!error}
+                        inputProps={{
+                            inputMode: 'numeric',
+                            dir: 'ltr',
+                        }}
+                        sx={{
+                            input: {
+                                color: '#fff',
+                                fontSize: { xs: '16px', sm: '18px', md: '20px' },
+                                textAlign: 'center',
+                            },
+                            '& .MuiInput-underline:before': {
+                                borderBottomColor: '#fff',
+                            },
+                            '& .MuiInput-underline:after': {
+                                borderBottomColor: '#fff',
+                            },
+                        }}
+                    />
+                    {error && (
+                        <FormHelperText sx={{ textAlign: 'center', color: '#ffdede' }}>
+                            {error}
+                        </FormHelperText>
+                    )}
+                    <Button
+                        type="submit"
+                        fullWidth
+                        variant="contained"
+                        sx={{
+                            backgroundColor: '#e3e0db',
+                            color: '#a92a21',
+                            borderRadius: '25px',
+                            fontWeight: 'bold',
+                            mt: { xs: 3, sm: 4, md: 5 },
+                            py: 1.5,
+                            fontSize: { xs: '14px', sm: '16px', md: '18px' },
+                            boxShadow: '4px 4px 0px rgba(0,0,0,0.4)',
+                            '&:hover': {
+                                backgroundColor: '#d5d3cf',
+                            },
+                        }}
+                    >
+                        دریافت کد
+                    </Button>
+                </form>
+            </Box>
+        </Container>
+    );
 }
+
+export default Login;
+
+Login.getLayout = function (page) {
+    return <MarketLayout>{page}</MarketLayout>;
+};

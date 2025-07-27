@@ -18,11 +18,11 @@ function ContactButton() {
                 size="medium"
                 onClick={toggleButtons}
                 sx={{
-                    backgroundColor: "rgb(188, 50, 58)",
+                    backgroundColor: "rgba(0, 131, 50, 1)",
                     color: 'white',
                     transition: "all 0.3s",
                     '&:hover': {
-                        backgroundColor: "rgb(220, 60, 65)",
+                        backgroundColor: "rgba(0, 131, 50, 1)",
                         transform: "scale(1.1)",
                     }
                 }}

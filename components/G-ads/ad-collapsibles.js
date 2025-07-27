@@ -3,6 +3,8 @@ import styles from "../styles/g-ads/ad-collapsibles.module.css";
 import dayjs from "dayjs";
 import jalali from "jalali-dayjs"
 import AdChart from "./Ad-chart";
+import KeywordClicksBarChart from "./KeywordClicksBarChart";
+import KeywordClicksDoughnutChart from "./KeywordClicksDoughnutChart";
 
 dayjs.extend(jalali);
 
@@ -39,11 +41,9 @@ export function AdCollapsibles({ ads }) {
                                         <span className={styles["start-date"]}>{formatToJalali(ad.startDate)}</span>
                                     </div>
                                     <div className={styles["left-status"]}>
-
                                         <img
-                                            className={`${styles["collapse-icon"]} ${isOpen ? styles["rotate"] : ""
-                                                }`}
-                                            src="https://i.postimg.cc/C5Dg38jT/expand-arrow.png"
+                                            className={`${styles["collapse-icon"]} ${isOpen ? styles["rotate"] : ""}`}
+                                            src="/img/G-ads/expand-arrow.png"
                                             alt="toggle"
                                         />
                                         <span
@@ -53,8 +53,7 @@ export function AdCollapsibles({ ads }) {
                                                     : ad.status === "pending"
                                                         ? "yellow"
                                                         : "red"
-                                            ]
-                                                }`}
+                                            ]}`}
                                         ></span>
                                         <span className={styles["status-label"]}>
                                             {ad.status === "active"
@@ -63,6 +62,14 @@ export function AdCollapsibles({ ads }) {
                                                     ? " در انتظار تایید"
                                                     : "غیرفعال"}
                                         </span>
+                                        {ad.plan && (
+                                            <span style={{ marginRight: 12, fontWeight: 600, color: '#bc323a', fontSize: 14 }}>
+                                                {ad.plan === 'diamond' ? 'الماس'
+                                                    : ad.plan === 'gold' ? 'طلایی'
+                                                        : ad.plan === 'silver' ? 'نقره‌ای'
+                                                            : ad.plan}
+                                            </span>
+                                        )}
                                     </div>
                                 </div>
                             </button>
@@ -93,15 +100,24 @@ export function AdCollapsibles({ ads }) {
                                         <p>تعداد تماس: </p>
                                         <p>{ad.callCount}</p>
                                     </div>
-                                    {
-                                        ad.chart.length !== 0 &&
-                                        <div className={styles["container"]}>{ad.chart && ad.chart.length > 0 && (
+                                    {ad.chart.length !== 0 && (
+                                        <div className={styles["container"]}>
                                             <div className={styles["chart-wrapper"]}>
                                                 <AdChart chartData={ad.chart} />
                                             </div>
-                                        )}
+                                            {/* Per-ad keyword clicks charts */}
+                                            {ad.keywordClicks && ad.keywordClicks.length > 0 && (
+                                                <>
+                                                    <div style={{ margin: "24px 0 12px 0" }}>
+                                                        <KeywordClicksBarChart data={{
+                                                            labels: ad.keywordClicks.map(kc => kc.keyword),
+                                                            values: ad.keywordClicks.map(kc => kc.clicks)
+                                                        }} />
+                                                    </div>
+                                                </>
+                                            )}
                                         </div>
-                                    }
+                                    )}
                                     <div className={styles["delete-container"]}>
                                         <button className={styles["delete-button"]}>
                                             <p style={{ margin: "auto" }}>حذف</p>

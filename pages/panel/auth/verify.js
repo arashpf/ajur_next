@@ -1,304 +1,282 @@
-import React, { useState, useEffect} from "react";
-import Avatar from '@mui/material/Avatar';
-import Button from '@mui/material/Button';
-import CssBaseline from '@mui/material/CssBaseline';
-import TextField from '@mui/material/TextField';
-import Input from '@mui/material/Input';
-import FormControlLabel from '@mui/material/FormControlLabel';
-import Checkbox from '@mui/material/Checkbox';
-import Link from '@mui/material/Link';
-import Grid from '@mui/material/Grid';
-import Box from '@mui/material/Box';
-import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
-import Typography from '@mui/material/Typography';
-import Container from '@mui/material/Container';
-
-import Stack from '@mui/material/Stack';
-
-import Snackbar from '@mui/material/Snackbar';
-import MuiAlert from '@mui/material/Alert';
-import { createTheme, ThemeProvider } from '@mui/material/styles';
-import axios from 'axios';
+'use client';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
+import {
+    Box,
+    Typography,
+    TextField,
+    Button,
+    Container,
+    FormHelperText,
+    IconButton,
+} from '@mui/material';
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import axios from 'axios';
 import Cookies from 'js-cookie';
+import MarketLayout from '../../../components/layouts/MarketLayout';
 
-const Alert = React.forwardRef(function Alert(props, ref) {
-  return <MuiAlert elevation={6} ref={ref} variant="filled" {...props} />;
-});
+const RESEND_INTERVAL = 60; // seconds
 
-function Copyright(props) {
-  return (
-    <Typography variant="body2" color="text.secondary" align="center" {...props}>
-      {'Copyright © '}
-      <Link color="inherit" href="https://ajur.app/">
-        Ajur.app
-      </Link>{' '}
-      {new Date().getFullYear()}
-      {'.'}
-    </Typography>
-  );
-}
+function Verify() {
+    const router = useRouter();
+    const [code, setCode] = useState('');
+    const [number, setNumber] = useState('');
+    const [ref, setRef] = useState('');
+    const [error, setError] = useState('');
+    const [loading, setLoading] = useState(false);
 
-const theme = createTheme();
+    const [cooldown, setCooldown] = useState(RESEND_INTERVAL);
 
-export default function Verify() {
+    const RESEND_INTERVAL = 60;
 
+    useEffect(() => {
+        const phone = Cookies.get('phone');
+        const refCookie = Cookies.get('ref');
+        if (phone) setNumber(phone);
+        if (refCookie) setRef(refCookie);
 
-
-  const router = useRouter();
-  const [text, set_text] = useState(2);
-  const [code, set_code] = useState(0);
-  const [loading, set_loading] = useState('false');
-  const [open, setOpen] = useState(false);
-  const [problem, setProblem] = useState('test');
-  const [number, set_number] = useState(0);
-
-  const [ref, set_ref] = useState('arashpf');
-
-  // Hint: if user indtroduce from a marketer just set the marketer username here 
-  useEffect(() => {
-    var ref = Cookies.get('ref');
-    if(ref){
-      set_ref(ref);
-    }else{
-    }
-  }, []);
-
-  useEffect(() => {
-    console.log('the cookie passed from login section is ');
-    var phone = Cookies.get('phone');
-    console.log(phone);
-    set_number(phone);
-
-    },[])
-  const change_code = (code) => {
-    console.log(code.target.value);
-     set_code(code.target.value);
-}
-
-const handleClick = () => {
-   setOpen(true);
- };
-
-
- const handleClose = (event, reason) => {
-   if (reason === 'clickaway') {
-     return;
-   }
-   setOpen(false);
- };
-
-  const handleSubmit = (event) => {
-    event.preventDefault();
-    // const data = new FormData(event.currentTarget);
-    // console.log({
-    //   email: data.get('email'),
-    //   password: data.get('password'),
-    // });
-
-
-    console.log(code);
-
-   if(code.length != 5 ){
-          setProblem('کد باید ۵ رقم باشد');
-           console.log('the length of phone');
-           setOpen(true);
-           console.log(code.length);
-           // toast.show({
-           //   render: () => {
-           //     return <Box bg="orange.700" px="15" py="3" rounded="md" mb={5}>
-           //           <Text style={{color:'white',fontSize:16}}>  فرمت شماره معتبر نیست</Text>
-           //           </Box>;
-           //   }
-           // });
-
-    }else{
-      // AsyncStorage.setItem('cellphone', phone);
-      // TODO: set the session of cellphone here
-
-      console.log('the phone number is :');
-      console.log(number);
-
-      console.log('the code came from user input');
-      console.log(code);
-
-      set_loading(true);
-
-        //axios  call
-
-
-          console.log('the cookie passed from login section is ');
-
-          axios({
-             method:'post',
-             url:'https://api.ajur.app/webauth/verify',
-             params: {
-             phone: number,
-             code: code,
-             ref:ref,
-             password: 'ddr007'
-              },
-      })
-      .then(function (response) {
-
-        console.log('the response in axios of verify is : ');
-        console.log(response.data);
-
-        set_loading('false');
-
-
-
-        if(response.data.status == 'success'){
-
-
-          setProblem('با موفقیت وارد شدید');
-           console.log('the length of phone');
-           setOpen(true);
-
-
-
-            Cookies.set('id_token', response.data.result.token, { expires: 30 });
-            Cookies.set('stars', JSON.stringify(response.data.stars));
-            Cookies.set('user_name',response.data.user.name);
-            Cookies.set('user_family',response.data.user.family);
-            Cookies.set('user_phone',response.data.user.phone);
-            Cookies.set('user_realstate',response.data.user.realstate);
-            Cookies.set('user_city',response.data.user.city);
-            Cookies.set('user_description',response.data.user.description);
-            Cookies.set('user_profile_url',response.data.user.profile_url);
-            Cookies.set('user_realstate_url',response.data.user.realstate_url);
-
-            var destination_before_auth =  Cookies.get('destination_before_auth');
-            if(destination_before_auth){
-
-              
-              Cookies.remove('destination_before_auth');
-              router.push(destination_before_auth);
-              
-            }else{
-              router.push("/panel");
-            }
-            
-
-
-
-
-        }else if (response.data.status == 'useless') {
-
-
-          setProblem('مدت زمان استفاده از این کد تمام شده');
-           setOpen(true);
-
-           return {
-              redirect: {
-                destination: '/panel/auth/login',
-                permanent: true,
-              },
-            }
-
+        const lastRequest = parseInt(localStorage.getItem('code_requested_at'), 10);
+        const now = Math.floor(Date.now() / 1000);
+        if (lastRequest && now - lastRequest < RESEND_INTERVAL) {
+            setCooldown(RESEND_INTERVAL - (now - lastRequest));
+        } else {
+            setCooldown(0);
         }
-        else{
-          setProblem('کد وارد شده اشتباه است ');
-           setOpen(true);
+    }, []);
+
+
+    useEffect(() => {
+        if (cooldown <= 0) return;
+        const timer = setInterval(() => {
+            setCooldown((prev) => prev - 1);
+        }, 1000);
+        return () => clearInterval(timer);
+    }, [cooldown]);
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+
+        if (code.length !== 5) {
+            setError('کد باید ۵ رقم باشد');
+            return;
         }
 
+        setError('');
+        setLoading(true);
+
+        try {
+            const res = await axios.post('https://api.ajur.app/webauth/verify', null, {
+                params: {
+                    phone: number,
+                    code,
+                    ref,
+                    password: 'ddr007',
+                },
+            });
+
+            if (res.data.status === 'success') {
+                const { token } = res.data.result;
+                // Cookies.set('id_token', token, { expires: 30});
+                Cookies.set('id_token', token, { expires: 30, secure: true, sameSite: 'Strict' });
+                Cookies.set('user_name', res.data.user.name);
+
+                // ✅ Clear cooldown so user can re-register cleanly later
+                localStorage.removeItem('code_requested_at');
+
+                router.push(Cookies.get('destination_before_auth') || '/panel');
+            } else {
+                setError(
+                    res.data.status === 'useless'
+                        ? 'مدت زمان استفاده از این کد تمام شده'
+                        : 'کد وارد شده اشتباه است'
+                );
+            }
+        } catch {
+            setError('خطا در ارتباط با سرور');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleResend = async () => {
+        if (cooldown > 0) return;
+
+        try {
+            await axios.post('https://api.ajur.app/webauth/register', null, {
+                params: {
+                    phone: number,
+                    ref: ref,
+                },
+            });
+
+            const now = Math.floor(Date.now() / 1000);
+            localStorage.setItem('code_requested_at', now.toString());
+            setCooldown(RESEND_INTERVAL);
+            setError('');
+        } catch {
+            setError('خطایی در ارسال مجدد کد رخ داد');
+        }
+    };
 
 
-       })
-
-          //end of axios  call
-
-
-
-
-    }
-
-  };
-
-
-
-
-  return (
-    <ThemeProvider theme={theme}>
-      <Container component="main" maxWidth="xs" style={{background:'white'}}>
-        <CssBaseline />
-        <Box
-          sx={{
-            marginTop: 8,
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-          }}
+    return (
+        <Container
+            maxWidth="xs"
+            sx={{
+                minHeight: '100vh',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                backgroundColor: 'white',
+                backgroundImage: "url('/img/SignUp/signupback.png')",
+                backgroundSize: 'cover',
+                backgroundPosition: 'center',
+                backgroundRepeat: 'no-repeat',
+                position: 'relative',
+                px: { xs: 2, sm: 3, md: 4 },
+                py: { xs: 4, sm: 6, md: 8 },
+            }}
         >
-          <Avatar sx={{ m: 1, bgcolor: 'secondary.main' }}>
-            <LockOutlinedIcon />
-          </Avatar>
-          <Typography component="h1" variant="h5">
-            کد تایید را وارد کنید
-          </Typography>
-          <Box component="form" onSubmit={handleSubmit} noValidate sx={{ mt: 1 }}>
-            <Input
-             placeholder={number}
-             
-              disabled
-              style={{fontSize:18}}
-              margin="normal"
-              required
-              fullWidth
-              
-             
-             
-              
-            />
-            <Input
-              margin="normal"
-              required
-              type="tel"
-              fullWidth
-              style={{fontSize:30}}
-              id="code"
-              placeholder="- - - - -"
-              name="code"
-              autoComplete="code"
-              onChange={(code) => change_code(code)}
-              autoFocus
-            />
-
-            <Button
-              type="submit"
-
-              fullWidth
-              variant="contained"
-              sx={{ mt: 0, mb: 2 }}
-              size="small"
+            <IconButton
+                sx={{
+                    position: 'absolute',
+                    top: { xs: 8, sm: 16, md: 24 },
+                    left: { xs: 8, sm: 16, md: 24 },
+                    color: '#fff',
+                    zIndex: 3,
+                    backgroundColor: 'rgba(0, 0, 0, 0.3)',
+                    '&:hover': {
+                        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+                    },
+                }}
+                onClick={() => router.back()}
             >
-              <div style={{fontSize:20}}>
-              تایید
-              </div>
-            
-            </Button>
-            <Grid container>
-              <Grid item xs>
-                <Link href={'/panel/auth/login'} variant="body2">
-                  شماره اشتباه؟ / ارسال مجدد کد؟
-                </Link>
-              </Grid>
-              <Grid item>
-                <Link href="#" variant="body2">
-                {number}
-                </Link>
-              </Grid>
-            </Grid>
-          </Box>
-        </Box>
-        <Copyright sx={{ mt: 8, mb: 4 }} />
-      </Container>
+                <ArrowBackIcon sx={{ fontSize: { xs: 20, sm: 24, md: 28 } }} />
+            </IconButton>
 
-      <Snackbar open={open} autoHideDuration={6000} onClose={handleClose}>
-        <Alert onClose={handleClose} severity="warning" sx={{ width: '100%' }}>
-          {problem}
-        </Alert>
-      </Snackbar>
-    </ThemeProvider>
-  );
+            <Box
+                sx={{
+                    width: '100%',
+                    zIndex: 2,
+                    textAlign: 'center',
+                    color: '#fff',
+                    mt: { xs: -10, sm: -15, md: -18 },
+                }}
+            >
+                <Typography
+                    variant="h5"
+                    fontWeight="bold"
+                    mb={{ xs: 1.5, sm: 2, md: 2.5 }}
+                    fontSize={{ xs: '20px', sm: '24px', md: '26px' }}
+                >
+                    کد تأیید را وارد کنید
+                </Typography>
+                <Typography
+                    variant="body2"
+                    mb={1}
+                    fontSize={{ xs: '14px', sm: '16px', md: '17px' }}
+                >
+                    کد تأیید ارسال‌شده به شماره زیر را وارد کنید:
+                </Typography>
+
+                <Typography
+                    variant="caption"
+                    display="block"
+                    mb={{ xs: 2, sm: 3, md: 3.5 }}
+                    fontSize={{ xs: '14px', sm: '15px', md: '16px' }}
+                >
+                    {number}
+                </Typography>
+
+                <form onSubmit={handleSubmit}>
+                    <TextField
+                        fullWidth
+                        placeholder="- - - - -"
+                        variant="standard"
+                        value={code}
+                        onChange={(e) => setCode(e.target.value)}
+                        inputProps={{
+                            inputMode: 'numeric',
+                            dir: 'ltr',
+                            maxLength: 5,
+                        }}
+                        error={!!error}
+                        sx={{
+                            input: {
+                                color: '#fff',
+                                fontSize: { xs: '20px', sm: '22px', md: '24px' },
+                                textAlign: 'center',
+                                letterSpacing: '10px',
+                            },
+                            '& .MuiInput-underline:before': {
+                                borderBottomColor: '#fff',
+                            },
+                            '& .MuiInput-underline:after': {
+                                borderBottomColor: '#fff',
+                            },
+                        }}
+                    />
+                    {error && (
+                        <FormHelperText sx={{ textAlign: 'center', color: '#ffdede' }}>
+                            {error}
+                        </FormHelperText>
+                    )}
+
+                    <Button
+                        type="submit"
+                        fullWidth
+                        variant="contained"
+                        disabled={loading}
+                        sx={{
+                            backgroundColor: '#e3e0db',
+                            color: '#a92a21',
+                            borderRadius: '25px',
+                            fontWeight: 'bold',
+                            mt: { xs: 3, sm: 4, md: 5 },
+                            py: 1.5,
+                            fontSize: { xs: '14px', sm: '16px', md: '18px' },
+                            boxShadow: '4px 4px 0px rgba(0,0,0,0.4)',
+                            '&:hover': {
+                                backgroundColor: '#d5d3cf',
+                            },
+                        }}
+                    >
+                        تایید
+                    </Button>
+                </form>
+
+                <Typography
+                    variant="body2"
+                    sx={{
+                        color: cooldown > 0 ? '#ccc' : '#add8e6',
+                        mt: 2,
+                        textDecoration: cooldown > 0 ? 'none' : 'underline',
+                        cursor: cooldown > 0 ? 'default' : 'pointer',
+                        transition: 'color 0.3s',
+                    }}
+                    onClick={handleResend}
+                >
+                    {cooldown > 0
+                        ? `ارسال مجدد کد تا ${cooldown} ثانیه دیگر`
+                        : 'ارسال مجدد کد'}
+                </Typography>
+
+                <Typography
+                    variant="caption"
+                    color="#ccc"
+                    mt={3}
+                    display="block"
+                    fontSize="12px"
+                >
+                    © {new Date().getFullYear()} Ajur.app
+                </Typography>
+            </Box>
+        </Container>
+    );
 }
+
+export default Verify;
+
+Verify.getLayout = function (page) {
+    return <MarketLayout>{page}</MarketLayout>;
+};

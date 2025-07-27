@@ -9,8 +9,12 @@ import { Pagination, Navigation, Autoplay } from 'swiper';
 import { Header } from "../../components/G-ads/Header";
 import { ActiveAds } from "../../components/G-ads/ActiveAds";
 import Style from "../../styles/G-ads/user-dashboard.module.css"
+
 import NewAd from "../../components/G-ads/new-add";
 import Button from "@mui/material/Button";
+
+import KeywordClicksBarChart from "../../components/G-ads/KeywordClicksBarChart";
+import KeywordClicksDoughnutChart from "../../components/G-ads/KeywordClicksDoughnutChart";
 
 
 
@@ -25,11 +29,19 @@ const dummyAds = [
         clicksLeft: "150",
         callCount: "20",
         status: "active",
+        plan: "diamond",
         chart: [
             { date: "2025/07/13", views: 20 },
             { date: "2025/07/14", views: 40 },
             { date: "2025/07/15", views: 45 },
             { date: "2025/07/16", views: 45 },
+        ],
+        keywordClicks: [
+            { keyword: "خانه", clicks: 20 },
+            { keyword: "ویلایی", clicks: 10 },
+            { keyword: "زمین", clicks: 5 },
+            { keyword: "زیر قیمت", clicks: 2 },
+            { keyword: "سند دار", clicks: 6 },
         ],
     }, {
         AdUrl: "#",
@@ -40,7 +52,10 @@ const dummyAds = [
         clicksLeft: "100",
         callCount: "0",
         status: "pending",
+        plan: "gold",
         chart: [
+        ],
+        keywordClicks: [
         ],
     }, {
         AdUrl: "#",
@@ -51,6 +66,7 @@ const dummyAds = [
         clicksLeft: "0",
         callCount: "40",
         status: "unactive",
+        plan: "silver",
         chart: [
             { date: "2025/05/12", views: 20 },
             { date: "2025/05/13", views: 40 },
@@ -60,12 +76,33 @@ const dummyAds = [
             { date: "2025/05/17", views: 25 },
             { date: "2025/05/18", views: 40 },
         ],
+        keywordClicks: [
+            { keyword: "آپارتمان", clicks: 15 },
+            { keyword: "خانه", clicks: 12 },
+            { keyword: "تجاری", clicks: 7 },
+        ],
     },
 ]
 
 
-function UserDashboard() {
 
+function aggregateKeywordClicks(ads) {
+    const keywordMap = {};
+    ads.forEach(ad => {
+        if (Array.isArray(ad.keywordClicks)) {
+            ad.keywordClicks.forEach(kc => {
+                if (!keywordMap[kc.keyword]) keywordMap[kc.keyword] = 0;
+                keywordMap[kc.keyword] += kc.clicks;
+            });
+        }
+    });
+    const labels = Object.keys(keywordMap);
+    const values = labels.map(k => keywordMap[k]);
+    return { labels, values };
+}
+
+function UserDashboard() {
+    const keywordClicksData = aggregateKeywordClicks(dummyAds);
 
     return (
         <div id="dashboard" className={Style["main-wrapper"]}>
@@ -76,7 +113,10 @@ function UserDashboard() {
                 <NewAd />
             </div>
             <div className={Style["graphs"]}>
-
+                <div style={{ textAlign: "center", fontWeight: 600, fontSize: 18, margin: "24px 0 8px 0" }}>
+                    تعداد کلیک هر کلیدواژه
+                </div>
+                <KeywordClicksDoughnutChart data={keywordClicksData} style={{ width: 400, height: 400 }} />
             </div>
         </div>
     )
