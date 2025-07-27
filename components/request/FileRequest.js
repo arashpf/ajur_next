@@ -700,12 +700,21 @@ function InViewAnimationWrapper() {
   const ref = React.useRef();
 
   React.useEffect(() => {
-    const observer = new window.IntersectionObserver(
-      ([entry]) => setInView(entry.isIntersecting),
-      { threshold: 0.2 }
-    );
-    if (ref.current) observer.observe(ref.current);
-    return () => { if (ref.current) observer.unobserve(ref.current); };
+    if (typeof window === "undefined" || !ref.current) return;
+    let observer;
+    if ("IntersectionObserver" in window) {
+      observer = new window.IntersectionObserver(
+        ([entry]) => setInView(entry.isIntersecting),
+        { threshold: 0.2 }
+      );
+      observer.observe(ref.current);
+    } else {
+      // Fallback: always show animation if IntersectionObserver is not supported
+      setInView(true);
+    }
+    return () => {
+      if (observer && ref.current) observer.unobserve(ref.current);
+    };
   }, []);
 
   return (
