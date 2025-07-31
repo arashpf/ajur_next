@@ -115,7 +115,7 @@ const handleClick = () => {
 
       axios({
             method:'post',
-            url:'https://api.ajur.app/webauth/register',
+            url:'https://api.ajur.app/web/register',
             params: {
              phone: phone,
              ref: ref,
@@ -135,7 +135,7 @@ const handleClick = () => {
 
         Cookies.set('phone', phone);
 
-       router.push("/panel/auth/verify");
+       router.push("/panel//verify");
        // toast.show({
        //   render: () => {
        //     return <Box bg="green.700" px="15" py="3" rounded="md" mb={5}>
