@@ -29,6 +29,7 @@
     "bootstrap": "^5.2.0",
     "canvas2image-2": "^2.3.0",
     "chart.js": "^4.5.0",
+    "chartjs-plugin-datalabels": "^2.2.0",
     "date-fns": "^2.29.2",
     "dayjs": "^1.11.13",
     "dropzone": "^6.0.0-beta.2",

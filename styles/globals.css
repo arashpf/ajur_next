@@ -6,6 +6,10 @@ body {
 @tailwind components;
 @tailwind utilities;
 
+img {
+  height: unset;
+}
+
 @font-face {
   font-family: iransans;
   src: url(../fonts/iran-sans.ttf);

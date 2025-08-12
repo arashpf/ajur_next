@@ -15,10 +15,12 @@ import Button from "@mui/material/Button";
 
 import KeywordClicksBarChart from "../../components/G-ads/KeywordClicksBarChart";
 import KeywordClicksDoughnutChart from "../../components/G-ads/KeywordClicksDoughnutChart";
+import axios from "axios";
+import Cookies from 'js-cookie';
+import { useRouter } from "next/router";
 
 
-
-
+// Dummy data for initial state
 const dummyAds = [
     {
         AdUrl: "#",
@@ -101,13 +103,61 @@ function aggregateKeywordClicks(ads) {
     return { labels, values };
 }
 
+
 function UserDashboard() {
-    const keywordClicksData = aggregateKeywordClicks(dummyAds);
+    const [ads, setAds] = useState(null);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+    const token = Cookies.get("id_token");
+
+    useEffect(() => {
+        setAds(dummyAds)
+        setLoading(false)
+        //     axios({
+        //         method: "get",
+        //         url: "https://api.ajur.app/api/user-gads",
+        //         params: {
+        //             token: token,
+        //         },
+        //     }).then(function (response) {
+        //         console.log("the response from the get-user-gads");
+        //         console.log(response.data);
+
+        //         set_data(response.data.user);
+
+
+        //         setAds(response.data.ads);
+        //     })
+        //         .finally(() => {
+        //             setLoading(false);
+        //         });
+
+    }, []);
+
+    if (loading) {
+        return (
+            <div className="spinnerImageView">
+                <img
+                    className="spinner-image"
+                    src="/logo/ajour-gif.gif"
+                    alt="ajur logo"
+                />
+            </div>
+        );
+    }
+
+
+    const keywordClicksData = aggregateKeywordClicks(ads);
+
+    const router = useRouter();
+    if (!token) {
+        router.replace(`/panel/auth/login?next=${encodeURIComponent(router.asPath)}`);
+    }
 
     return (
         <div id="dashboard" className={Style["main-wrapper"]}>
             <div className={Style["active-ads"]}>
-                <ActiveAds ads={dummyAds} />
+                <ActiveAds ads={ads} />
             </div>
             <div className={Style["new-ad-container"]}>
                 <NewAd />
@@ -116,10 +166,10 @@ function UserDashboard() {
                 <div style={{ textAlign: "center", fontWeight: 600, fontSize: 18, margin: "24px 0 8px 0" }}>
                     تعداد کلیک هر کلیدواژه
                 </div>
-                <KeywordClicksDoughnutChart data={keywordClicksData} style={{ width: 400, height: 400 }} />
+                <KeywordClicksDoughnutChart data={keywordClicksData} style={{ width: 300, height: 300 }} />
             </div>
         </div>
-    )
+    );
 }
 
 export default UserDashboard;

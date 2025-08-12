@@ -19,6 +19,7 @@ const RESEND_INTERVAL = 60; // seconds
 
 function Verify() {
     const router = useRouter();
+    const { next } = router.query;
     const [code, setCode] = useState('');
     const [number, setNumber] = useState('');
     const [ref, setRef] = useState('');
@@ -76,14 +77,18 @@ function Verify() {
 
             if (res.data.status === 'success') {
                 const { token } = res.data.result;
-                // Cookies.set('id_token', token, { expires: 30});
                 Cookies.set('id_token', token, { expires: 30, secure: true, sameSite: 'Strict' });
                 Cookies.set('user_name', res.data.user.name);
 
                 // ✅ Clear cooldown so user can re-register cleanly later
                 localStorage.removeItem('code_requested_at');
 
-                router.push(Cookies.get('destination_before_auth') || '/panel');
+                // Redirect to next param if present, else to /panel
+                if (next) {
+                    router.replace(next);
+                } else {
+                    router.push('/panel');
+                }
             } else {
                 setError(
                     res.data.status === 'useless'

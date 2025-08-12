@@ -4,7 +4,7 @@
 
 .card-wrapper {
   position: relative;
-  
+
   border-radius: 10px;
   box-shadow: rgba(0, 0, 0, 0.35) 0px 5px 15px;
 }
@@ -24,9 +24,9 @@
   justify-content: space-between;
   /* height: 30px;
   width: 30px; */
- 
+
   padding: 10px;
-  
+
   background-color: rgba(255, 255, 255, 0.70);
 
   /* margin: 0 5px; */
@@ -49,9 +49,9 @@
   justify-content: space-between;
   /* height: 30px;
   width: 30px; */
- 
+
   padding: 2px;
-  
+
   background-color: rgba(255, 255, 255, 0.70);
 
   /* margin: 0 5px; */
@@ -66,22 +66,23 @@
   text-align: right;
   color: #444;
   margin-bottom: -5px;
-  
-  
- 
+
+
+
 }
-.properties-wrapper{
+
+.properties-wrapper {
   display: flex;
   flex-direction: row;
   justify-content: flex-end;
   font-size: 14px;
   text-align: right;
- 
+
 }
 
 .properties-hint {
-  
-  margin-top: -10px;
+
+  margin-top: 10px;
   display: flex;
   flex-direction: row;
   justify-content: flex-end;
@@ -91,14 +92,14 @@
 
 .card-inside-top {
   justify-content: flex-end;
-    width: 100%;
+  width: 100%;
 }
 
 .card-inside-top {
   /* background-color: blue; */
   position: absolute;
   top: 0%;
-  left:0%;
+  left: 0%;
   /* width: 360px; */
   /* height: 8%; */
   /* top: 1px; */
@@ -136,7 +137,7 @@
   text-align: center;
   font-family: sans-serif;
   padding: 1px 2px;
-  margin:3px;
+  margin: 3px;
   font-size: 12px;
 }
 
@@ -160,18 +161,19 @@
   flex-direction: row;
   justify-content: space-between;
 }
+
 @media (max-width: 600px) {
   .card-wrapper {
     margin: 3px 10px;
   }
 
-  
+
 
   .card-inside-top {
-    
+
     position: absolute;
     top: 0%;
-    left:0%;
+    left: 0%;
     /* width: 360px; */
     /* height: 8%; */
     /* top: 1px; */
@@ -181,7 +183,7 @@
     height: 30px;
   }
 
- 
+
 
   .card-inside-bottom {
     position: absolute;
@@ -194,7 +196,7 @@
     flex-direction: row;
     justify-content: space-between;
     height: 20px;
-    
+
     background-color: rgba(255, 255, 255, 0.70);
 
     margin: 0 5px;
@@ -202,17 +204,15 @@
     border-radius: 5px;
   }
 
-  .card-inside-bottom-right-wrappe {
-    
-  }
+  .card-inside-bottom-right-wrappe {}
 
-  .properties-wrapper{
+  .properties-wrapper {
     display: flex;
     flex-direction: row;
     justify-content: flex-end;
     font-size: 14px;
     text-align: right;
-   
+
   }
 }
 
@@ -220,7 +220,7 @@
   .card-inside-top {
     justify-content: space-between;
     width: 100%;
-    
+
   }
 
   .card-inside-bottom {
@@ -235,7 +235,7 @@
     justify-content: space-between;
     height: 20px;
     background-color: rgba(255, 255, 255, 0.70);
-    
+
 
     margin: 0 5px;
     padding: 0 10px;

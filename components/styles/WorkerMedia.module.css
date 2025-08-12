@@ -29,13 +29,18 @@
 
 .video {
   width: 100%;
-  height: auto; /* Let height adjust based on aspect ratio */
-  max-height: 260px; /* Optional: Set a maximum height */
-  object-fit: contain; /* Show entire video without cropping */
-  background-color: #000; /* Black background for letterboxing */
+  height: auto;
+  /* Let height adjust based on aspect ratio */
+  max-height: 260px;
+  /* Optional: Set a maximum height */
+  object-fit: contain;
+  /* Show entire video without cropping */
+  background-color: #000;
+  /* Black background for letterboxing */
   border-radius: 12px;
   display: block;
-  margin: 0 auto; /* Center the video */
+  margin: 0 auto;
+  /* Center the video */
 }
 
 .mediaBoxRow {
@@ -96,7 +101,7 @@
   direction: rtl;
 }
 
-.mediaCounterVideo{
+.mediaCounterVideo {
   position: absolute;
   top: 50%;
   left: 50%;
@@ -112,6 +117,7 @@
   align-items: center;
   min-width: 24px;
 }
+
 .slideCounter {
   position: absolute;
   top: 10px;

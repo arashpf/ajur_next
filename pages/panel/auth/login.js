@@ -19,6 +19,7 @@ import MarketLayout from '../../../components/layouts/MarketLayout';
 
 function Login() {
     const router = useRouter();
+    const { next } = router.query;
     const [phoneNumber, setPhoneNumber] = useState('');
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
@@ -72,7 +73,12 @@ function Login() {
             localStorage.setItem('code_requested_at', now.toString());
 
             Cookies.set('phone', phoneNumber);
-            router.push('/panel/auth/verify');
+            // Pass next param to verify page if present
+            if (next) {
+                router.push(`/panel/auth/verify?next=${encodeURIComponent(next)}`);
+            } else {
+                router.push('/panel/auth/verify');
+            }
         } catch (err) {
             setError('خطایی در ارسال درخواست رخ داد');
             console.error(err);

@@ -6,10 +6,12 @@ import OffersModal from "../../components/G-ads/OffersModal";
 import AdNameInput from "../../components/G-ads/AdNameInput";
 import CitySelector from "../../components/G-ads/CitySelector";
 import CatSelector from "../../components/G-ads/CatSelector";
+import axios from "axios"; // ✅ Import axios
+import Cookies from 'js-cookie';
+import { CatchingPokemonSharp } from "@mui/icons-material";
 
-const suggestedTags = [
-    "خانه", "ویلایی", "رباط کریم", "صد متری", "نورگیر", "زیرقیمت", "تا یک میلیارد", "هشتاد متری"
-]
+
+let token = Cookies.get('id_token')
 
 
 function SubmitButton({ onClick, disabled }) {
@@ -24,13 +26,46 @@ function SubmitButton({ onClick, disabled }) {
     );
 }
 
-
 function NewAdPage() {
     const [adName, setAdName] = useState("تبلیغ جدید ۱");
-    const [tags, setTags] = useState([]);
     const [selectedCities, setSelectedCities] = useState([]);
     const [selectedCats, setSelectedCats] = useState([]);
     const [showModal, setShowModal] = useState(false);
+
+    const handleCreateGAds = async ({ adName, token, selectedCats, selectedCities }) => {
+        setShowModal(true);
+
+        const cityNames = selectedCities.map(city => city.id);
+        const catId = selectedCats.map(cat => cat.id);
+
+        const payload = {
+            token: token,
+            ad_name: adName,
+            cities: cityNames,
+            cats: catId,
+        };
+
+        console.log("cityID" + catId)
+
+        console.log("📤 Payload to send:", payload);
+
+        try {
+            const response = await axios.post("https://api.ajur.app/api/google-ads/new", payload);
+            console.log("✅ Response:", response.data);
+        } catch (error) {
+            console.error("❌ Failed to create GADS ID:", error);
+        }
+    };
+
+
+    const handleSubmit = () => {
+        handleCreateGAds({
+            adName,
+            userId,
+            selectedCats,
+            selectedCities,
+        });
+    };
 
     return (
         <div className={Style["main-wrapper"]}>
@@ -38,7 +73,6 @@ function NewAdPage() {
                 <OffersModal open={showModal} setOpen={setShowModal} />
             </div>
             <div className={Style["query-section"]}>
-
                 <div className={Style["ad-name"]}>
                     <AdNameInput adName={adName} setAdName={setAdName} />
                 </div>
@@ -59,15 +93,17 @@ function NewAdPage() {
 
                 <div className={Style["submit-wrapper"]}>
                     <SubmitButton
-                        onClick={() => setShowModal(true)}
-                        // disabled={tags.length < 2 || !adName.trim()}
-                        disabled={selectedCities.length == 0 || selectedCats.length === 0 || !adName.trim()}
+                        onClick={handleSubmit}
+                        disabled={
+                            selectedCities.length === 0 ||
+                            selectedCats.length === 0 ||
+                            !adName.trim()
+                        }
                     />
                 </div>
-
             </div>
         </div>
-    )
+    );
 }
 
 export default NewAdPage;

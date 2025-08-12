@@ -5,6 +5,7 @@ import jalali from "jalali-dayjs"
 import AdChart from "./Ad-chart";
 import KeywordClicksBarChart from "./KeywordClicksBarChart";
 import KeywordClicksDoughnutChart from "./KeywordClicksDoughnutChart";
+import { height, width } from "@mui/system";
 
 dayjs.extend(jalali);
 
@@ -109,10 +110,20 @@ export function AdCollapsibles({ ads }) {
                                             {ad.keywordClicks && ad.keywordClicks.length > 0 && (
                                                 <>
                                                     <div style={{ margin: "24px 0 12px 0" }}>
-                                                        <KeywordClicksBarChart data={{
-                                                            labels: ad.keywordClicks.map(kc => kc.keyword),
-                                                            values: ad.keywordClicks.map(kc => kc.clicks)
-                                                        }} />
+                                                        {ad.keywordClicks.length > 4 ? (
+                                                            <KeywordClicksBarChart
+                                                                data={{
+                                                                    labels: ad.keywordClicks.map(kc => kc.keyword),
+                                                                    values: ad.keywordClicks.map(kc => kc.clicks)
+                                                                }} />)
+                                                            : (
+                                                                <KeywordClicksDoughnutChart
+                                                                    data={{
+                                                                        labels: ad.keywordClicks.map(kc => kc.keyword),
+                                                                        values: ad.keywordClicks.map(kc => kc.clicks)
+                                                                    }} />
+                                                            )
+                                                        }
                                                     </div>
                                                 </>
                                             )}
