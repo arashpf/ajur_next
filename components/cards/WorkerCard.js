@@ -435,7 +435,7 @@ export default function ImgMediaCard(props) {
         component="img"
         alt={worker.name}
         height="190"
-        
+        className="notailwind"
         image={worker.thumb}
       ></CardMedia>
       <div className={Styles["card-inside-top"]}>
