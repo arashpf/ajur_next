@@ -159,12 +159,12 @@ if (filters.intent === "rent") {
 }
 
 
-  // 2. Feature keywords
-  ["مبله", "پارکینگ", "انباری", "آسانسور", "تراس"].forEach(feat => {
-    if (raw.includes(feat)) {
-      filters[normalize(feat)] = true;
-      chips.push(feat);
-    }
+  // // 2. Feature keywords
+  // ["مبله", "پارکینگ", "انباری", "آسانسور", "تراس"].forEach(feat => {
+  //   if (raw.includes(feat)) {
+  //     filters[normalize(feat)] = true;
+  //     chips.push(feat);
+  //   }
   });
 
   // 3. Numeric filters: area, rooms, price

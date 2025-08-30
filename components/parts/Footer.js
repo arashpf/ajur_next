@@ -1,7 +1,6 @@
 import * as React from "react";
 import styles from "../styles/Footer.module.css";
 import "font-awesome/css/font-awesome.min.css";
-import Image from "next/image";
 import BottomNavigation from "@mui/material/BottomNavigation";
 import BottomNavigationAction from "@mui/material/BottomNavigationAction";
 
@@ -55,8 +54,16 @@ const Footer = () => {
             value={value}
             onChange={(event, newValue) => setValue(newValue)}
           >
-            <BottomNavigationAction onClick={onClickSearch} label="جستجو" icon={<SearchIcon />} />
-            <BottomNavigationAction onClick={onClickFavorites} label="پسندها" icon={<FavoriteIcon />} />
+            <BottomNavigationAction
+              onClick={onClickSearch}
+              label="جستجو"
+              icon={<SearchIcon />}
+            />
+            <BottomNavigationAction
+              onClick={onClickFavorites}
+              label="پسندها"
+              icon={<FavoriteIcon />}
+            />
             <BottomNavigationAction
               onClick={onClickNew}
               label={<p style={{ marginTop: "-10px" }}>جدید</p>}
@@ -73,13 +80,21 @@ const Footer = () => {
                     borderTopLeftRadius: 30,
                     borderTopColor: "#f2f2f2",
                     borderTopWidth: 2,
-                    borderTopStyle: "solid",
+                    borderTopStyle: "solid"
                   }}
                 />
               }
             />
-            <BottomNavigationAction onClick={onClickMarketing} label="بازاریابی" icon={<CampaignIcon />} />
-            <BottomNavigationAction onClick={onClickMyDashboard} label="آجر مشاور" icon={<PersonIcon />} />
+            <BottomNavigationAction
+              onClick={onClickMarketing}
+              label="بازاریابی"
+              icon={<CampaignIcon />}
+            />
+            <BottomNavigationAction
+              onClick={onClickMyDashboard}
+              label="آجر مشاور"
+              icon={<PersonIcon />}
+            />
           </BottomNavigation>
         </Paper>
       </div>
@@ -89,16 +104,17 @@ const Footer = () => {
   return (
     <div>
       {renderFixedFooterNav()}
-
       <footer className={styles.footer}>
+        {/* فوتر با تصویر و ستون‌ها */}
         {/* معرفی آجر */}
         <section className={styles.footerContainer}>
           <section className={styles.header}>
             <h2>مشاوره املاک هوشمند آجر</h2>
             <p>
-              تا حالا خرید یا فروش ملک انقدر ساده و مطمئن نبوده! آجر با یک ایده‌ی نو برای اولین بار در ایران اومده
-              که تجربه‌ی ملک‌دار شدن رو براتون شیرین‌تر کنه. تیم مجرب و حرفه‌ای ما کنارتونه تا توی هر قدم بهترین
-              همراهی رو داشته باشید.
+              تا حالا خرید یا فروش ملک انقدر ساده و مطمئن نبوده! آجر با یک
+              ایده‌ی نو برای اولین بار در ایران اومده که تجربه‌ی ملک‌دار شدن رو
+              براتون شیرین‌تر کنه. تیم مجرب و حرفه‌ای ما کنارتونه تا توی هر قدم
+              بهترین همراهی رو داشته باشید.
             </p>
           </section>
 
@@ -106,78 +122,96 @@ const Footer = () => {
           <section className={styles.quickLinks}>
             <h3>لینک‌های سریع</h3>
             <ul>
-              <li><Link href="/support">پشتیبانی</Link></li>
-              <li><Link href="/about">درباره‌ی آجر</Link></li>
-              <li><Link href="/marketing">بازاریابی</Link></li>
-              <li><Link href="/city-selection">انتخاب شهر</Link></li>
-              <li><Link href="/">صفحه‌ی اصلی</Link></li>
+              <li>
+                <Link href="/">صفحه‌ی اصلی</Link>
+              </li>
+              <li>
+                <Link href="/support">پشتیبانی</Link>
+              </li>
+              <li>
+                <Link href="/about">درباره‌ی آجر</Link>
+              </li>
+              <li>
+                <Link href="/marketing">بازاریابی</Link>
+              </li>
+              <li>
+                <Link href="/city-selection">انتخاب شهر</Link>
+              </li>
             </ul>
           </section>
         </section>
-
-        {/* ارتباط با ما */}
-        <div className={styles.contactSection}>
-          <h2 className={styles.contactTitle}>ارتباط با ما</h2>
-
-          <div className={styles.contactGrid}>
-            <div className={styles.contactCol}>
-              <div className={styles.contactItem} onClick={() => window.open("https://www.instagram.com/ajur_real_estate", "_blank")}>
-                <div className={styles.iconCircle}>
-                  <img src="/icons/instagram.svg" alt="Instagram" width={24} height={24} />
-                </div>
-                <p>ajur_real_estate</p>
+        <div className={styles.contactWithImage}>
+          {/* ستون اول */}
+          <div className={`${styles.contactCol} ${styles.col1}`}>
+            <div
+              className={styles.contactItem}
+              onClick={() =>
+                window.open(
+                  "https://www.instagram.com/ajur_real_estate",
+                  "_blank"
+                )}
+            >
+              <div className={styles.iconCircle}>
+                <img src="/icons/instagram.svg" alt="Instagram" />
               </div>
-
-              <div className={styles.contactItem} onClick={() => window.open("https://t.me/ajur_real_estate", "_blank")}>
-                <div className={styles.iconCircle}>
-                  <img src="/icons/telegram.svg" alt="Telegram" width={24} height={24} />
-                </div>
-                <p>ajur_real_estate</p>
-              </div>
-
-              <div className={styles.contactItem} onClick={() => window.open("https://wa.me/989382740488", "_blank")}>
-                <div className={styles.iconCircle}>
-                  <img src="/icons/whatsapp.svg" alt="WhatsApp" width={24} height={24} />
-                </div>
-                <p>ajur_real_estate</p>
-              </div>
+              <p>ajur_real_estate</p>
             </div>
 
-            <div className={styles.contactCol}>
-              <div className={styles.contactItem} onClick={() => window.open("https://goo.gl/maps/5Z1b7z8f35x", "_blank")}>
-                <div className={styles.iconCircle}>
-                  <img src="/icons/location.svg" alt="Location" width={24} height={24} />
-                </div>
-                <p>ایران، تهران، رباط‌کریم، آزادگان چهارم</p>
+            <div
+              className={styles.contactItem}
+              onClick={() =>
+                window.open("https://t.me/ajur_real_estate", "_blank")}
+            >
+              <div className={styles.iconCircle}>
+                <img src="/icons/telegram.svg" alt="Telegram" />
               </div>
+              <p>ajur_real_estate</p>
+            </div>
 
-              <div className={styles.contactItem} onClick={() => window.open("tel:02140557301")}>
-                <div className={styles.iconCircle}>
-                  <img src="/icons/call.svg" alt="Call" width={24} height={24} />
-                </div>
-                <p>021 40557301</p>
+            <div
+              className={styles.contactItem}
+              onClick={() =>
+                window.open("https://wa.me/989382740488", "_blank")}
+            >
+              <div className={styles.iconCircle}>
+                <img src="/icons/whatsapp.svg" alt="WhatsApp" />
               </div>
-
-              <div className={styles.contactItem} onClick={() => window.open("mailto:support@ajur.app")}>
-                <div className={styles.iconCircle}>
-                  <img src="/icons/email.svg" alt="Email" width={24} height={24} />
-                </div>
-                <p>support@ajur.app</p>
-              </div>
+              <p>ajur_real_estate</p>
             </div>
           </div>
-        </div>
 
-        {/* تصویر تهران */}
-        <div className={styles.cityImage}>
-          <Image
-            src="/img/tehran.png"
-            alt="تصویر تهران"
-            layout="fill"
-            objectFit="cover"
-            objectPosition="bottom"
-            priority
-          />
+          {/* ستون دوم */}
+          <div className={`${styles.contactCol} ${styles.col2}`}>
+            <div
+              className={styles.contactItem}
+              onClick={() => window.open("tel:02140557301")}
+            >
+              <div className={styles.iconCircle}>
+                <img src="/icons/call.svg" alt="Call" />
+              </div>
+              <p>021 40557301</p>
+            </div>
+
+            <div
+              className={styles.contactItem}
+              onClick={() => window.open("mailto:support@ajur.app")}
+            >
+              <div className={styles.iconCircle}>
+                <img src="/icons/email.svg" alt="Email" />
+              </div>
+              <p>support@ajur.app</p>
+            </div>
+            <div
+              className={styles.contactItem}
+              onClick={() =>
+                window.open("https://goo.gl/maps/5Z1b7z8f35x", "_blank")}
+            >
+              <div className={styles.iconCircle}>
+                <img src="/icons/location.svg" alt="Location" />
+              </div>
+              <p>ایران، تهران، رباط‌کریم، آزادگان چهارم</p>
+            </div>
+          </div>
         </div>
       </footer>
     </div>
