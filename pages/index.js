@@ -30,7 +30,7 @@ import "swiper/css/autoplay";
 import { display, style } from "@mui/system";
 // import "./styles.css";
 // import required modules
-
+import LazyLoader from "../components/lazyLoader/Loading";
 function Home(props) {
   const router = useRouter();
   SwiperCore.use([Autoplay]);
@@ -209,19 +209,19 @@ function Home(props) {
     ));
   };
 
-  const renderSliderOne = () => {
-    return collection1.map((worker) => (
-      <SwiperSlide key={worker.id} onClick={AlterLoading}>
-        <Link href={`/worker/${worker.id}?slug=${worker.slug}`}>
-          <a>
-            <WorkerCard key={worker.id} worker={worker} />
-          </a>
-        </Link>
-      </SwiperSlide>
-    ));
-  };
+   const renderSliderOne = () => {
+  return collection1.map((worker) => (
+    <SwiperSlide key={worker.id} onClick={AlterLoading}>
+      <Link href={`/worker/${worker.id}?slug=${worker.slug}`}>
+        <a>
+          <WorkerCard key={worker.id} worker={worker} />
+        </a>
+      </Link>
+    </SwiperSlide>
+  ));
+};
 
-  const renderSlidertwo = () => {
+ const renderSlidertwo = () => {
     return collection2.map((worker) => (
       <SwiperSlide key={worker.id} onClick={AlterLoading}>
         <Link href={`/worker/${worker.id}?slug=${worker.slug}`}>
@@ -232,6 +232,7 @@ function Home(props) {
       </SwiperSlide>
     ));
   };
+
 
   const renderSliderthree = () => {
     return collection3.map((worker) => (

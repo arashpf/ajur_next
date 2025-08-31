@@ -5,7 +5,11 @@ module.exports = {
         "./components/**/*.{js,ts,jsx,tsx}",
         "./app/**/*.{js,ts,jsx,tsx}",
     ],
+    corePlugins: {
+        preflight: false,
+    },
     theme: {
+        spacing:{},
         extend: {
             colors: {
                 primary: "rgb(188, 50, 58)", // customize as needed

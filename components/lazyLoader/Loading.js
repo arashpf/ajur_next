@@ -20,9 +20,10 @@ const LazyLoader = ({
   const [visibleItems, setVisibleItems] = useState([]);
   const [page, setPage] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
+  const [showMessage, setShowMessage] = useState(false);
   const loaderRef = useRef(null);
+  const containerRef = useRef(null);
 
-  // Reset when items change
   useEffect(() => {
     setVisibleItems(items.slice(0, itemsPerPage));
     setPage(1);
@@ -30,8 +31,10 @@ const LazyLoader = ({
 
   const loadMoreItems = useCallback(() => {
     if (isLoading || visibleItems.length >= items.length) return;
-    
+
     setIsLoading(true);
+    setShowMessage(true);
+
     const nextPage = page + 1;
 
     setTimeout(() => {
@@ -39,10 +42,15 @@ const LazyLoader = ({
       setVisibleItems(nextItems);
       setPage(nextPage);
       setIsLoading(false);
+
+      if (nextItems.length >= items.length) {
+        setShowMessage(true);
+      } else {
+        setShowMessage(false);
+      }
     }, delay);
   }, [page, items, visibleItems, itemsPerPage, isLoading, delay]);
 
-  // Intersection Observer setup
   useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => {
@@ -57,7 +65,6 @@ const LazyLoader = ({
     return () => observer.disconnect();
   }, [loadMoreItems]);
 
-  // Handle empty state
   if (!items || items.length === 0) {
     return grid ? (
       <Grid container {...gridProps} className={className}>
@@ -80,47 +87,47 @@ const LazyLoader = ({
     )
   );
 
-  return grid ? (
-    <Grid container {...gridProps} className={className}>
-      {content}
-      <Grid
-        item
-        xs={12}
-        ref={loaderRef}
-        style={{
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-          padding: "16px",
-          minHeight: "100px",
-          textAlign: "center",
-        }}
-      >
-        {visibleItems.length < items.length
-          ? isLoading
-            ? loadingComponent
-            : null
-          : endComponent}
-      </Grid>
-    </Grid>
-  ) : (
-    <div className={className}>
-      {content}
+  return (
+    <div
+      ref={containerRef}
+      className={className}
+      style={{ position: "relative", minHeight: "300px" }}
+    >
+      {grid ? (
+        <Grid container {...gridProps}>
+          {content}
+          <div ref={loaderRef}></div>
+        </Grid>
+      ) : (
+        <div>
+          {content}
+          <div ref={loaderRef}></div>
+        </div>
+      )}
+
+    
       <div
-        ref={loaderRef}
         style={{
+          position: "absolute",
+          bottom: "20px",          
+          left: 0,
+          width: "100%",           
           display: "flex",
           justifyContent: "center",
-          alignItems: "center",
-          minHeight: "100px",
           textAlign: "center",
+          background: "rgba(255, 255, 255, 0.95)",
+          padding: "8px 16px",
+          borderRadius: "8px",
+          boxShadow: "0 2px 10px rgba(0,0,0,0.2)",
+          maxWidth: "90%",
+          wordBreak: "break-word",
+          margin: "0 auto",
+          opacity: showMessage ? 1 : 0,
+          transition: "opacity 0.5s ease",
+          pointerEvents: showMessage ? "auto" : "none",
         }}
       >
-        {visibleItems.length < items.length
-          ? isLoading
-            ? loadingComponent
-            : null
-          : endComponent}
+        {visibleItems.length < items.length ? loadingComponent : endComponent}
       </div>
     </div>
   );
