@@ -89,50 +89,54 @@ const dummyAds = [
 
 
 function aggregateKeywordClicks(ads) {
-    const keywordMap = {};
-    ads.forEach(ad => {
-        if (Array.isArray(ad.keywordClicks)) {
-            ad.keywordClicks.forEach(kc => {
-                if (!keywordMap[kc.keyword]) keywordMap[kc.keyword] = 0;
-                keywordMap[kc.keyword] += kc.clicks;
-            });
-        }
-    });
-    const labels = Object.keys(keywordMap);
-    const values = labels.map(k => keywordMap[k]);
-    return { labels, values };
+  if (!Array.isArray(ads)) return {};  // defensive check
+
+  const keywordMap = {};
+  ads.forEach(ad => {
+    if (Array.isArray(ad.keywords)) {
+      ad.keywords.forEach(kc => {
+        if (!kc || !kc.keyword) return; // skip bad entries
+        if (!keywordMap[kc.keyword]) keywordMap[kc.keyword] = 0;
+        keywordMap[kc.keyword] += kc.clicks || 0;
+      });
+    }
+  });
+
+  return keywordMap;
 }
 
 
+
+
+
 function UserDashboard() {
-    const [ads, setAds] = useState(null);
+    const [ads, setAds] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const token = Cookies.get("id_token");
 
     useEffect(() => {
-        setAds(dummyAds)
-        setLoading(false)
-        //     axios({
-        //         method: "get",
-        //         url: "https://api.ajur.app/api/user-gads",
-        //         params: {
-        //             token: token,
-        //         },
-        //     }).then(function (response) {
-        //         console.log("the response from the get-user-gads");
-        //         console.log(response.data);
+  setLoading(true);
 
-        //         set_data(response.data.user);
+  axios.post("https://api.ajur.app/api/user-gads", null, {
+    params: { token },
+  })
+  .then((response) => {
 
+    setAds(response.data.all_user_gads);
 
-        //         setAds(response.data.ads);
-        //     })
-        //         .finally(() => {
-        //             setLoading(false);
-        //         });
+    console.log("+++++++++++++ the response from the get-user-gads");
+    console.log(JSON.stringify(response.data.all_user_gads, null, 2));
 
-    }, []);
+  })
+  .catch((err) => {
+    console.error("Error fetching ads:", err);
+  })
+  .finally(() => {
+    setLoading(false);
+  });
+}, []);
+
 
     if (loading) {
         return (

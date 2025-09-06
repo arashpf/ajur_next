@@ -37,7 +37,7 @@ export default function BasicSpeedDial() {
     <Box md={{ height: 320, transform: 'translateZ(0px)', flexGrow: 1 }}>
       <SpeedDial
         ariaLabel="ثبت فایل جدید"
-        sx={{ position: 'fixed', bottom: 30, right: 16 }}
+        sx={{ position: 'fixed', bottom: 90, right: 16 }}
         icon={<Add />}
         onClick={handleClick}
         FabProps={{

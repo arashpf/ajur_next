@@ -38,8 +38,8 @@ export function AdCollapsibles({ ads }) {
                             >
                                 <div className={styles["toggle-header"]}>
                                     <div className={styles["right-info"]}>
-                                        <span className={styles["ad-name"]}>{ad.name}</span>
-                                        <span className={styles["start-date"]}>{formatToJalali(ad.startDate)}</span>
+                                        <span className={styles["ad-name"]}>{ad.campaign_name}</span>
+                                        <span className={styles["start-date"]}>{formatToJalali(ad.created_at)}</span>
                                     </div>
                                     <div className={styles["left-status"]}>
                                         <img
@@ -83,44 +83,43 @@ export function AdCollapsibles({ ads }) {
                                 }}
                             >
                                 <div className={styles["content"]}>
-                                    <div className={styles["container"]}>
-                                        <p>تاریخ انقضاء: </p>
-                                        <p>{formatToJalali(ad.expiryDate)}</p>
-                                    </div>
                                     <div className={styles["half-group"]}>
                                         <div className={styles["half-container"]}>
                                             <p>تعداد کلیک: </p>
-                                            <p>{ad.clickedamount}</p>
+                                            <p>{ad.click_count}</p>
                                         </div>
+                                        
                                         <div className={styles["half-container"]}>
                                             <p>کلیک باقیمانده: </p>
                                             <p>{ad.clicksLeft}</p>
                                         </div>
+
+
                                     </div>
-                                    <div className={styles["container"]}>
+                                    {/* <div className={styles["container"]}>
                                         <p>تعداد تماس: </p>
                                         <p>{ad.callCount}</p>
-                                    </div>
-                                    {ad.chart.length !== 0 && (
+                                    </div> */}
+                                    {/* {ad.chart && ad.chart.length !== 0 && ( */}
                                         <div className={styles["container"]}>
-                                            <div className={styles["chart-wrapper"]}>
+                                            {/* <div className={styles["chart-wrapper"]}>
                                                 <AdChart chartData={ad.chart} />
-                                            </div>
+                                            </div> */}
                                             {/* Per-ad keyword clicks charts */}
-                                            {ad.keywordClicks && ad.keywordClicks.length > 0 && (
+                                            {ad.keywords && ad.keywords.length > 0 && (
                                                 <>
                                                     <div style={{ margin: "24px 0 12px 0" }}>
-                                                        {ad.keywordClicks.length > 4 ? (
+                                                        {ad.keywords.length > 4 ? (
                                                             <KeywordClicksBarChart
                                                                 data={{
-                                                                    labels: ad.keywordClicks.map(kc => kc.keyword),
-                                                                    values: ad.keywordClicks.map(kc => kc.clicks)
+                                                                    labels: ad.keywords.map(kc => kc.keyword),
+                                                                    values: ad.keywords.map(kc => kc.clicks)
                                                                 }} />)
                                                             : (
                                                                 <KeywordClicksDoughnutChart
                                                                     data={{
-                                                                        labels: ad.keywordClicks.map(kc => kc.keyword),
-                                                                        values: ad.keywordClicks.map(kc => kc.clicks)
+                                                                        labels: ad.keywords.map(kc => kc.keyword),
+                                                                        values: ad.keywords.map(kc => kc.clicks)
                                                                     }} />
                                                             )
                                                         }
@@ -128,7 +127,7 @@ export function AdCollapsibles({ ads }) {
                                                 </>
                                             )}
                                         </div>
-                                    )}
+                                    {/* )} */}
                                     <div className={styles["delete-container"]}>
                                         <button className={styles["delete-button"]}>
                                             <p style={{ margin: "auto" }}>حذف</p>

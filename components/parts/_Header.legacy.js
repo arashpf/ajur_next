@@ -28,13 +28,11 @@ const Alert = React.forwardRef(function Alert(props, ref) {
 let deferredPrompt;
 
 
-
 function Header() {
 
   const router = useRouter();
   const expand = "false";
-  // show the scrolled-down header (search box) by default
-  const [nav_kind, set_nav_kind] = useState("secondary");
+  const [nav_kind, set_nav_kind] = useState("main");
 
   const [location_li, set_location_li] = useState(false);
   const [search, set_search] = useState("");
@@ -120,8 +118,19 @@ function Header() {
     window.addEventListener("scroll", changeBackground);
   }, []);
 
-  // We no longer switch header variant on scroll. The scrolled/secondary
-  // header (with search) is shown by default via initial state above.
+  const changeLogo = () => {
+    if (window.scrollY >= 300) {
+      set_nav_kind("secondary");
+    } else if (window.scrollY <= 270) {
+      set_nav_kind("main");
+    }
+  };
+
+  useEffect(() => {
+    changeLogo();
+
+    window.addEventListener("scroll", changeLogo);
+  }, []);
 
   const handleOnclickInput = () => {
     console.log("form clicked");
@@ -349,7 +358,6 @@ function Header() {
 
 
 
-
     // remove all cookies before logout and im the god guy respect others privacy !!!
     Cookies.remove("id_token");
     Cookies.remove("destination_before_auth");
@@ -505,6 +513,7 @@ function Header() {
                        انتخاب شهر جدید
                     </NavDropdown.Item>
                    
+
                    
 
                     {renderLogoutButton()}
@@ -551,7 +560,7 @@ function Header() {
               <Nav
                 className={`flex-grow-1 pe-3 ${styles["nav-link-wrapper-end"]}  `}
               >
-                <Nav.Link href={"/"} onClick={onClickHome}>
+                <Nav.Link href="/" onClick={onClickHome}>
                   <p>خانه</p>
                 </Nav.Link>
                 <Nav.Link href="/about" onClick={onClickAboutUs}>

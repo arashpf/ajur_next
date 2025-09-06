@@ -435,6 +435,7 @@ export default function ImgMediaCard(props) {
         component="img"
         alt={worker.name}
         height="190"
+        className="no-tailwind"
         
         image={worker.thumb}
       ></CardMedia>

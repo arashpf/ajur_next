@@ -71,6 +71,139 @@
 
 }
 
+/* Action buttons wrapper: stacked on small, side-by-side on larger screens */
+.actionButtonsRow {
+  width: 100%;
+  max-width: 760px; /* keeps it centered on small/medium screens */
+  margin: 0 auto;
+  padding: 12px;
+  display: flex;
+  flex-direction: column; /* default stacked */
+  gap: 8px;
+  box-sizing: border-box;
+}
+
+.actionBtnWrap {
+  width: 100%;
+}
+
+/* Simple action button appearance used on the home page */
+.simple-action {
+  display: inline-block;
+  width: 100%;
+  padding: 12px 16px;
+  font-size: 16px;
+  font-family: iransans, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+  text-align: center;
+  border-radius: 10px;
+  border: 1px solid #ddd;
+  background: #fff;
+  color: #222;
+  cursor: pointer;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+  transition: background 150ms ease, transform 60ms ease, box-shadow 150ms ease;
+}
+
+.simple-action:hover {
+  background: #f7f7f7;
+}
+
+.simple-action:active {
+  transform: translateY(1px);
+  box-shadow: 0 0 0 rgba(0, 0, 0, 0);
+}
+
+.simple-action:focus {
+  outline: none;
+  box-shadow: 0 0 0 4px rgba(185, 42, 49, 0.12);
+}
+
+/* Card-style action buttons (match provided design) */
+.actionCard {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  background: #fff;
+  justify-content: flex-start; /* align left as requested */
+  border-radius: 12px;
+  padding: 18px;
+  box-shadow: 0 6px 18px rgba(18, 18, 18, 0.06);
+  cursor: pointer;
+}
+
+.actionCardIcon {
+  width: 84px;
+  height: 84px;
+  flex: 0 0 84px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(180deg, #f7f9ff 0%, #fff 100%);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.6);
+}
+
+.actionCardContent {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+/* force action card text to RTL inside the main buttons */
+.actionCardContent, .actionCardTitle, .actionCardDesc, .actionCardCTA {
+  direction: rtl;
+  text-align: right;
+}
+
+/* grid for deal buttons: fill left-to-right and wrap rows from left */
+.dealGridInner {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 8px;
+  direction: rtl; /* ensure new rows start filling from right */
+}
+
+.actionCardTitle {
+  font-weight: 700;
+  font-size: 18px;
+  color: #111;
+}
+
+.actionCardDesc {
+  color: #666;
+  font-size: 14px;
+  line-height: 1.3;
+}
+
+.actionCardCTA {
+  align-self: flex-start;
+  margin-top: 6px;
+  padding: 8px 14px;
+  border-radius: 8px;
+  border: 2px solid #b92a31; /* Ajur red */
+  background: white;
+  color: #b92a31;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.actionCardCTA:hover {
+  background: rgba(185,42,49,0.04);
+}
+
+/* Small screens: ensure cards take full width and icon smaller */
+@media (max-width: 600px) {
+  .actionCard {
+    padding: 12px;
+    gap: 12px;
+  }
+  .actionCardIcon {
+    width: 64px;
+    height: 64px;
+    flex: 0 0 64px;
+  }
+}
+
 .spinnerView {
   display: flex;
   justify-content: center;
@@ -215,9 +348,7 @@
 
 
 @media (max-width: 600px) {
-  .main-row {
-    padding: 10px 10px;
-  }
+  /* responsive tweaks for small screens */
 
   .title {
     padding: 10px;
@@ -243,9 +374,7 @@
 }
 
 @media (min-width: 600px) {
-  .main-row {
-    padding: 10px 40px;
-  }
+  /* responsive tweaks for medium+ screens */
 
   .cat-swiper {
     position: unset !important;
@@ -255,4 +384,151 @@
     padding: 20px 0px !important;
 
   }
+
+  /* turn action buttons into a row on medium+ screens */
+  .actionButtonsRow {
+    flex-direction: row;
+    align-items: stretch;
+  }
+
+  .actionBtnWrap {
+    flex: 1 1 50%; /* allow growth and equal share */
+    padding: 0 8px; /* small horizontal spacing */
+    box-sizing: border-box;
+    min-width: 0; /* prevent overflow of children when shrinking */
+  }
+}
+
+/* On larger screens make the buttons expand and the row fill the viewport */
+@media (min-width: 1000px) {
+  .actionButtonsRow {
+    max-width: none; /* allow full-width */
+    margin: 0; /* span the full container/viewport */
+    padding: 18px 24px; /* add comfortable horizontal padding */
+    gap: 12px;
+    width: 100%;
+  }
+
+  .actionBtnWrap {
+    flex: 1 1 0; /* each button will take equal available space */
+    padding: 0 12px;
+  }
+}
+
+/* exit animation: push the whole row up and fade out */
+.pushed {
+  transform: translateY(-140%);
+  opacity: 0;
+  transition: transform 420ms cubic-bezier(.2,.9,.2,1), opacity 320ms ease;
+}
+
+/* enter animation: start translated up and slide into place */
+.pullIn {
+  transform: translateY(-6px);
+  opacity: 0;
+  animation: pullInAnim 360ms ease forwards;
+}
+
+@keyframes pullInAnim {
+  from {
+    transform: translateY(-140%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* deal grid pop-out when closing */
+.dealGrid {
+  will-change: transform, opacity;
+}
+
+.dealPopOut {
+  animation: dealPopOutAnim 220ms ease forwards;
+}
+
+@keyframes dealPopOutAnim {
+  from {
+    transform: scale(1);
+    opacity: 1;
+  }
+  60% {
+    transform: scale(1.04);
+    opacity: 0.9;
+  }
+  to {
+    transform: scale(0.6);
+    opacity: 0;
+  }
+}
+
+/* Header for deal grid: back button on the left of the selected title */
+.dealHeader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+  justify-content: flex-start; /* align left */
+  direction: ltr; /* force LTR inside header so flex-start is left */
+  width: 100%;
+}
+
+.backButton {
+  background: #f1f1f1;
+  border: none;
+  padding: 8px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: transform 160ms ease, background 120ms ease;
+}
+
+.backButton:hover {
+  background: #e6e6e6;
+}
+.backButton {
+  background: transparent; /* remove gray background */
+  border: none;
+  padding: 6px 8px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: transform 120ms ease, background 100ms ease;
+}
+
+.backButton:hover {
+  background: rgba(185,42,49,0.06);
+}
+
+.backButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.backIcon {
+  width: 18px;
+  height: 18px;
+  display: inline-block;
+  color: #b92a31; /* Ajur red */
+}
+
+.dealTitle {
+  font-weight: 700;
+  font-size: 18px;
+  display: inline-block;
+  transform: translateX(0); /* default */
+  transition: transform 220ms cubic-bezier(.2,.9,.2,1);
+  white-space: nowrap;
+}
+
+/* when the deal grid is shown, nudge the title a bit to the right to make room for the back button */
+
+.dealGrid .dealTitle {
+  transform: translateX(8px);
+  margin-left: 8px; /* spacing from icon */
+  text-align: left;
+  direction: rtl; /* keep Persian text direction inside title */
 }

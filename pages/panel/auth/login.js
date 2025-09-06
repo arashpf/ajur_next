@@ -117,7 +117,7 @@ function Login() {
                         backgroundColor: 'rgba(0, 0, 0, 0.5)',
                     },
                 }}
-                onClick={() => router.back()}
+                onClick={() => router.push('/')}
             >
                 <ArrowBackIcon sx={{ fontSize: { xs: 20, sm: 24, md: 28 } }} />
             </IconButton>

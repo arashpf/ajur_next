@@ -1,0 +1,130 @@
+.container {
+  display: block;
+  width: 100%;
+  margin: 6px 0;
+  cursor: pointer;
+  perspective: 600px;
+  box-sizing: border-box;
+}
+
+.card {
+  background: linear-gradient(135deg, #fff, #f8f8f8);
+  border-radius: 10px;
+  padding: 18px 20px; /* slightly larger padding for taller appearance */
+  width: 100%;
+  min-height: 72px; /* ensure a slightly taller control */
+  box-shadow: 0 6px 18px rgba(0,0,0,0.08);
+  transition: transform 320ms cubic-bezier(.2,.9,.2,1), opacity 220ms ease;
+}
+
+/* when selected, highlight red */
+.selected .card {
+  background: linear-gradient(180deg, #fff1f1, #ffe6e6);
+  border: 1px solid #bc323a; /* ajur red */
+}
+
+/* close button for selected */
+.closeButton {
+  position: absolute;
+  right: 10px;
+  top: 8px;
+  border: none;
+  background: transparent;
+  font-size: 26px;
+  line-height: 1;
+  cursor: pointer;
+  color: #bc323a; /* ajur red */
+  padding: 8px; /* increase hit area */
+  border-radius: 6px;
+}
+
+/* hide animations: move other button out */
+.hideRight {
+  animation: hideRight 420ms forwards ease-in;
+}
+
+@keyframes hideRight {
+  0% { transform: translateX(0) rotate(0deg); opacity: 1; }
+  60% { transform: translateX(40%) rotate(-6deg); opacity: 1; }
+  100% { transform: translateX(140%) rotate(-12deg); opacity: 0; }
+}
+
+.hideLeft {
+  animation: hideLeft 420ms forwards ease-in;
+}
+
+@keyframes hideLeft {
+  0% { transform: translateX(0) rotate(0deg); opacity: 1; }
+  60% { transform: translateX(-40%) rotate(6deg); opacity: 1; }
+  100% { transform: translateX(-140%) rotate(12deg); opacity: 0; }
+}
+
+.label {
+  font-weight: 700;
+  direction: rtl;
+  text-align: center;
+  margin-bottom: 8px;
+  font-size: 18px; /* slightly larger label */
+}
+
+.description {
+  font-size: 12px;
+  color: #666;
+  direction: rtl;
+  text-align: center;
+}
+
+/* swipe out right */
+.swipeRight {
+  animation: swipeRight 420ms forwards ease-in;
+}
+
+@keyframes swipeRight {
+  0% { transform: translateX(0) rotate(0deg); opacity: 1; }
+  60% { transform: translateX(40%) rotate(-6deg); opacity: 1; }
+  100% { transform: translateX(140%) rotate(-12deg); opacity: 0; }
+}
+
+/* swipe out left */
+.swipeLeft {
+  animation: swipeLeft 420ms forwards ease-in;
+}
+
+@keyframes swipeLeft {
+  0% { transform: translateX(0) rotate(0deg); opacity: 1; }
+  60% { transform: translateX(-40%) rotate(6deg); opacity: 1; }
+  100% { transform: translateX(-140%) rotate(12deg); opacity: 0; }
+}
+
+/* pop disappear for the other button */
+.pop {
+  animation: pop 320ms forwards ease-out;
+}
+
+@keyframes pop {
+  0% { transform: scale(1); opacity: 1; }
+  60% { transform: scale(1.12); opacity: 0.9; }
+  100% { transform: scale(0.1); opacity: 0; }
+}
+
+/* selected button slides out a bit differently (slower and to the side) */
+.exitSelected {
+  animation: exitSelected 420ms forwards ease-in;
+}
+
+@keyframes exitSelected {
+  0% { transform: translateY(0) scale(1); opacity: 1; }
+  60% { transform: translateY(-6%) scale(0.98); opacity: 0.95; }
+  100% { transform: translateY(-140%) scale(0.95); opacity: 0; }
+}
+
+/* show animation when returning */
+.show {
+  animation: showIn 420ms forwards ease-out;
+}
+
+@keyframes showIn {
+  0% { transform: translateY(40%) scale(0.85); opacity: 0; }
+  60% { transform: translateY(-6%) scale(1.02); opacity: 1; }
+  100% { transform: translateY(0) scale(1); opacity: 1; }
+}

@@ -16,6 +16,8 @@ import FileRequest from "../components/request/FileRequest";
 import Cookies from "js-cookie";
 import { useRouter } from "next/router";
 import LandingPage from "./G-ads/landing-page";
+// simplified buttons: using plain HTML buttons instead of animated ActionButton
+import DealButton from "../components/parts/DealButton";
 
 import ForwardIcon from "@mui/icons-material/Forward";
 
@@ -38,6 +40,7 @@ function Home(props) {
   const [loading, set_loading] = useState(true);
   const [cats, set_cats] = useState();
   const [main_cats, set_main_cats] = useState();
+  const [sub_cats, set_sub_cats] = useState();
   const [realestates, set_realestates] = useState();
   const [departments, set_departments] = useState();
   const [title1, set_title1] = useState();
@@ -54,6 +57,55 @@ function Home(props) {
 
   const [favorite_workers, set_favorite_workers] = useState([]);
   const [history_workers, set_history_workers] = useState([]);
+  const [clickedAction, setClickedAction] = useState(null);
+  const [buyVisible, setBuyVisible] = useState(true);
+  const [rentVisible, setRentVisible] = useState(true);
+  const [isStacked, setIsStacked] = useState(true); // true when buttons are stacked (narrow screens)
+  const [dealCats, setDealCats] = useState();
+  const [animState, setAnimState] = useState(null); // null | 'pushed' | 'pullIn'
+  const [dealAnim, setDealAnim] = useState(null); // null | 'popOut'
+  // simplified visibility control
+  const selectAction = (type) => {
+    // start push animation; after animation finishes, show deal grid and hide buttons
+    setAnimState("pushed");
+    setTimeout(() => {
+      setClickedAction(type);
+      setBuyVisible(false);
+      setRentVisible(false);
+    }, 420);
+  };
+
+  const clearAction = () => {
+    // first pop out the deal grid, then show main buttons from the top
+    setDealAnim("popOut");
+    // wait for pop-out animation to finish, then remove deal grid and pull in buttons
+    setTimeout(() => {
+      setDealAnim(null);
+      setClickedAction(null);
+      setBuyVisible(true);
+      setRentVisible(true);
+      setAnimState("pullIn");
+      setTimeout(() => setAnimState(null), 520);
+    }, 240); // matches dealPopOutAnim duration (220ms) plus small buffer
+  };
+
+  console.log(dealCats);
+  
+  useEffect(() => {
+    // update stacked/side-by-side state based on viewport width
+    function updateStacked() {
+      // keep in sync with CSS breakpoint (600px)
+      setIsStacked(typeof window !== "undefined" ? window.innerWidth < 600 : true);
+    }
+
+    updateStacked();
+    window.addEventListener("resize", updateStacked);
+    return () => window.removeEventListener("resize", updateStacked);
+  }, []);
+
+  const handleBackButtons = () => {
+    clearAction();
+  };
 
 
 
@@ -88,11 +140,16 @@ function Home(props) {
       set_the_neighborhoods(response.data.the_neighborhoods);
 
       set_main_cats(response.data.main_cats);
+      set_sub_cats(response.data.sub_cats);
 
       set_realestates(response.data.realstates);
 
-      console.log("the departments data in base is --------------------");
-      console.log(response.data.departments);
+      setDealCats(response.data.sub_cats);
+      
+      console.log("the maincat data in base is --------------------");
+      console.log(response.data.main_cats);
+
+      console.log(response.data.sub_cats);
 
       set_departments(response.data.departments);
 
@@ -109,7 +166,6 @@ function Home(props) {
       set_loading(false);
     });
   }, [props.trigeredcity]);
-
 
 
   useEffect(() => {
@@ -454,17 +510,76 @@ function Home(props) {
       return (
         <div>
           <main className={styles["main"]}>
+            {/* Quick action buttons for Buy / Rent (stacked on small, side-by-side on larger) */}
+            <div className={`${styles.actionButtonsRow} ${animState === 'pushed' ? styles.pushed : ''} ${animState === 'pullIn' ? styles.pullIn : ''}`}>
+              <div className={styles.actionBtnWrap}>
+                {buyVisible && (
+                  <div className={styles.actionCard} onClick={() => selectAction("buy")}>
+                    <div className={styles.actionCardIcon}>
+                      {/* icon image */}
+                      <img src="/logo/buy-home.png" alt="خرید" width="56" height="56" />
+                    </div>
+                    <div className={styles.actionCardContent}>
+                      <div className={styles.actionCardTitle}>خرید</div>
+                      <div className={styles.actionCardDesc}>آگهی‌ها برای خرید را ببینید و با مشاور تماس بگیرید</div>
+                      <button className={styles.actionCardCTA}>مشاهده گزینه‌ها</button>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <div className={styles.actionBtnWrap}>
+                {rentVisible && (
+                  <div className={styles.actionCard} onClick={() => selectAction("rent")}>
+                    <div className={styles.actionCardIcon}>
+                      <img src="/logo/rent-home.png" alt="اجاره" width="56" height="56" />
+                    </div>
+                    <div className={styles.actionCardContent}>
+                      <div className={styles.actionCardTitle}>اجاره</div>
+                      <div className={styles.actionCardDesc}>آگهی‌های اجاره را مشاهده کنید و سریع تماس بگیرید</div>
+                      <button className={styles.actionCardCTA}>مشاهده گزینه‌ها</button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Deal categories grid when buy or rent is selected */}
+            {clickedAction && (
+              <div className={`${styles.dealGrid} ${dealAnim === 'popOut' ? styles.dealPopOut : ''}`} style={{ maxWidth: 760, margin: '12px auto', padding: 12 }}>
+                  <div className={styles.dealHeader}>
+                    <button className={styles.backButton} onClick={handleBackButtons} aria-label="بازگشت">
+                      <svg className={styles.backIcon} viewBox="0 0 24 24" fill="none" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M20 12 H8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                        <path d="M9 7 L4 12 L9 17" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                      </svg>
+                    </button>
+                    <div className={styles.dealTitle}>{clickedAction === 'buy' ? '\u062f\u0633\u062a\u0647 \u0628\u0646\u062f\u06cc \u0647\u0627\u06cc \u062e\u0631\u06cc\u062f' : '\u062f\u0633\u062a\u0647 \u0628\u0646\u062f\u06cc \u0647\u0627\u06cc \u0627\u062c\u0627\u0631\u0647'}</div>
+                  </div>
+                <div className={styles.dealGridInner}>
+                  {sub_cats.filter(c => (clickedAction === 'buy' ? c.type === 'sell' : c.type === 'rent')).map((cat, idx) => (
+                    <DealButton
+                      key={cat.id}
+                      title={cat.name}
+                      src={`/cats_image/sub-cats/${cat.id}.png`}
+                      onClick={() => { /* placeholder - navigate to category */ }}
+                      style={{ animationDelay: `${idx * 80}ms` }}
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
             <div className={styles["main-row"]}>
-              <SearchDiv
+              {/* <SearchDiv
                 loading={AlterLoading}
                 the_city={the_city}
                 the_neighborhoods={the_neighborhoods}
-              />
+              /> */}
 
               {renderHistoryWorkers()}
               {renderFavoriteWorkers()}
 
-              <Swiper
+              {/* <Swiper
                 slidesPerView={1}
                 spaceBetween={10}
                 pagination={{ clickable: true }}
@@ -499,7 +614,7 @@ function Home(props) {
               // className={styles["cat-swiper"]}
               >
                 {renderSliderCategories()}
-              </Swiper>
+              </Swiper> */}
 
               {collection1.length > 0 && (
                 <div>

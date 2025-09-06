@@ -6,9 +6,11 @@ body {
 @tailwind components;
 @tailwind utilities;
 
-img {
-  height: unset;
+img.no-tailwind {
+  height: 190px
 }
+
+
 
 @font-face {
   font-family: iransans;

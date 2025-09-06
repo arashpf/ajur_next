@@ -1,0 +1,29 @@
+.button{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:12px;
+  border-radius:10px;
+  border:1px solid #eee;
+  background:#fff;
+  cursor:pointer;
+  transition:transform .12s ease, box-shadow .12s ease;
+}
+.button:active{ transform: translateY(1px); }
+.content{ display:flex; flex-direction:column; align-items:center; gap:6px }
+.content{ display:flex; flex-direction:column; align-items:center; gap:6px; direction: rtl; }
+.icon{ width:36px; height:36px; border-radius:10px; background:rgba(0,0,0,0.04); display:flex; align-items:center; justify-content:center }
+.title{ font-size:14px; color:#222; direction: rtl; text-align: right }
+
+/* pop-in animation for deal buttons */
+.popIn {
+  opacity: 0;
+  transform: scale(0.92) translateY(6px);
+  animation: popIn 280ms cubic-bezier(.2,.9,.2,1) forwards;
+}
+
+@keyframes popIn {
+  0% { opacity: 0; transform: scale(0.92) translateY(6px); }
+  60% { opacity: 1; transform: scale(1.03) translateY(-4px); }
+  100% { opacity: 1; transform: scale(1) translateY(0); }
+}
