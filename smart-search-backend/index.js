@@ -1,23 +1,25 @@
 // index.js
-const express          = require("express");
-const cors             = require("cors");
-const axios            = require("axios");
+const express = require("express");
+const cors = require("cors");
+const axios = require("axios");
 const stringSimilarity = require("string-similarity");
 
 const app = express();
-app.use(cors({
-  origin: "http://localhost:3000",
-  methods: ["POST"],
-  credentials: true
-}));
+app.use(
+  cors({
+    origin: "http://localhost:3000",
+    methods: ["POST"],
+    credentials: true
+  })
+);
 
 app.use(express.json());
 
 const AI_API = "https://api.ajur.app/api/ai/v1";
 
-let cities        = [];
+let cities = [];
 let neighborhoods = [];
-let categories    = [];
+let categories = [];
 
 /**
  * Load metadata (cities, neighborhoods, categories)
@@ -29,7 +31,9 @@ async function loadMetadata() {
     const json = resp.data;
 
     const citiesArr = Array.isArray(json.cities) ? json.cities : [];
-    const hoodsArr  = Array.isArray(json.neighborhoods) ? json.neighborhoods : [];
+    const hoodsArr = Array.isArray(json.neighborhoods)
+      ? json.neighborhoods
+      : [];
 
     let listingsArr = [];
     for (const key of Object.keys(json)) {
@@ -40,7 +44,9 @@ async function loadMetadata() {
         "category_name" in json[key][0]
       ) {
         listingsArr = json[key];
-        console.log(`🧩 Found listings under key "${key}" (count: ${listingsArr.length})`);
+        console.log(
+          `🧩 Found listings under key "${key}" (count: ${listingsArr.length})`
+        );
         break;
       }
     }
@@ -48,8 +54,8 @@ async function loadMetadata() {
     // ✅ Now safe to log sample listing
     console.log("🧪 Sample listing:", listingsArr[0]);
 
-    const citySet     = new Set();
-    const hoodSet     = new Set();
+    const citySet = new Set();
+    const hoodSet = new Set();
     const categorySet = new Set();
 
     citiesArr.forEach(c => {
@@ -66,21 +72,20 @@ async function loadMetadata() {
       }
     });
 
-    cities        = Array.from(citySet);
+    cities = Array.from(citySet);
     neighborhoods = Array.from(hoodSet);
-    categories    = Array.from(categorySet);
+    categories = Array.from(categorySet);
 
     console.log("✅ Loaded metadata:", {
       cities: cities.length,
       neighborhoods: neighborhoods.length,
-      categories: categories.length,
+      categories: categories.length
     });
     console.log("📁 Sample categories:", categories.slice(0, 20));
   } catch (err) {
     console.error("❌ Failed to load metadata:", err.message);
   }
 }
-
 
 /**
  * Normalize text: convert Persian digits to Latin, lowercase & trim.
@@ -98,29 +103,29 @@ function normalize(str = "") {
  */
 function flattenListing(listing, decodedProps = []) {
   const flat = {
-    id:           listing.id,
-    name:         listing.name,
-    city:         listing.city,
+    id: listing.id,
+    name: listing.name,
+    city: listing.city,
     neighborhood: listing.neighbourhood,
-    category:     listing.category_name,
-    price:        null,
-    area:         null,
-    rooms:        null,
-    parking:      false,
-    storage:      false,
-    elevator:     false,
-    balcony:      false,
+    category: listing.category_name,
+    price: null,
+    area: null,
+    rooms: null,
+    parking: false,
+    storage: false,
+    elevator: false,
+    balcony: false
   };
 
   decodedProps.forEach(({ name, value }) => {
     const key = normalize(name);
-    if (/قیمت/.test(key))    flat.price    = Number(value);
-    if (/متراژ/.test(key))    flat.area     = Number(value);
-    if (/خوابه/.test(key))    flat.rooms    = Number(value);
-    if (/پارکینگ/.test(key)) flat.parking  = true;
-    if (/انباری/.test(key))  flat.storage  = true;
+    if (/قیمت/.test(key)) flat.price = Number(value);
+    if (/متراژ/.test(key)) flat.area = Number(value);
+    if (/خوابه/.test(key)) flat.rooms = Number(value);
+    if (/پارکینگ/.test(key)) flat.parking = true;
+    if (/انباری/.test(key)) flat.storage = true;
     if (/آسانسور/.test(key)) flat.elevator = true;
-    if (/تراس/.test(key))    flat.balcony  = true;
+    if (/تراس/.test(key)) flat.balcony = true;
   });
 
   return flat;
@@ -131,9 +136,9 @@ function flattenListing(listing, decodedProps = []) {
  * Receives { query }, returns { filters, chips, suggestions, results }.
  */
 app.post("/api/search-intent", async (req, res) => {
-  const raw         = normalize(req.body.query || "");
-  const filters     = {};
-  const chips       = [];
+  const raw = normalize(req.body.query || "");
+  const filters = {};
+  const chips = [];
   const suggestions = [];
 
   // 1. Rent vs Buy
@@ -143,21 +148,20 @@ app.post("/api/search-intent", async (req, res) => {
   } else {
     filters.intent = "buy";
   }
-  
+
   let typeSuggestions = [];
 
-if (filters.intent === "buy") {
-  typeSuggestions = categories.filter(cat => 
-    cat.includes("خرید") || cat.includes("فروش")
-  );
-}
+  if (filters.intent === "buy") {
+    typeSuggestions = categories.filter(
+      cat => cat.includes("خرید") || cat.includes("فروش")
+    );
+  }
 
-if (filters.intent === "rent") {
-  typeSuggestions = categories.filter(cat => 
-    cat.includes("اجاره") || cat.includes("رهن")
-  );
-}
-
+  if (filters.intent === "rent") {
+    typeSuggestions = categories.filter(
+      cat => cat.includes("اجاره") || cat.includes("رهن")
+    );
+  }
 
   // 2. Feature keywords
   ["مبله", "پارکینگ", "انباری", "آسانسور", "تراس"].forEach(feat => {
@@ -168,8 +172,8 @@ if (filters.intent === "rent") {
   });
 
   // 3. Numeric filters: area, rooms, price
-  const areaM  = raw.match(/(\d+)\s*متر/);
-  const roomM  = raw.match(/(\d+)\s*خوابه/);
+  const areaM = raw.match(/(\d+)\s*متر/);
+  const roomM = raw.match(/(\d+)\s*خوابه/);
   const priceM = raw.match(/زیر\s*(\d+)\s*(میلیارد|میلیون)?/);
 
   if (areaM) {
@@ -183,7 +187,7 @@ if (filters.intent === "rent") {
   if (priceM) {
     let p = Number(priceM[1]);
     if (priceM[2] === "میلیارد") p *= 1_000_000_000;
-    if (priceM[2] === "میلیون")  p *=   1_000_000;
+    if (priceM[2] === "میلیون") p *= 1_000_000;
     filters.price = p;
     chips.push(`زیر ${priceM[1]} ${priceM[2] || ""}`);
   }
@@ -212,11 +216,11 @@ if (filters.intent === "rent") {
     const resp = await axios.get(AI_API);
     const allListings = Array.isArray(resp.data.data)
       ? resp.data.data
-      : Array.isArray(resp.data.listings)
-        ? resp.data.listings
-        : [];
+      : Array.isArray(resp.data.listings) ? resp.data.listings : [];
     const results = allListings
-      .map(item => flattenListing(item, JSON.parse(item.json_properties || "[]")))
+      .map(item =>
+        flattenListing(item, JSON.parse(item.json_properties || "[]"))
+      )
       .filter(listing =>
         Object.entries(filters).every(([k, v]) => {
           const val = listing[k];
@@ -226,35 +230,31 @@ if (filters.intent === "rent") {
         })
       );
 
-// Auto-suggest categories based on intent keywords
-if (raw.includes("خرید") || raw.includes("فروش")) {
-  const buyCategories = categories.filter(cat =>
-    /خرید|فروش/.test(cat)
-  );
-  suggestions.push(...buyCategories.slice(0, 6));
-}
+    // Auto-suggest categories based on intent keywords
+    if (raw.includes("خرید") || raw.includes("فروش")) {
+      const buyCategories = categories.filter(cat => /خرید|فروش/.test(cat));
+      suggestions.push(...buyCategories.slice(0, 6));
+    }
 
-if (/(اجاره|رهن|کرایه)/.test(raw)) {
-  const rentCategories = categories.filter(cat =>
-    /اجاره|رهن|کرایه/.test(cat)
-  );
-  suggestions.push(...rentCategories.slice(0, 6));
-}
+    if (/(اجاره|رهن|کرایه)/.test(raw)) {
+      const rentCategories = categories.filter(cat =>
+        /اجاره|رهن|کرایه/.test(cat)
+      );
+      suggestions.push(...rentCategories.slice(0, 6));
+    }
 
-// Fallback generic suggestions
-if (suggestions.length === 0) {
-  suggestions.push("ویلا", "زمین", "آپارتمان", "اجاره", "زیر ۳ میلیارد");
-}
-
+    // Fallback generic suggestions
+    if (suggestions.length === 0) {
+      suggestions.push("ویلا", "زمین", "آپارتمان", "اجاره", "زیر ۳ میلیارد");
+    }
 
     return res.json({
-  filters,
-  chips,
-  suggestions: [...suggestions, ...typeSuggestions.slice(0, 6)],
-  results,
-  confidence: Object.keys(filters).length ? 0.9 : 0.3
-});
-
+      filters,
+      chips,
+      suggestions: [...suggestions, ...typeSuggestions.slice(0, 6)],
+      results,
+      confidence: Object.keys(filters).length ? 0.9 : 0.3
+    });
   } catch (err) {
     console.error("❌ Failed to fetch listings:", err.message);
     return res.status(500).json({ error: "Failed to fetch listings." });
@@ -265,5 +265,7 @@ if (suggestions.length === 0) {
 (async () => {
   await loadMetadata();
   const port = process.env.PORT || 8000;
-  app.listen(port, () => console.log(`🚀 Smart Search API listening on http://localhost:${port}`));
+  app.listen(port, () =>
+    console.log(`🚀 Smart Search API listening on http://localhost:${port}`)
+  );
 })();
