@@ -4,7 +4,7 @@
 
 .card-wrapper {
   position: relative;
-  
+ 
   border-radius: 10px;
   box-shadow: rgba(0, 0, 0, 0.35) 0px 5px 15px;
 }
@@ -13,8 +13,8 @@
 .card-inside-heart {
 
   position: absolute;
-  top: 140px;
-  right: 1px;
+  top: 5px;
+  left: 1px;
 
   /* width: 360px; */
   /* height: 8%; */
@@ -31,15 +31,16 @@
 
   /* margin: 0 5px; */
   /* padding: 0 10px; */
-  border-radius: 5px;
+  border-radius: 50px;
 
 }
+
 
 .card-inside-date {
 
   position: absolute;
   top: 155px;
-  right: 60px;
+ right: 10px;
 
   /* width: 360px; */
   /* height: 8%; */
@@ -50,7 +51,7 @@
   /* height: 30px;
   width: 30px; */
  
-  padding: 2px;
+  padding: 4px;
   
   background-color: rgba(255, 255, 255, 0.70);
 
@@ -71,6 +72,11 @@
  
 }
 .properties-wrapper{
+  
+
+  
+ right: 10px;
+  
   display: flex;
   flex-direction: row;
   justify-content: flex-end;
@@ -87,18 +93,81 @@
   justify-content: flex-end;
   font-size: 14px;
   text-align: right;
+} 
+.properties-hint {
+  position: absolute;
+  top: 130px;
+  right: 10px;
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 8px; /* فاصله اولیه بین گزینه‌ها */
+  font-size: 14px;
+  text-align: right;
 }
+
+ .properties-hint > * {
+  height: 30px;
+  display: flex;
+  align-items: center;
+  padding: 0 10px;
+  white-space: nowrap; /* جلوگیری از شکستن متن */
+} 
+
+/* ریسپانسیو برای نمایشگرهای کوچک (از 1200px به پایین) */
+ @media (max-width: 1200px) {
+  .properties-hint {
+    gap: 6px; /* کاهش فاصله بین گزینه‌ها */
+  }
+
+   .properties-hint > * {
+    height: 25px; /* کاهش ارتفاع */
+    font-size: 12px; /* کاهش اندازه فونت */
+    padding: 0 8px; /* کاهش حاشیه داخلی */
+  }
+}  
+
+/* ریسپانسیو برای نمایشگرهای بسیار کوچک (از 900px به پایین) */
+  @media (max-width: 900px) {
+  .properties-hint {
+    justify-content: flex-start; /* از چپ شروع شود */
+    gap: 4px; /* کاهش بیشتر فاصله بین گزینه‌ها */
+    top: 135px; /* تنظیم موقعیت عمودی */
+    flex-wrap: nowrap; /* اطمینان از اینکه گزینه‌ها کنار هم قرار می‌گیرند */
+    overflow-x: auto; /* اسکرول افقی اگر جای کافی نبود */
+  }
+
+  .properties-hint > * {
+    height: 20px; /* کاهش بیشتر ارتفاع */
+    font-size: 10px; /* کاهش بیشتر اندازه فونت */
+    padding: 0 6px; /* کاهش بیشتر حاشیه داخلی */
+  }
+} 
+
+/* ریسپانسیو برای نمایشگرهای بسیار بسیار کوچک (از 600px به پایین) */
+@media (max-width: 600px) {
+  .properties-hint {
+    gap: 2px; /* کاهش بیشتر فاصله بین گزینه‌ها */
+  } 
+
+  .properties-hint > * {
+    height: 18px; /* کاهش بیشتر ارتفاع */
+    font-size: 8px; /* کاهش بیشتر اندازه فونت */
+    padding: 0 4px; /* کاهش بیشتر حاشیه داخلی */
+  }
+} 
 
 .card-inside-top {
   justify-content: flex-end;
     width: 100%;
-}
+} 
 
 .card-inside-top {
   /* background-color: blue; */
   position: absolute;
-  top: 0%;
-  left:0%;
+  top: 1%;
+   right:2px;
   /* width: 360px; */
   /* height: 8%; */
   /* top: 1px; */
@@ -119,12 +188,15 @@
 }
 
 .inside-top-right {
+    position: absolute;
+  top: 10px;
+  right: 10px;
   font-size: 12px;
   color: rgb(255, 255, 255);
   background: #0a0a1499;
   border-radius: 999px;
   padding: 2px 8px;
-  margin-right: 8px;
+ 
   margin-top: 3px;
   direction: rtl;
 }
@@ -152,20 +224,15 @@
   justify-content: space-between;
 }
 
-.worker-address {
-  text-align: right;
-  font-size: 14px;
-  color: #888;
-  display: flex;
-  flex-direction: row;
-  justify-content: space-between;
-}
+
 @media (max-width: 600px) {
   .card-wrapper {
     margin: 3px 10px;
   }
 
-  
+
+
+
 
   .card-inside-top {
     
@@ -181,7 +248,7 @@
     height: 30px;
   }
 
- 
+
 
   .card-inside-bottom {
     position: absolute;
@@ -205,7 +272,7 @@
   .card-inside-bottom-right-wrappe {
     
   }
-
+  
   .properties-wrapper{
     display: flex;
     flex-direction: row;
@@ -215,6 +282,8 @@
    
   }
 }
+
+
 
 @media (min-width: 600px) {
   .card-inside-top {
@@ -242,3 +311,5 @@
     border-radius: 5px;
   }
 }
+
+
