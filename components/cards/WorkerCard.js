@@ -131,12 +131,8 @@ export default function ImgMediaCard({ worker }) {
     return null;
   };
 
-  const renderAddress = () => {
-    if (worker.formatted) return <div style={{ direction: "rtl" }}>{short(worker.formatted, 40)}</div>;
-    if (worker.neighbourhood) return <p>{short(worker.neighbourhood, 40)}</p>;
-    if (worker.region) return <div>{short(worker.region, 40)}</div>;
-    return null;
-  };
+  // حذف renderAddress برای عدم نمایش آدرس زیر قیمت
+  const renderAddress = () => null;
 
   const renderProperties = () => (
     <div className={Styles["properties-wrapper"]}>
@@ -230,7 +226,7 @@ export default function ImgMediaCard({ worker }) {
       </div>
       <CardContent>
         <div className={Styles["price-wrapper"]}>{renderPrice()}</div>
-        {renderAddress()}
+        {renderAddress() /* الان هیچ آدرسی نمایش داده نمیشه */}
         {renderProperties()}
         {renderQuickHint()}
       </CardContent>
