@@ -84,79 +84,31 @@
   text-align: right;
  
 }
-
-.properties-hint {
-  
-  margin-top: -10px;
-  display: flex;
-  flex-direction: row;
-  justify-content: flex-end;
-  font-size: 14px;
-  text-align: right;
-} 
-.properties-hint {
-  position: absolute;
-  top: 130px;
-  right: 10px;
-  display: flex;
-  flex-direction: row;
-  justify-content: flex-end;
-  align-items: center;
-  gap: 8px; /* فاصله اولیه بین گزینه‌ها */
-  font-size: 14px;
-  text-align: right;
+.card-inside-top {
+  position: relative;
 }
 
- .properties-hint > * {
-  height: 30px;
+.properties-hint {
+  position: absolute;
+  bottom: 150px; /* فاصله از پایین container */
+  left: 50%;
+  transform: translateX(-50%);
   display: flex;
-  align-items: center;
-  padding: 0 10px;
-  white-space: nowrap; /* جلوگیری از شکستن متن */
-} 
+  flex-direction: row;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 4px;
+  width: 90%;
+}
 
-/* ریسپانسیو برای نمایشگرهای کوچک (از 1200px به پایین) */
- @media (max-width: 1200px) {
-  .properties-hint {
-    gap: 6px; /* کاهش فاصله بین گزینه‌ها */
-  }
 
-   .properties-hint > * {
-    height: 25px; /* کاهش ارتفاع */
-    font-size: 12px; /* کاهش اندازه فونت */
-    padding: 0 8px; /* کاهش حاشیه داخلی */
-  }
-}  
+.absolute-center {
+  position: absolute;
 
-/* ریسپانسیو برای نمایشگرهای بسیار کوچک (از 900px به پایین) */
-  @media (max-width: 900px) {
-  .properties-hint {
-    justify-content: flex-start; /* از چپ شروع شود */
-    gap: 4px; /* کاهش بیشتر فاصله بین گزینه‌ها */
-    top: 135px; /* تنظیم موقعیت عمودی */
-    flex-wrap: nowrap; /* اطمینان از اینکه گزینه‌ها کنار هم قرار می‌گیرند */
-    overflow-x: auto; /* اسکرول افقی اگر جای کافی نبود */
-  }
+  left: 50%;
+  transform: translateX(-50%);
+}
 
-  .properties-hint > * {
-    height: 20px; /* کاهش بیشتر ارتفاع */
-    font-size: 10px; /* کاهش بیشتر اندازه فونت */
-    padding: 0 6px; /* کاهش بیشتر حاشیه داخلی */
-  }
-} 
-
-/* ریسپانسیو برای نمایشگرهای بسیار بسیار کوچک (از 600px به پایین) */
-@media (max-width: 600px) {
-  .properties-hint {
-    gap: 2px; /* کاهش بیشتر فاصله بین گزینه‌ها */
-  } 
-
-  .properties-hint > * {
-    height: 18px; /* کاهش بیشتر ارتفاع */
-    font-size: 8px; /* کاهش بیشتر اندازه فونت */
-    padding: 0 4px; /* کاهش بیشتر حاشیه داخلی */
-  }
-} 
 
 .card-inside-top {
   justify-content: flex-end;

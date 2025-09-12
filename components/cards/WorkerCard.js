@@ -1,118 +1,63 @@
 import React, { useState, useEffect } from "react";
 import Card from "@mui/material/Card";
-import CardActions from "@mui/material/CardActions";
 import CardContent from "@mui/material/CardContent";
 import CardMedia from "@mui/material/CardMedia";
-import Button from "@mui/material/Button";
-import CameraIndoorIcon from "@mui/icons-material/CameraIndoor";
-import CollectionsIcon from "@mui/icons-material/Collections";
-
 import FavoriteBorderIcon from "@mui/icons-material/FavoriteBorder";
 import FavoriteIcon from "@mui/icons-material/Favorite";
+import CameraIndoorIcon from "@mui/icons-material/CameraIndoor";
+import CollectionsIcon from "@mui/icons-material/Collections";
 import Cookies from "js-cookie";
-import { Box, Typography, Chip } from "@mui/material";
+import { Box, Chip } from "@mui/material";
 import CheckIcon from "@mui/icons-material/Check";
-import { parseISO, differenceInDays } from 'date-fns';
-
+import { parseISO, differenceInDays } from "date-fns";
 import Styles from "../styles/WorkerCard.module.css";
 
-export default function ImgMediaCard(props) {
-  const worker = props.worker;
-  const [properties, set_properties] = useState([]);
-
-  const [isfavorite, set_isfavorite] = useState("off");
+export default function ImgMediaCard({ worker }) {
+  const [properties, setProperties] = useState([]);
+  const [isFavorite, setIsFavorite] = useState("off");
 
   useEffect(() => {
-    // set_properties( JSON.stringify(worker.json_properties[0]));
-    set_properties(JSON.parse(worker.json_properties));
+    setProperties(JSON.parse(worker.json_properties || "[]"));
   }, [worker.json_properties]);
 
-  useEffect(() => {}, [properties]);
-
   useEffect(() => {
-    var faviorited = Cookies.get("favorited");
-
-    if (!faviorited) {
-      return;
-    }
-
+    const favorited = Cookies.get("favorited");
+    if (!favorited) return;
     const productToBeSaved = worker.id;
-
-    // const newProduct = JSON.parse(faviorited);
-    var newProduct = JSON.parse(faviorited);
-    if (!newProduct) {
-      newProduct = [];
+    const newProduct = JSON.parse(favorited) || [];
+    if (newProduct.includes(productToBeSaved)) {
+      setIsFavorite("on");
     }
+  }, [worker.id]);
 
-    var length = newProduct.length;
-
-    if (length > 20) {
-      newProduct = newProduct.slice(length - 20, length);
-    }
-    var filterProduct = newProduct.filter(function (item) {
-      return item == productToBeSaved;
-    });
-
-    if (filterProduct.length > 0) {
-      set_isfavorite("on");
-    }
-  }, []);
-
-  const onPressMakeWorkerfavorite = () => {
-    var faviorited = Cookies.get("favorited");
-
+  const handleFavoriteToggle = () => {
+    const favorited = Cookies.get("favorited");
     const productToBeSaved = worker.id;
-
-    if (faviorited) {
-      var newProduct = JSON.parse(faviorited);
+    const newProduct = JSON.parse(favorited) || [];
+    if (isFavorite === "on") {
+      const updated = newProduct.filter((id) => id !== productToBeSaved);
+      Cookies.set("favorited", JSON.stringify(updated));
+      setIsFavorite("off");
     } else {
-      var newProduct = [];
+      const updated = [...newProduct, productToBeSaved].slice(-20);
+      Cookies.set("favorited", JSON.stringify(updated));
+      setIsFavorite("on");
     }
-
-    // if (!newProduct) {
-    //   newProduct = [];
-    // }
-
-    const length = newProduct.length;
-
-    if (length > 20) {
-      newProduct = newProduct.slice(length - 20, length);
-    }
-
-    const filterProduct = newProduct.filter(function (item) {
-      return item !== productToBeSaved;
-    });
-    filterProduct.push(productToBeSaved);
-
-    Cookies.set("favorited", JSON.stringify(filterProduct));
-
-    set_isfavorite("on");
   };
 
-  const onPressMakeWorkerUnfavorite = () => {
-    var faviorited = Cookies.get("favorited");
-
-    const productToBeSaved = worker.id;
-
-    if (faviorited) {
-      var newProduct = JSON.parse(faviorited);
-    } else {
-      var newProduct = [];
+  const calculateDaysPast = (createdAt) => {
+    if (!createdAt) return "امروز در آجر";
+    try {
+      const createdDate = parseISO(createdAt);
+      const daysPast = differenceInDays(new Date(), createdDate);
+      return daysPast < 1 ? "امروز در آجر" : `${daysPast} روز در آجر`;
+    } catch {
+      return "امروز در آجر";
     }
-
-    const length = newProduct.length;
-
-    if (length > 20) {
-      newProduct = newProduct.slice(length - 20, length);
-    }
-    const filterProduct = newProduct.filter(function (item) {
-      return item !== productToBeSaved;
-    });
-
-    Cookies.set("favorited", JSON.stringify(filterProduct));
-
-    set_isfavorite("off");
   };
+
+  const short = (name, amount) =>
+    name ? (name.length > amount ? name.substring(0, amount) + " ..." : name) : "";
 
   const renderNeighborHoodRibbon = () => {
     if (worker.neighbourhood) {
@@ -124,332 +69,170 @@ export default function ImgMediaCard(props) {
         </div>
       );
     }
+    return null;
   };
 
-  const calculateDaysPast = createdAt => {
-    if (!createdAt) return 0;
+  const renderHeart = () => (
+    <div onClick={handleFavoriteToggle} className={Styles["card-inside-heart"]}>
+      {isFavorite === "on" ? (
+        <FavoriteIcon style={{ color: "#b92a31" }} />
+      ) : (
+        <FavoriteBorderIcon />
+      )}
+    </div>
+  );
 
-    try {
-      const createdDate = parseISO(createdAt);
-      const daysPast = differenceInDays(new Date(), createdDate);
-      
-      return daysPast < 1 
-        ? 'امروز در آجر' 
-        : `${daysPast} روز در آجر`;
-    } catch {
-      return 'امروز در آجر';
-    }
-  };
+  const renderDate = () => (
+    <div className={Styles["card-inside-date"]}>
+      تاریخ: {calculateDaysPast(worker.updated_at)}
+    </div>
+  );
 
-  const renderDate = (worker) => {
-    if (1) {
-      return (
-        // <View style={styles.dateWrapper}>
-        //   {showDistance(worker.distance)}
+  const renderPrice = () => {
+    const price = properties.find((p) => p.name === "قیمت");
+    const perM2 = properties.find((p) => p.name === "قیمت هر متر");
+    const rentFront = properties.find((p) => p.name === "پول پیش");
+    const rentPerMonth = properties.find((p) => p.name === "اجاره ماهیانه");
 
-        //   <Text>{calculateDaysPast(worker.updated_at)} </Text>
-        //   <Icon
-        //     name="access-time"
-        //     size={18}
-        //     color="gray"
-        //     style={{marginLeft: 2}}
-        //   />
-        // </View>
-
-        <div
-          
-          className={Styles["card-inside-date"]}
-        >
-          {/* <FavoriteIcon style={{ color: "#b92a31" }} /> */}
-             تاریخ  :  {calculateDaysPast(worker.updated_at)}
-        </div>
-      );
-    }
-  };
-
-  const renderHeart = () => {
-    if (isfavorite == "on") {
-      return (
-        <div
-          onClick={() => onPressMakeWorkerUnfavorite(worker)}
-          className={Styles["card-inside-heart"]}
-        >
-          <FavoriteIcon style={{ color: "#b92a31" }} />
-        </div>
-      );
-    } else if (isfavorite == "off") {
-      return (
-        <div
-          onClick={() => onPressMakeWorkerfavorite(worker)}
-          className={Styles["card-inside-heart"]}
-        >
-          <FavoriteBorderIcon />
-        </div>
-      );
-    }
-  };
-
-  const rednerPrice = () => {
-    var price_per_m2 = properties.filter((item) => item.name == "قیمت هر متر");
-    var price_item = properties.filter((item) => item.name == "قیمت");
-
-    var rent_front = properties.filter((item) => item.name == "پول پیش");
-    var rent_per_mounth = properties.filter(
-      (item) => item.name == "اجاره ماهیانه"
-    );
-
-    if (price_item[0]) {
-      var price_no_format = price_item[0].value;
-      var price_per_m2 = price_per_m2[0].value;
-
+    if (price) {
       return (
         <p style={{ direction: "rtl" }}>
           <strong style={{ fontSize: "17px", color: "#111" }}>
-            {" "}
-            {String(price_no_format).replace(/(.)(?=(\d{3})+$)/g, "$1,")}{" "}
-            {"تومان"}
-            {" | "}
+            {String(price.value).replace(/(.)(?=(\d{3})+$)/g, "$1,")} تومان
           </strong>
-          {" متری "}
-          {String(price_per_m2).replace(/(.)(?=(\d{3})+$)/g, "$1,")} {"تومان"}{" "}
+          {perM2 && (
+            <> | متری {String(perM2.value).replace(/(.)(?=(\d{3})+$)/g, "$1,")} تومان</>
+          )}
         </p>
       );
-    } else if (rent_front[0]) {
-      var rent_front_no_format = rent_front[0].value;
-      var rent_per_mounth_no_format = rent_per_mounth[0].value;
+    } else if (rentFront) {
+      const front = String(rentFront.value).replace(/(.)(?=(\d{3})+$)/g, "$1,");
+      const month = rentPerMonth
+        ? String(rentPerMonth.value).replace(/(.)(?=(\d{3})+$)/g, "$1,")
+        : "0";
 
       return (
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "row",
-            justifyContent: "flex-end",
-          }}
-        >
-          {rent_per_mounth_no_format != 0 ? (
+        <div style={{ display: "flex", flexDirection: "row", justifyContent: "flex-end" }}>
+          {month !== "0" ? (
             <p style={{ direction: "rtl", paddingRight: 4 }}>
-              <strong style={{ fontSize: "16px" }}>
-                {" "}
-                {String(rent_per_mounth_no_format).replace(
-                  /(.)(?=(\d{3})+$)/g,
-                  "$1,"
-                )}{" "}
-                {" اجاره "}{" "}
-              </strong>
+              <strong style={{ fontSize: "16px" }}>{month} اجاره</strong>
             </p>
           ) : (
-            <strong style={{ fontSize: "16px" }}>
-              <p style={{ direction: "rtl", paddingRight: 4 }}> {"کامل"} </p>
-            </strong>
+            <p style={{ direction: "rtl", paddingRight: 4 }}>
+              <strong style={{ fontSize: "16px" }}>کامل</strong>
+            </p>
           )}
-
           <p style={{ direction: "rtl" }}>
-            <strong style={{ fontSize: "16px" }}>
-              {" "}
-              {String(rent_front_no_format).replace(
-                /(.)(?=(\d{3})+$)/g,
-                "$1,"
-              )}{" "}
-              {" رهن  "}{" "}
-            </strong>
+            <strong style={{ fontSize: "16px" }}>{front} رهن</strong>
           </p>
         </div>
       );
     }
-  };
-
-  const rednerProperties = () => {
-    if (1) {
-      return properties.map((pr) => (
-        <>{pr.special == "1" && renderPropertiesCustomized(pr)}</>
-      ));
-    }
-  };
-
-  const renderPropertiesCustomized = (pr) => {
-    if (pr.name == "قیمت") return;
-    if (pr.name == "پول پیش") return;
-    if (pr.name == "اجاره ماهیانه") return;
-
-    if (pr.name == "قیمت هر متر") return;
-
-    // var norama = properties.filter((item) => item.name == "قیمت");
-    if (pr.kind == 1) {
-      return (
-        <>
-          <span>&nbsp; </span>
-          <p>
-            | {pr.name} {String(pr.value).replace(/(.)(?=(\d{3})+$)/g, "$1,")}
-          </p>
-          {"."}
-        </>
-      );
-    }
-  };
-
-  const renderVideoOrImageIcon = () => {
-    return (
-      <>
-        {worker.video_count > 0 && (
-          <div className={Styles["card-top-icon-wrapper"]}>
-            <CameraIndoorIcon />
-          </div>
-        )}
-
-        {worker.image_count > 0 && (
-          <div className={Styles["card-top-icon-wrapper"]}>
-            {worker.image_count} <CollectionsIcon />
-          </div>
-        )}
-      </>
-    );
-
-    if (worker.video_count > 0) {
-      return (
-        <div className={Styles["card-top-icon-wrapper"]}>
-          <CameraIndoorIcon />
-        </div>
-      );
-    } else if (worker.image_count > 0) {
-      return (
-        <div className={Styles["card-top-icon-wrapper"]}>
-          {worker.image_count} <CollectionsIcon />
-        </div>
-      );
-    }
-  };
-
-  const short = (name, amount) => {
-    if (name.length > amount) {
-      var shortname = name.substring(0, amount) + " ...";
-      return shortname;
-    } else {
-      return name;
-    }
-  };
-
-  const rednerDate = () => {
-    return <>test</>;
+    return null;
   };
 
   const renderAddress = () => {
-    if (worker.formatted) {
-      return (
-        // <div> {short(worker.neighbourhood ,40)}   </div>
-        <div style={{ direction: "rtl" }}> {short(worker.formatted, 40)} </div>
-      );
-    } else if (worker.neighbourhood) {
-      return (
-        // <div> {short(worker.neighbourhood ,40)}   </div>
-        <p> {short(worker.neighbourhood, 40)} </p>
-      );
-    } else if (worker.region) {
-      return <div> {short(worker.region, 40)} </div>;
-    }
+    if (worker.formatted) return <div style={{ direction: "rtl" }}>{short(worker.formatted, 40)}</div>;
+    if (worker.neighbourhood) return <p>{short(worker.neighbourhood, 40)}</p>;
+    if (worker.region) return <div>{short(worker.region, 40)}</div>;
+    return null;
   };
 
-  const renderQuickHintHumanRedableValue = (pr) => {
-    if (pr.value == 1) {
-      return (
-        <Chip
-          label={
+  const renderProperties = () => (
+    <div className={Styles["properties-wrapper"]}>
+      {properties.map(
+        (pr) =>
+          pr.special === "1" &&
+          !["قیمت", "پول پیش", "اجاره ماهیانه", "قیمت هر متر"].includes(pr.name) && (
+            <span key={pr.name}>
+              | {pr.name} {String(pr.value).replace(/(.)(?=(\d{3})+$)/g, "$1,")}
+            </span>
+          )
+      )}
+    </div>
+  );
+
+  const renderQuickHint = () => (
+    <div className={Styles["properties-hint"]}>
+      {properties.map(
+        (pr, index) =>
+          pr.special === "1" &&
+          pr.kind === 2 && (
             <Box
-              component="span"
-              sx={{ display: "flex", alignItems: "center" }}
+              key={index}
+              sx={{
+                display: "flex",
+                flexDirection: "row",
+                width: 100,
+                justifyContent: "space-around",
+              }}
             >
-              {pr.name}
-              <CheckIcon sx={{ fontSize: 13, color: "white", ml: 0.5 }} />
+              {pr.value == 1 && (
+                <Chip
+                  label={
+                    <Box component="span" sx={{ display: "flex", alignItems: "center" }}>
+                      {pr.name}
+                      <CheckIcon sx={{ fontSize: 13, color: "white", ml: 0.5 }} />
+                    </Box>
+                  }
+                  sx={{
+                    px: 0.5,
+                    py: 0,
+                    m: 0,
+                    bgcolor: "#b9272e",
+                    color: "white",
+                    borderRadius: 1,
+                    width: 90,
+                    fontSize: 13,
+                    height: 24,
+                    "& .MuiChip-label": { px: 0.5 },
+                  }}
+                />
+              )}
             </Box>
-          }
-          sx={{
-            px: 0.5,
-            py: 0,
-            m: 0,
-            bgcolor: "#b9272e",
-            color: "white",
-            borderRadius: 1,
-            width: 90,
-            fontSize: 13,
-            height: 24,
-            "& .MuiChip-label": {
-              px: 0.5,
-            },
-          }}
-        />
-      );
-    }
-    return null;
-  };
+          )
+      )}
+    </div>
+  );
 
-  const renderQickHintCustomized = (pr, index) => {
-    // Skip specific property names
-    // if (
-    //   pr.name !== "پارکینگ" ||
-    //   pr.name !== "انباری"
-    // ) {
-    //   return null;
-    // }
+  const renderVideoOrImageIcon = () => (
+    <>
+      {worker.video_count > 0 && (
+        <div className={Styles["card-top-icon-wrapper"]}>
+          <CameraIndoorIcon />
+        </div>
+      )}
+      {worker.image_count > 0 && (
+        <div className={Styles["card-top-icon-wrapper"]}>
+          {worker.image_count} <CollectionsIcon />
+        </div>
+      )}
+    </>
+  );
 
-    if (pr.kind === 2) {
-      return (
-        <Box
-          key={index}
-          sx={{
-            display: "flex",
-            flexDirection: "row",
-            width: 100,
-            justifyContent: "space-around",
-          }}
-        >
-          {renderQuickHintHumanRedableValue(pr)}
-        </Box>
-      );
-    }
-
-    return null;
-  };
-
-  const renderQuickHint = () => {
-    if (properties) {
-      return properties.map(
-        (pr, index) => pr.special === "1" && renderQickHintCustomized(pr, index)
-      );
-    }
-  };
-
-  const renderWorkercategory = () => {
-    if (worker.category_name) {
-      return <p style={{ fontSize: 16 }}> {worker.category_name} </p>;
-    }
-  };
   return (
-    <Card
-      sx={{ maxHeight: 300, height: 300 }}
-      className={Styles["card-wrapper"]}
-    >
+    <Card sx={{ maxHeight: 300, height: 300 }} className={Styles["card-wrapper"]}>
       {renderNeighborHoodRibbon()}
-      {renderHeart(worker)}
-      {renderDate(worker)}
-
+      {renderHeart()}
+      {renderDate()}
       <CardMedia
         component="img"
         alt={worker.name}
         height="190"
         className="notailwind"
         image={worker.thumb}
-      ></CardMedia>
+      />
       <div className={Styles["card-inside-top"]}>
         <p className={Styles["inside-top-left"]}>{renderVideoOrImageIcon()}</p>
         <div className={Styles["inside-top-right"]}>
           <p>{worker.name}</p>
         </div>
       </div>
-
       <CardContent>
-        <div className={Styles["price-wrapper"]}> {rednerPrice()} </div>
-        <div className={Styles["properties-wrapper"]}>{rednerProperties()}</div>
-        <div className={Styles["properties-hint"]}>{renderQuickHint()}</div>
-        
+        <div className={Styles["price-wrapper"]}>{renderPrice()}</div>
+        {renderAddress()}
+        {renderProperties()}
+        {renderQuickHint()}
       </CardContent>
     </Card>
   );
