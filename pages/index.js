@@ -616,7 +616,7 @@ function Home(props) {
                 {renderSliderCategories()}
               </Swiper> */}
 
-              {collection1.length > 0 && (
+              {/* {collection1.length > 0 && (
                 <div>
                   <div className={styles["title"]}>
 
@@ -697,9 +697,9 @@ function Home(props) {
                     </SwiperSlide>
                   </Swiper>
                 </div>
-              )}
+              )} */}
 
-              {collection2.length > 0 && (
+              {/* {collection2.length > 0 && (
                 <div>
                   <div className={styles["title"]}>
                     <Link
@@ -775,7 +775,7 @@ function Home(props) {
                     </SwiperSlide>
                   </Swiper>
                 </div>
-              )}
+              )} */}
 
               {collection3.length > 0 && (
                 <div>
@@ -882,7 +882,7 @@ function Home(props) {
                       spaceBetween: 20,
                     },
                     768: {
-                      slidesPerView: 5,
+                      slidesPerView: 4,
                       spaceBetween: 25,
                     },
                     1400: {
@@ -918,7 +918,7 @@ function Home(props) {
                       spaceBetween: 20,
                     },
                     768: {
-                      slidesPerView: 5,
+                      slidesPerView: 4,
                       spaceBetween: 25,
                     },
                     1400: {
@@ -928,6 +928,9 @@ function Home(props) {
                   }}
                   modules={[Pagination, Navigation]}
                   className={styles["cat-swiper"]}
+                  style={{
+                    marginBottom: '30px'
+                  }}
                 >
                   {renderSliderRealState()}
                 </Swiper>
