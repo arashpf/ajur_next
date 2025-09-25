@@ -1,9 +1,10 @@
 import React from "react";
-import AjurCommissionCalculator from "../../components/others/AjurCommissionCalculator";
+import AjurCommissionCalculator from "../../components/commision-calculator/AjurCommissionCalculator";
+import AjurCommissionPage from "../../components/commision-calculator/AjurCommissionCalc";
 
 function CommissionCalc() {
     return(
-        <AjurCommissionCalculator/>
+        <AjurCommissionPage/>
     )
 }
 

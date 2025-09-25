@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 
 export default function MagCards() {
-  const PER_PAGE = 4;
+  const PER_PAGE = 6;
   const PREVIEW_CHARS = 120;
   const [posts, setPosts] = useState([]);
   const [page, setPage] = useState(1);

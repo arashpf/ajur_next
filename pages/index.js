@@ -4,6 +4,7 @@ import Image from "next/image";
 import styles from "../styles/Home.module.css";
 import SearchDiv from "../components/others/SearchDiv";
 import WorkerCard from "../components/cards/WorkerCard";
+import ListingCard from "../components/cards/ListingCards";
 import RealStateSmalCard from "../components/cards/realestate/RealStateSmalCard";
 import DepartmentSmalCard from "../components/cards/department/DepartmentSmalCard";
 import CatCard from "../components/cards/CatCard";
@@ -294,7 +295,7 @@ function Home(props) {
       <SwiperSlide key={worker.id} onClick={AlterLoading}>
         <Link href={`/worker/${worker.id}?slug=${worker.slug}`}>
           <a>
-            <WorkerCard key={worker.id} worker={worker} />
+            <WorkerCard key={worker.id} file={worker} />
           </a>
         </Link>
       </SwiperSlide>
@@ -562,7 +563,13 @@ function Home(props) {
                       key={cat.id}
                       title={cat.name}
                       src={`/cats_image/sub-cats/${cat.id}.png`}
-                      onClick={() => { /* placeholder - navigate to category */ }}
+                      onClick={() => {
+                        // navigate to the same URL pattern the old main category links used
+                        const city = props.trigeredcity ? props.trigeredcity : renderDefaultCity();
+                        // use router.push to change the path so pages/index.js will receive the category segment
+                        // encodeURIComponent in case cat.name contains spaces or non-latin chars
+                        router.push(`/${encodeURIComponent(city)}/${encodeURIComponent(cat.name)}`);
+                      }}
                       style={{ animationDelay: `${idx * 80}ms` }}
                     />
                   ))}

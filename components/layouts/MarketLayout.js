@@ -7,8 +7,7 @@ import "slick-carousel/slick/slick-theme.css"
 
 
 import MarketingHeader from "../parts/MarketingHeader"
-import Footer from '../parts/Footer'
-import BottomNavbar from "../parts/bottomNavbar"
+import Footer from "../parts/Footer"
 
 
 
@@ -24,7 +23,7 @@ function MarketLayout({ children }) {
       <div>
   {/* <MarketingHeader /> */}
   <main>{children}</main>
-  <BottomNavbar />
+  <Footer />
       </div>
 
 

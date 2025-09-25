@@ -28,7 +28,6 @@ function Verify() {
 
     const [cooldown, setCooldown] = useState(RESEND_INTERVAL);
 
-    const RESEND_INTERVAL = 60;
 
     useEffect(() => {
         const phone = Cookies.get('phone');

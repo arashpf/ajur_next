@@ -1,13 +1,12 @@
 import React from 'react'
 
-import { makeStyles } from '@mui/styles'
+import { withStyles } from '@mui/styles'
 import Dialog from '@mui/material/Dialog'
 import AppBar from '@mui/material/AppBar'
 import Toolbar from '@mui/material/Toolbar'
 import IconButton from '@mui/material/IconButton'
 import Typography from '@mui/material/Typography'
 import CloseIcon from '@mui/icons-material/Close';
-import { styled } from '@mui/material/styles';
 
 import Slide from '@mui/material/Slide'
 
@@ -84,4 +83,4 @@ class ImgDialog extends React.Component {
   }
 }
 
-export default styled(styles)(ImgDialog)
+export default withStyles(styles)(ImgDialog)
