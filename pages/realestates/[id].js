@@ -38,6 +38,7 @@ import Modal from "@mui/material/Modal";
 import TuneIcon from "@mui/icons-material/Tune";
 import CloseIcon from "@mui/icons-material/Close";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
+import LazyLoader from "../../components/lazyLoader/Loading";
 
 const RealestateSingle = (props) => {
   const router = useRouter();
@@ -340,35 +341,42 @@ const RealestateSingle = (props) => {
   // };
 
   const renderWorkers = () => {
-    if (workers.length > 0) {
-      // Sort workers by date (newest first)
-      const sortedWorkers = [...workers].sort((a, b) => {
-        // Assuming you have a 'created_at' or similar date field
-        return new Date(b.created_at) - new Date(a.created_at);
-      });
-  
-      return sortedWorkers.map((worker) => (
-        <Grid item xl={3} md={4} xs={12} key={worker.id}>
-                  <a href="#" >
-                    <Link
-                      href={`/worker/${worker.id}?slug=${worker.slug}`}
-                      key={worker.id}
-                    >
-                      <a>
-                        <WorkerCard key={worker.id} worker={worker} />
-                      </a>
-                    </Link>
-                  </a>
-                </Grid>
-      ));
-    } else {
-      return (
-        <Grid item md={12} xs={12}>
-          <p>متاسفانه موردی یافت نشد</p>
-        </Grid>
-      );
-    }
-  };
+  if (workers.length > 0) {
+    // Sort workers by date (newest first)
+    const sortedWorkers = [...workers].sort(
+      (a, b) => new Date(b.created_at) - new Date(a.created_at)
+    );
+
+    return (
+      <LazyLoader
+        items={sortedWorkers}
+        itemsPerPage={8}
+        delay={800}
+        renderItem={(worker) => (
+          <Link
+            href={`/worker/${worker.id}?slug=${worker.slug}`}
+            key={worker.id}
+          >
+            <a>
+              <WorkerCard worker={worker} />
+            </a>
+          </Link>
+        )}
+        loadingComponent={<p style={{ textAlign: "center" }}>در حال بارگذاری...</p>}
+        endComponent={<p style={{ textAlign: "center" }}>همه فایل‌ها بارگذاری شدند✅</p>}
+        grid={true}
+        gridProps={{ spacing: 2 }}
+        itemProps={{ xl: 3, md: 4, xs: 12 }}
+      />
+    );
+  } else {
+    return (
+      <Grid item md={12} xs={12}>
+        <p style={{ textAlign: "center" }}>متاسفانه موردی یافت نشد</p>
+      </Grid>
+    );
+  }
+};
 
   const renderSliderCategories = () => {
     return cats.map((cat) => (

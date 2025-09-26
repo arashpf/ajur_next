@@ -42,6 +42,9 @@ import CloseIcon from "@mui/icons-material/Close";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import DepartmentHead from "../../components/panel/department/parts/DepartmentHead";
 import RealStateSmalCard from "../../components/cards/realestate/RealStateSmalCard";
+import LazyLoader from "../../components/lazyLoader/Loading";
+
+
 
 const singleDeparment = (props) => {
   const router = useRouter();
@@ -319,27 +322,32 @@ const singleDeparment = (props) => {
   };
 
   const renderWorkers = () => {
-    if (workers.length > 0) {
-      return workers.map((worker) => (
-        <Grid item xl={3} md={4} xs={12} key={worker.id}>
-          <Link
-            href={`/worker/${worker.id}?slug=${worker.slug}`}
-            key={worker.id}
-          >
-            <a>
-              <WorkerCard key={worker.id} worker={worker} />
-            </a>
-          </Link>
-        </Grid>
-      ));
-    } else {
-      return (
-        <Grid item md={12} xs={12}>
-          <p>متاسفانه موردی یافت </p>
-        </Grid>
-      );
-    }
-  };
+  if (!workers || workers.length === 0) {
+    return (
+      <Grid item md={12} xs={12}>
+        <p>متاسفانه موردی یافت نشد ❌</p>
+      </Grid>
+    );
+  }
+
+  return (
+    <LazyLoader
+      items={workers}
+      itemsPerPage={8}
+      delay={800}
+      renderItem={(worker) => (
+        <Link href={`/worker/${worker.id}?slug=${worker.slug}`} key={worker.id}>
+          <WorkerCard worker={worker} />
+        </Link>
+      )}
+      loadingComponent={<p className="text-center">در حال بارگذاری...</p>}
+      endComponent={<p>همه فایل‌ها بارگذاری شدند ✅</p>}
+    />
+  );
+};
+
+
+
 
   const renderSliderCategories = () => {
     return cats.map((cat) => (

@@ -46,7 +46,7 @@ export default function RealstateCard(props) {
         }
         title={realstate.name + " " + realstate.family}
         subheader={realstate.description}
-      />
+      />-
         <Stars amount={realstate.stars} />
       <div className={Styles["worker-realstate-stars-and-shares"]}>
         <div>

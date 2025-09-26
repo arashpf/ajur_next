@@ -47,6 +47,7 @@ import MainCatCard from "../../components/cards/MainCatCard";
 import CheckBoxIcon from "@mui/icons-material/CheckBox";
 import CheckBoxOutlineBlankIcon from "@mui/icons-material/CheckBoxOutlineBlank";
 import TuneIcon from "@mui/icons-material/Tune";
+import LazyLoader from "../../components/lazyLoader/Loading";
 function valuetext(value) {
   return `${value}°C`;
 }
@@ -926,40 +927,49 @@ const SingleCategory = (props) => {
   }
 
   const renderWorkers = () => {
-    if (workers.length > 0) {
-      return workers.map((worker) => (
-        <Grid item xl={3} md={4} xs={12} key={worker.id}>
-          <a href="#" onClick={AlterLoading}>
-            <Link
-              href={`/worker/${worker.id}?slug=${worker.slug}`}
-              key={worker.id}
-            >
-              <a>
-                <WorkerCard key={worker.id} worker={worker} />
-              </a>
-            </Link>
-          </a>
-        </Grid>
-      ));
-    } else {
-      return (
-        <Grid item md={12} xs={12} style={{ background: "white" }}>
-          <p style={{ textAlign: "center", padding: 20 }}>
-            متاسفانه موردی یافت نشد
-          </p>
-          <div className="not-found-wrapper">
-            <img
-              className="not-found-image"
-              src="/logo/not-found.png"
-              alt="ملکی پیدا نشد"
-              width={200}
-              height={120}
-            />
-          </div>
-        </Grid>
-      );
-    }
-  };
+  if (workers.length > 0) {
+    return (
+      <LazyLoader
+        items={workers}
+        itemsPerPage={8}
+        delay={800}
+        renderItem={(worker) => (
+          <Link
+            href={`/worker/${worker.id}?slug=${worker.slug}`}
+            key={worker.id}
+          >
+            <a onClick={AlterLoading}>
+              <WorkerCard worker={worker} />
+            </a>
+          </Link>
+        )}
+        loadingComponent={<p style={{ textAlign: "center" }}>در حال بارگذاری...</p>}
+        endComponent={<p style={{ textAlign: "center" }}>همه آیتم‌ها بارگذاری شدند ✅</p>}
+        grid={true}
+        gridProps={{ spacing: 2 }}
+        itemProps={{ xl: 3, md: 4, xs: 12 }}
+      />
+    );
+  } else {
+    return (
+      <Grid item md={12} xs={12} style={{ background: "white" }}>
+        <p style={{ textAlign: "center", padding: 20 }}>
+          متاسفانه موردی یافت نشد
+        </p>
+        <div className="not-found-wrapper">
+          <img
+            className="not-found-image"
+            src="/logo/not-found.png"
+            alt="ملکی پیدا نشد"
+            width={200}
+            height={120}
+          />
+        </div>
+      </Grid>
+    );
+  }
+};
+
 
   // const Main =() => {
   //   return cats.map(cat =>

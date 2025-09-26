@@ -108,7 +108,36 @@ function Home(props) {
     clearAction();
   };
 
+  useEffect(
+    () => {
+      //  Cookies.set('selected_city','');
 
+      //  var selected_city = Cookies.get('selected_city');
+      var selected_city = props.trigeredcity;
+
+      //  if(props.url_city){
+      //   alert('city set in url');
+      //   Cookies.set('selected_city',props.url_city);
+      //  }else
+
+      if (!selected_city) {
+        //  router.push("/city-selection");
+        // Cookies.set('selected_city','رباط کریم');
+        selected_city = "رباط کریم";
+        //   Cookies.set('selected_city_lat', '35.47229675', { expires: 365 });
+        // Cookies.set('selected_city_lng', '51.08457936', { expires: 365 });
+      }
+
+      axios({
+        method: "get",
+        url: "https://api.ajur.app/api/base",
+        params: {
+          city: props.url_city ? props.url_city : selected_city
+        }
+      }).then(function(response) {
+        set_cats(response.data.cats);
+        set_the_city(response.data.the_city);
+        set_the_neighborhoods(response.data.the_neighborhoods);
 
   useEffect(() => {
     //  Cookies.set('selected_city','');
@@ -152,22 +181,22 @@ function Home(props) {
 
       console.log(response.data.sub_cats);
 
-      set_departments(response.data.departments);
+        set_realestates(response.data.realstates);
 
-      set_title1(response.data.title1);
+        console.log("the departments data in base is --------------------");
+        console.log(response.data.departments);
 
-      set_title2(response.data.title2);
+        set_departments(response.data.departments);
 
-      set_title3(response.data.title3);
+        set_title1(response.data.title1);
 
-      set_collection1(response.data.collection1);
-      set_collection2(response.data.collection2);
-      set_collection3(response.data.collection3);
+        set_title2(response.data.title2);
 
-      set_loading(false);
-    });
-  }, [props.trigeredcity]);
+        set_title3(response.data.title3);
 
+        set_collection1(response.data.collection1);
+        set_collection2(response.data.collection2);
+        set_collection3(response.data.collection3);
 
   useEffect(() => {
     var faviorited = Cookies.get("favorited");
@@ -183,9 +212,9 @@ function Home(props) {
       method: "get",
       url: "https://api.ajur.app/api/history-workers",
       params: {
-        workers_holder: newProduct,
-      },
-    }).then(function (response) {
+        workers_holder: newProduct
+      }
+    }).then(function(response) {
       set_favorite_workers(response.data);
 
       if (response.data.length == 0) {
@@ -201,7 +230,6 @@ function Home(props) {
     // alert(newProduct);
   }, []);
 
-
   useEffect(() => {
     var history = Cookies.get("history");
 
@@ -216,9 +244,9 @@ function Home(props) {
       method: "get",
       url: "https://api.ajur.app/api/history-workers",
       params: {
-        workers_holder: newProduct,
-      },
-    }).then(function (response) {
+        workers_holder: newProduct
+      }
+    }).then(function(response) {
       set_history_workers(response.data);
 
       if (response.data.length == 0) {
@@ -248,26 +276,27 @@ function Home(props) {
   const renderSliderCategories = () => {
     var selected_city = Cookies.get("selected_city");
 
-    return main_cats.map((cat) => (
+    return main_cats.map(cat =>
       <SwiperSlide
         key={cat.id}
         onClick={AlterLoading}
         className={styles["single_cat_swipper"]}
       >
         <Link
-          href={`/${props.trigeredcity ? props.trigeredcity : renderDefaultCity()
-            }/${cat.name}`}
+          href={`/${props.trigeredcity
+            ? props.trigeredcity
+            : renderDefaultCity()}/${cat.name}`}
         >
           <a>
             <MainCatCard key={cat.id} cat={cat} />
           </a>
         </Link>
       </SwiperSlide>
-    ));
+    );
   };
 
   const renderSliderOne = () => {
-    return collection1.map((worker) => (
+    return collection1.map(worker =>
       <SwiperSlide key={worker.id} onClick={AlterLoading}>
         <Link href={`/worker/${worker.id}?slug=${worker.slug}`}>
           <a>
@@ -275,11 +304,11 @@ function Home(props) {
           </a>
         </Link>
       </SwiperSlide>
-    ));
+    );
   };
 
   const renderSlidertwo = () => {
-    return collection2.map((worker) => (
+    return collection2.map(worker =>
       <SwiperSlide key={worker.id} onClick={AlterLoading}>
         <Link href={`/worker/${worker.id}?slug=${worker.slug}`}>
           <a>
@@ -287,11 +316,11 @@ function Home(props) {
           </a>
         </Link>
       </SwiperSlide>
-    ));
+    );
   };
 
   const renderSliderthree = () => {
-    return collection3.map((worker) => (
+    return collection3.map(worker =>
       <SwiperSlide key={worker.id} onClick={AlterLoading}>
         <Link href={`/worker/${worker.id}?slug=${worker.slug}`}>
           <a>
@@ -299,11 +328,11 @@ function Home(props) {
           </a>
         </Link>
       </SwiperSlide>
-    ));
+    );
   };
 
   const renderSliderDepartments = () => {
-    return departments.map((department) => (
+    return departments.map(department =>
       <SwiperSlide key={department.id} onClick={AlterLoading}>
         <Link href={`/department/${department.id}?slug=${department.slug}`}>
           <a>
@@ -311,11 +340,11 @@ function Home(props) {
           </a>
         </Link>
       </SwiperSlide>
-    ));
+    );
   };
 
   const renderSliderRealState = () => {
-    return realestates.map((realstate) => (
+    return realestates.map(realstate =>
       <SwiperSlide key={realstate.id} onClick={AlterLoading}>
         <Link href={`/realestates/${realstate.id}?slug=${realstate.slug}`}>
           <a>
@@ -323,12 +352,11 @@ function Home(props) {
           </a>
         </Link>
       </SwiperSlide>
-    ));
+    );
   };
 
-
   const renderSomeHistoryeWorkers = () => {
-    return history_workers.map((worker) => (
+    return history_workers.map(worker =>
       <SwiperSlide key={worker.id} onClick={AlterLoading}>
         <Link href={`/worker/${worker.id}?slug=${worker.slug}`}>
           <a>
@@ -336,11 +364,11 @@ function Home(props) {
           </a>
         </Link>
       </SwiperSlide>
-    ));
-  }
+    );
+  };
 
   const renderSomeFavoriteWorkers = () => {
-    return favorite_workers.map((worker) => (
+    return favorite_workers.map(worker =>
       <SwiperSlide key={worker.id} onClick={AlterLoading}>
         <Link href={`/worker/${worker.id}?slug=${worker.slug}`}>
           <a>
@@ -348,158 +376,131 @@ function Home(props) {
           </a>
         </Link>
       </SwiperSlide>
-    ));
-  }
-
+    );
+  };
 
   const renderHistoryWorkers = () => {
-
     if (1) {
       return (
-        history_workers.length > 0 && (
-          <div style={{ paddingBottom: 10 }}>
-            <div className={styles["title"]}>
-
-
-              <h2>آخرین بازدید های شما</h2>
-
-
-
-            </div>
-            <Swiper
-              slidesPerView={1}
-              spaceBetween={8}
-              autoplay={{
-                delay: 3000,
-                disableOnInteraction: true,
-                pauseOnMouseEnter: true,
-              }}
-              pagination={{ clickable: true }}
-              breakpoints={{
-                200: {
-                  slidesPerView: 1,
-                  spaceBetween: 2,
-
-                  navigation: {
-                    enabled: true,
-                  },
-                },
-
-                640: {
-                  slidesPerView: 2,
-                  spaceBetween: 3,
-                  navigation: {
-                    enabled: true,
-                  },
-                },
-                768: {
-                  slidesPerView: 3,
-                  spaceBetween: 20,
-                  navigation: {
-                    enabled: true,
-                  },
-                },
-                1400: {
-                  slidesPerView: 4,
-                  spaceBetween: 20,
-                  navigation: {
-                    enabled: true,
-                  },
-                },
-              }}
-              modules={[Pagination, Navigation]}
-              className={styles["worker-swiper"]}
-            >
-              {renderSomeHistoryeWorkers()}
-
-
-            </Swiper>
+        history_workers.length > 0 &&
+        <div style={{ paddingBottom: 10 }}>
+          <div className={styles["title"]}>
+            <h2>آخرین بازدید های شما</h2>
           </div>
-        )
-      )
-    }
-  }
+          <Swiper
+            slidesPerView={1}
+            spaceBetween={8}
+            autoplay={{
+              delay: 3000,
+              disableOnInteraction: true,
+              pauseOnMouseEnter: true
+            }}
+            pagination={{ clickable: true }}
+            breakpoints={{
+              200: {
+                slidesPerView: 1,
+                spaceBetween: 2,
 
+                navigation: {
+                  enabled: true
+                }
+              },
+
+              640: {
+                slidesPerView: 2,
+                spaceBetween: 3,
+                navigation: {
+                  enabled: true
+                }
+              },
+              768: {
+                slidesPerView: 3,
+                spaceBetween: 20,
+                navigation: {
+                  enabled: true
+                }
+              },
+              1400: {
+                slidesPerView: 4,
+                spaceBetween: 20,
+                navigation: {
+                  enabled: true
+                }
+              }
+            }}
+            modules={[Pagination, Navigation]}
+            className={styles["worker-swiper"]}
+          >
+            {renderSomeHistoryeWorkers()}
+          </Swiper>
+        </div>
+      );
+    }
+  };
 
   const renderFavoriteWorkers = () => {
-
     if (1) {
       return (
-        favorite_workers.length > 0 && (
-          <div style={{ paddingBottom: 20 }}>
-            <div className={styles["title"]}>
-
-
-              <h2>آخرین مورد پسند های شما</h2>
-
-
-
-            </div>
-            <Swiper
-              slidesPerView={1}
-              spaceBetween={8}
-              autoplay={{
-                delay: 3000,
-                disableOnInteraction: true,
-                pauseOnMouseEnter: true,
-              }}
-              pagination={{ clickable: true }}
-              breakpoints={{
-                200: {
-                  slidesPerView: 1,
-                  spaceBetween: 2,
-
-                  navigation: {
-                    enabled: true,
-                  },
-                },
-
-                640: {
-                  slidesPerView: 2,
-                  spaceBetween: 3,
-                  navigation: {
-                    enabled: true,
-                  },
-                },
-                768: {
-                  slidesPerView: 3,
-                  spaceBetween: 20,
-                  navigation: {
-                    enabled: true,
-                  },
-                },
-                1400: {
-                  slidesPerView: 4,
-                  spaceBetween: 20,
-                  navigation: {
-                    enabled: true,
-                  },
-                },
-              }}
-
-              modules={[Pagination, Navigation]}
-              className={styles["worker-swiper"]}
-            >
-
-              {renderSomeFavoriteWorkers()}
-
-
-            </Swiper>
+        favorite_workers.length > 0 &&
+        <div style={{ paddingBottom: 20 }}>
+          <div className={styles["title"]}>
+            <h2>آخرین مورد پسند های شما</h2>
           </div>
+          <Swiper
+            slidesPerView={1}
+            spaceBetween={8}
+            autoplay={{
+              delay: 3000,
+              disableOnInteraction: true,
+              pauseOnMouseEnter: true
+            }}
+            pagination={{ clickable: true }}
+            breakpoints={{
+              200: {
+                slidesPerView: 1,
+                spaceBetween: 2,
 
-        )
+                navigation: {
+                  enabled: true
+                }
+              },
 
-      )
-
-
+              640: {
+                slidesPerView: 2,
+                spaceBetween: 3,
+                navigation: {
+                  enabled: true
+                }
+              },
+              768: {
+                slidesPerView: 3,
+                spaceBetween: 20,
+                navigation: {
+                  enabled: true
+                }
+              },
+              1400: {
+                slidesPerView: 4,
+                spaceBetween: 20,
+                navigation: {
+                  enabled: true
+                }
+              }
+            }}
+            modules={[Pagination, Navigation]}
+            className={styles["worker-swiper"]}
+          >
+            {renderSomeFavoriteWorkers()}
+          </Swiper>
+        </div>
+      );
     }
-
-  }
+  };
 
   const renderOrSpinner = () => {
     if (loading) {
       return (
-        <div className="spinnerImageView" >
+        <div className="spinnerImageView">
           <img
             className="spinner-image"
             src="/logo/ajour-gif.gif"
@@ -596,47 +597,43 @@ function Home(props) {
                 autoplay={{
                   delay: 5000,
                   disableOnInteraction: true,
-                  pauseOnMouseEnter: true,
+                  pauseOnMouseEnter: true
                 }}
                 breakpoints={{
                   200: {
                     slidesPerView: 2,
-                    spaceBetween: 10,
+                    spaceBetween: 10
                   },
 
                   640: {
                     slidesPerView: 2,
-                    spaceBetween: 10,
+                    spaceBetween: 10
                   },
                   768: {
                     slidesPerView: 4,
-                    spaceBetween: 20,
+                    spaceBetween: 20
                   },
                   1400: {
                     slidesPerView: 5,
-                    spaceBetween: 30,
-                  },
+                    spaceBetween: 30
+                  }
                 }}
                 modules={[Pagination, Navigation]}
-              // className={styles["cat-swiper"]}
+                // className={styles["cat-swiper"]}
               >
                 {renderSliderCategories()}
               </Swiper> */}
-
-              {/* {collection1.length > 0 && (
                 <div>
                   <div className={styles["title"]}>
-
                     <Link
                       href={`/${props.trigeredcity
                         ? props.trigeredcity
-                        : renderDefaultCity()
-                        }/فروش زمین مسکونی`}
+                        : renderDefaultCity()}/فروش زمین مسکونی`}
                     >
-                      <h2>{title1}</h2>
-
+                      <h2>
+                        {title1}
+                      </h2>
                     </Link>
-
                   </div>
                   <Swiper
                     slidesPerView={1}
@@ -644,7 +641,7 @@ function Home(props) {
                     autoplay={{
                       delay: 3000,
                       disableOnInteraction: true,
-                      pauseOnMouseEnter: true,
+                      pauseOnMouseEnter: true
                     }}
                     pagination={{ clickable: true }}
                     breakpoints={{
@@ -653,31 +650,31 @@ function Home(props) {
                         spaceBetween: 2,
 
                         navigation: {
-                          enabled: true,
-                        },
+                          enabled: true
+                        }
                       },
 
                       640: {
                         slidesPerView: 2,
                         spaceBetween: 3,
                         navigation: {
-                          enabled: true,
-                        },
+                          enabled: true
+                        }
                       },
                       768: {
                         slidesPerView: 3,
                         spaceBetween: 20,
                         navigation: {
-                          enabled: true,
-                        },
+                          enabled: true
+                        }
                       },
                       1400: {
                         slidesPerView: 4,
                         spaceBetween: 20,
                         navigation: {
-                          enabled: true,
-                        },
-                      },
+                          enabled: true
+                        }
+                      }
                     }}
                     modules={[Pagination, Navigation]}
                     className={styles["worker-swiper"]}
@@ -688,13 +685,11 @@ function Home(props) {
                       <Link
                         href={`/${props.trigeredcity
                           ? props.trigeredcity
-                          : renderDefaultCity()
-                          }/فروش زمین مسکونی`}
+                          : renderDefaultCity()}/فروش زمین مسکونی`}
                       >
                         <div className={styles["more-swiper"]}>
                           <p className={styles["more-swiper-p"]}>
-                            {" "}
-                            <p>نمایش موارد بیشتر</p>{" "}
+                            {" "}<p>نمایش موارد بیشتر</p>{" "}
                             <ForwardIcon
                               className={styles["more-swiper-icon"]}
                             />{" "}
@@ -712,10 +707,11 @@ function Home(props) {
                     <Link
                       href={`/${props.trigeredcity
                         ? props.trigeredcity
-                        : renderDefaultCity()
-                        }/فروش آپارتمان`}
+                        : renderDefaultCity()}/فروش آپارتمان`}
                     >
-                      <h2>{title2} </h2>
+                      <h2>
+                        {title2}{" "}
+                      </h2>
                     </Link>
                   </div>
                   <Swiper
@@ -732,31 +728,31 @@ function Home(props) {
                         spaceBetween: 2,
 
                         navigation: {
-                          enabled: true,
-                        },
+                          enabled: true
+                        }
                       },
 
                       640: {
                         slidesPerView: 2,
                         spaceBetween: 10,
                         navigation: {
-                          enabled: true,
-                        },
+                          enabled: true
+                        }
                       },
                       768: {
                         slidesPerView: 3,
                         spaceBetween: 20,
                         navigation: {
-                          enabled: true,
-                        },
+                          enabled: true
+                        }
                       },
                       1400: {
                         slidesPerView: 4,
                         spaceBetween: 20,
                         navigation: {
-                          enabled: true,
-                        },
-                      },
+                          enabled: true
+                        }
+                      }
                     }}
                     modules={[Pagination, Navigation]}
                     className={styles["worker-swiper"]}
@@ -766,13 +762,11 @@ function Home(props) {
                       <Link
                         href={`/${props.trigeredcity
                           ? props.trigeredcity
-                          : renderDefaultCity()
-                          }/فروش آپارتمان`}
+                          : renderDefaultCity()}/فروش آپارتمان`}
                       >
                         <div className={styles["more-swiper"]}>
                           <p className={styles["more-swiper-p"]}>
-                            {" "}
-                            <p>نمایش موارد بیشتر</p>{" "}
+                            {" "}<p>نمایش موارد بیشتر</p>{" "}
                             <ForwardIcon
                               className={styles["more-swiper-icon"]}
                             />{" "}
@@ -784,18 +778,18 @@ function Home(props) {
                 </div>
               )} */}
 
-              {collection3.length > 0 && (
+              {collection3.length > 0 &&
                 <div>
                   <div className={styles["title"]}>
                     <Link
                       href={`/${props.trigeredcity
                         ? props.trigeredcity
-                        : renderDefaultCity()
-                        }/فروش باغ و باغچه`}
+                        : renderDefaultCity()}/فروش باغ و باغچه`}
                     >
-                      <h2>{title3} </h2>
+                      <h2>
+                        {title3}{" "}
+                      </h2>
                     </Link>
-
                   </div>
                   <Swiper
                     slidesPerView={1}
@@ -808,31 +802,31 @@ function Home(props) {
                         spaceBetween: 2,
 
                         navigation: {
-                          enabled: true,
-                        },
+                          enabled: true
+                        }
                       },
 
                       640: {
                         slidesPerView: 2,
                         spaceBetween: 10,
                         navigation: {
-                          enabled: true,
-                        },
+                          enabled: true
+                        }
                       },
                       768: {
                         slidesPerView: 3,
                         spaceBetween: 20,
                         navigation: {
-                          enabled: true,
-                        },
+                          enabled: true
+                        }
                       },
                       1400: {
                         slidesPerView: 4,
                         spaceBetween: 20,
                         navigation: {
-                          enabled: true,
-                        },
-                      },
+                          enabled: true
+                        }
+                      }
                     }}
                     modules={[Pagination, Navigation]}
                     className={styles["worker-swiper"]}
@@ -843,13 +837,11 @@ function Home(props) {
                       <Link
                         href={`/${props.trigeredcity
                           ? props.trigeredcity
-                          : renderDefaultCity()
-                          }/فروش باغ و باغچه`}
+                          : renderDefaultCity()}/فروش باغ و باغچه`}
                       >
                         <div className={styles["more-swiper"]}>
                           <p className={styles["more-swiper-p"]}>
-                            {" "}
-                            <p>نمایش موارد بیشتر</p>{" "}
+                            {" "}<p>نمایش موارد بیشتر</p>{" "}
                             <ForwardIcon
                               className={styles["more-swiper-icon"]}
                             />{" "}
@@ -858,13 +850,14 @@ function Home(props) {
                       </Link>
                     </SwiperSlide>
                   </Swiper>
-                </div>
-              )}
+                </div>}
 
               <FileRequest />
 
               <div className={styles["title"]}>
-                <h2>بهترین دپارتمان های املاک آجر {the_city.title}</h2>
+                <h2>
+                  بهترین دپارتمان های املاک آجر {the_city.title}
+                </h2>
               </div>
 
               <div>
@@ -876,17 +869,17 @@ function Home(props) {
                   autoplay={{
                     delay: 5000,
                     disableOnInteraction: false,
-                    pauseOnMouseEnter: true,
+                    pauseOnMouseEnter: true
                   }}
                   breakpoints={{
                     200: {
                       slidesPerView: 2,
-                      spaceBetween: 15,
+                      spaceBetween: 15
                     },
 
                     640: {
                       slidesPerView: 3,
-                      spaceBetween: 20,
+                      spaceBetween: 20
                     },
                     768: {
                       slidesPerView: 4,
@@ -894,8 +887,8 @@ function Home(props) {
                     },
                     1400: {
                       slidesPerView: 7,
-                      spaceBetween: 35,
-                    },
+                      spaceBetween: 35
+                    }
                   }}
                   modules={[Pagination, Navigation]}
                   className={styles["cat-swiper"]}
@@ -905,7 +898,9 @@ function Home(props) {
               </div>
 
               <div className={styles["title"]}>
-                <h2>بهترین مشاورین املاک آجر {the_city.title}</h2>
+                <h2>
+                  بهترین مشاورین املاک آجر {the_city.title}
+                </h2>
               </div>
 
               <div>
@@ -917,12 +912,12 @@ function Home(props) {
                   breakpoints={{
                     200: {
                       slidesPerView: 2,
-                      spaceBetween: 15,
+                      spaceBetween: 15
                     },
 
                     640: {
                       slidesPerView: 3,
-                      spaceBetween: 20,
+                      spaceBetween: 20
                     },
                     768: {
                       slidesPerView: 4,
@@ -930,8 +925,8 @@ function Home(props) {
                     },
                     1400: {
                       slidesPerView: 7,
-                      spaceBetween: 35,
-                    },
+                      spaceBetween: 35
+                    }
                   }}
                   modules={[Pagination, Navigation]}
                   className={styles["cat-swiper"]}
@@ -950,14 +945,13 @@ function Home(props) {
   };
   return (
     <div className={styles.container}>
-
       <Head>
         <meta charset="UTF-8" />
         <meta name="robots" content="max-image-preview:large" />
         <meta
           name="viewport"
           content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
-        ></meta>
+        />
         <title> آجر : مشاور املاک هوشمند </title>
         <meta
           name="description"
@@ -999,8 +993,9 @@ function Home(props) {
         <link rel="canonical" href="https://ajur.app" />
       </Head>
 
-      <main className={styles.main}>{renderOrSpinner()}</main>
-
+      <main className={styles.main}>
+        {renderOrSpinner()}
+      </main>
     </div>
   );
 }
@@ -1013,8 +1008,8 @@ export function getServerSideProps(props) {
 
   return {
     props: {
-      url_city: city,
-    }, // will be passed to the page component as props
+      url_city: city
+    } // will be passed to the page component as props
   };
 }
 

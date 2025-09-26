@@ -7,14 +7,11 @@ import Image from "next/image";
 import BottomNavigation from "@mui/material/BottomNavigation";
 import BottomNavigationAction from "@mui/material/BottomNavigationAction";
 
-import ShareLocationIcon from "@mui/icons-material/ShareLocation";
-
+import CampaignIcon from "@mui/icons-material/Campaign";
 import AddCircleIcon from "@mui/icons-material/AddCircle";
 import HomeIcon from "@mui/icons-material/Home";
-
 import SearchIcon from "@mui/icons-material/Search";
-import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
-import FavoriteIcon from '@mui/icons-material/Favorite';
+import FavoriteIcon from "@mui/icons-material/Favorite";
 import PersonIcon from "@mui/icons-material/Person";
 import CampaignIcon from "@mui/icons-material/Campaign";
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
@@ -24,7 +21,7 @@ import { useRouter } from "next/router";
 import Cookies from "js-cookie";
 import Link from "next/link";
 
-const Footer = (props) => {
+const Footer = () => {
   const router = useRouter();
   const [value, setValue] = React.useState(0);
   const ref = React.useRef(null);
@@ -105,7 +102,6 @@ const Footer = (props) => {
       var token = Cookies.get("id_token");
       // close assistant and navigate according to auth, but avoid pushing the same route
       if (!token) {
-        console.log("you have to login");
         Cookies.set("destination_before_auth", "/panel", { expires: 14 });
         setValue(0);
         const base = router && router.asPath ? router.asPath.split('?')[0] : router.pathname;
@@ -118,7 +114,6 @@ const Footer = (props) => {
         if (base !== "/panel") router.push("/panel");
       }
     };
-
     const onClickMarketing = () => {
       console.log("new worker clicked from a person");
       var token = Cookies.get("id_token");
@@ -252,6 +247,7 @@ const Footer = (props) => {
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
               <PersonIcon style={{ color: value === 4 ? '#fff' : 'rgba(0,0,0,0.50)', fontSize: 26 }} />
               <span style={{ fontSize: 12, color: value === 4 ? 'rgba(255,255,255,0.95)' : 'rgba(0,0,0,0.70)' }}>املاک من</span>
+
             </div>
           </div>
         </div>
@@ -273,6 +269,7 @@ const Footer = (props) => {
 
   {/* assistant overlay removed: footer now only handles tab selection without opening an overlay */}
   {/* site footer removed — keep only bottom navbar + assistant */}
+
     </div>
   );
 };
