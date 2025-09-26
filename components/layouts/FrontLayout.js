@@ -8,6 +8,7 @@ import "slick-carousel/slick/slick-theme.css"
 
 import Header from '../parts/Header'
 import Footer from '../parts/Footer'
+import AIOverlayComponent from "../parts/AIOverlayComponent"
 import GoogleAnalytics from '../parts/GoogleAnalytics';
 import { GoogleTagManager } from '@next/third-parties/google';
 

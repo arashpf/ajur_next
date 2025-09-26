@@ -31,11 +31,6 @@ function LandingPage() {
         <div id="landing-page" className={Style["landing-page"]}>
             <div className={Style["intro"]}>
                 <WelcomePopup />
-                <button onClick={() => {
-                    Cookies.remove('hasSeenIntro');
-                }}>
-                    Reset
-                </button>
             </div>
             <header className={Style["page-header"]}>
                 <h2 className={Style["header-title"]}>تبلیغات هدفمند اختصاصی املاک</h2>

@@ -26,6 +26,7 @@ import Chart from "../../components/panel/Chart";
 import Deposits from "../../components/panel/Deposits";
 import Orders from "../../components/panel/Orders";
 import SpinnerLoader from "../../components/panel/SpinnerLoader";
+import Footer from "../../components/parts/Footer";
 import SpeedDial from "../../components/panel/SpeedDial";
 
 import CatCard2 from "../../components/cards/CatCard2";
@@ -50,6 +51,7 @@ import Department from "../../components/panel/department";
 import Tab from "react-bootstrap/Tab";
 import Tabs from "react-bootstrap/Tabs";
 import AppBar from "@mui/material/AppBar";
+import ListingCard from "../../components/cards/ListingCards";
 
 function Copyright(props) {
   return (
@@ -262,7 +264,7 @@ const DashboardContent = (props) => {
       return workers.map((worker) => (
         <Grid item md={4} xs={12} key={worker.id}>
           <a>
-            <PanelWorkerCard key={worker.id} worker={worker} />
+            <WorkerCard key={worker.id} file={worker} />
             {/* <WorkerCard key={worker.id} worker={worker} /> */}
           </a>
         </Grid>
@@ -408,7 +410,12 @@ const DashboardContent = (props) => {
   };
 
   if (loading) {
-    return <SpinnerLoader />;
+    return (
+      <>
+        <SpinnerLoader />
+        <Footer />
+      </>
+    );
   } else {
     return (
       <ThemeProvider theme={mdTheme}>
@@ -433,8 +440,10 @@ const DashboardContent = (props) => {
             {rendertabs()}
           </Box>
         </Box>
-        <SpeedDial />
-        <HomeDial />
+  {/* keep only the new-file SpeedDial and push it higher to sit above the footer */}
+  <SpeedDial />
+  {/* main footer added to panel page */}
+  {typeof window !== 'undefined' && require('../../components/parts/Footer').default && React.createElement(require('../../components/parts/Footer').default)}
       </ThemeProvider>
     );
   }

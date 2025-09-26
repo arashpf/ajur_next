@@ -25,7 +25,7 @@
   inset: 0;
   border-radius: 50px;
   padding: 3px; /* controls thickness of border */
-  background: linear-gradient(270deg, rgb(177, 3, 47), #dd0143, #5303e7, hsl(0, 100%, 65%));
+  background: linear-gradient(270deg, rgb(121, 16, 16), #ac460b, #a18400 );
   background-size: 600% 600%;
   animation: animatedBorder 8s linear infinite;
 

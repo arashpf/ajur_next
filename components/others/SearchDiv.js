@@ -153,7 +153,7 @@ const handleSmartSearch = (filters) => {
           <SmartSearchBox onSearch={handleSmartSearch} />
         </div>
 
-        <div className={styles["neighborhoods-wrapper"]}>
+        {/* <div className={styles["neighborhoods-wrapper"]}>
           <Swiper
             slidesPerView={1}
             spaceBetween={5}
@@ -175,7 +175,7 @@ const handleSmartSearch = (filters) => {
           >
             {renderNeighborhoods()}
           </Swiper>
-        </div>
+        </div> */}
 
         {/* Render search results
         {searchResults.length > 0 && (

@@ -1,6 +1,11 @@
+body {
+  background-color: white !important;
+}
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
 
 img.notailwind{
   height: 190px;
@@ -116,6 +121,7 @@ div {
 
 
   color: orange !important;
+  display: none !important;
   /* box-shadow: rgba(0, 0, 0, 0.50) 0px 5px 15px; */
 
 

@@ -54,7 +54,7 @@ function WelcomePopup() {
                     <div className={Style["intro-slide"]}>
                         <img
                             className={Style["slide-image"]}
-                            src='https://i.postimg.cc/DyD86nQn/slazzer-edit-image.png'
+                            src='/img/G-ads/gads.png'
                             alt='google-ads'
                         />
                         <h2>تبلیغات گوگل چیست؟</h2>
@@ -71,7 +71,7 @@ function WelcomePopup() {
                     <div className={Style["intro-slide"]}>
                         <img
                             className={Style["slide-image"]}
-                            src='https://i.postimg.cc/x1cLj65T/1.png'
+                            src='/img/G-ads/customer-magnet.png'
                             alt='google-ads'
                         />
                         <h2> چگونه می‌تواند به کسب و کار شما کمک کند؟ </h2>
@@ -85,12 +85,12 @@ function WelcomePopup() {
                     <div className={Style["intro-slide"]}>
                         <img
                             className={Style["slide-image"]}
-                            src='https://i.postimg.cc/N00Gvnkp/clicks.png'
+                            src='/img/G-ads/clicks.png'
                             alt='google-ads'
                         />
-                        <h2> چرا تبلیغات گوگل مغرون به صرفه است؟ </h2>
+                        <h2> چرا تبلیغات گوگل به صرفه است؟ </h2>
                         <p>
-                            چون فقط وقتی بازدید حساب می‌شود که مشتری واقعاً روی آگهی شما کلیک کند.
+                            چون فقط وقتی از حساب شما اعتبار کسر می‌شود که مشتری واقعاً روی آگهی شما کلیک کند.
                         </p>
                     </div>
                 </SwiperSlide>
@@ -98,8 +98,7 @@ function WelcomePopup() {
                     <div className={Style["intro-slide"]}>
                         <img
                             className={Style["slide-image"]}
-                            src='https://i.postimg.cc/bN8sF3WF/ajur-and-gads.png'
-                            alt='google-ads'
+                            src='/img/G-ads/ajur-gads.png'
                         />
                         <h2> چگونه می‌توانید از آن استفاده کنید؟ </h2>
                         <p>

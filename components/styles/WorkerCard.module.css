@@ -4,7 +4,6 @@
 
 .card-wrapper {
   position: relative;
- 
   border-radius: 10px;
   box-shadow: rgba(0, 0, 0, 0.35) 0px 5px 15px;
 }
@@ -24,9 +23,9 @@
   justify-content: space-between;
   /* height: 30px;
   width: 30px; */
- 
+
   padding: 10px;
-  
+
   background-color: rgba(255, 255, 255, 0.70);
 
   /* margin: 0 5px; */
@@ -50,9 +49,9 @@
   justify-content: space-between;
   /* height: 30px;
   width: 30px; */
- 
-  padding: 4px;
-  
+
+  padding: 2px;
+
   background-color: rgba(255, 255, 255, 0.70);
 
   /* margin: 0 5px; */
@@ -67,32 +66,26 @@
   text-align: right;
   color: #444;
   margin-bottom: -5px;
-  
-  
- 
-}
-.properties-wrapper{
-  
 
-  
- right: 10px;
-  
+
+
+}
+
+.properties-wrapper {
   display: flex;
   flex-direction: row;
   justify-content: flex-end;
   font-size: 14px;
   text-align: right;
- 
+
 }
 .card-inside-top {
   position: relative;
 }
 
 .properties-hint {
-  position: absolute;
-  bottom: 150px; /* فاصله از پایین container */
-  left: 50%;
-  transform: translateX(-50%);
+
+  margin-top: 10px;
   display: flex;
   flex-direction: row;
   flex-wrap: wrap;
@@ -112,14 +105,14 @@
 
 .card-inside-top {
   justify-content: flex-end;
-    width: 100%;
-} 
+  width: 100%;
+}
 
 .card-inside-top {
   /* background-color: blue; */
   position: absolute;
-  top: 1%;
-   right:2px;
+  top: 0%;
+  left: 0%;
   /* width: 360px; */
   /* height: 8%; */
   /* top: 1px; */
@@ -160,7 +153,7 @@
   text-align: center;
   font-family: sans-serif;
   padding: 1px 2px;
-  margin:3px;
+  margin: 3px;
   font-size: 12px;
 }
 
@@ -176,6 +169,14 @@
   justify-content: space-between;
 }
 
+.worker-address {
+  text-align: right;
+  font-size: 14px;
+  color: #888;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+}
 
 @media (max-width: 600px) {
   .card-wrapper {
@@ -183,14 +184,11 @@
   }
 
 
-
-
-
   .card-inside-top {
-    
+
     position: absolute;
     top: 0%;
-    left:0%;
+    left: 0%;
     /* width: 360px; */
     /* height: 8%; */
     /* top: 1px; */
@@ -213,7 +211,7 @@
     flex-direction: row;
     justify-content: space-between;
     height: 20px;
-    
+
     background-color: rgba(255, 255, 255, 0.70);
 
     margin: 0 5px;
@@ -221,17 +219,15 @@
     border-radius: 5px;
   }
 
-  .card-inside-bottom-right-wrappe {
-    
-  }
-  
-  .properties-wrapper{
+  .card-inside-bottom-right-wrappe {}
+
+  .properties-wrapper {
     display: flex;
     flex-direction: row;
     justify-content: flex-end;
     font-size: 14px;
     text-align: right;
-   
+
   }
 }
 
@@ -241,7 +237,7 @@
   .card-inside-top {
     justify-content: space-between;
     width: 100%;
-    
+
   }
 
   .card-inside-bottom {
@@ -256,12 +252,9 @@
     justify-content: space-between;
     height: 20px;
     background-color: rgba(255, 255, 255, 0.70);
-    
+
 
     margin: 0 5px;
     padding: 0 10px;
     border-radius: 5px;
   }
-}
-
-

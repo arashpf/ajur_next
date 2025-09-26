@@ -1,6 +1,6 @@
 .appBanner {
   position: fixed;
-  bottom: 10px;
+  top: 10%;
   left: 10px;
   right: 10px;
   background: linear-gradient(to right, #bc323a, #9c1f26); /* Updated Gradient */

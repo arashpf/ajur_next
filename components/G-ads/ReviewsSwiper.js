@@ -9,21 +9,33 @@ import Style from '../../styles/G-ads/LandingPage.module.css';
 const reviews = [
     {
         id: 1,
-        name: "Jack Hoffman",
+        name: "امیر رضایی",
         rating: 5,
-        comment: "Amazing service, highly recommended!",
+        comment: "خیلی عالی بود! با تبلیغات گوگل آجر، مشتریان زیادی برای فایل‌هام پیدا کردم و فروش سریع‌تر شد.",
     },
     {
         id: 2,
-        name: "Hugh Janus",
+        name: "حسین محمدی",
         rating: 4,
-        comment: "Very helpful and professional team.",
+        comment: "پنل کاربری ساده و کاربردی است. تبلیغات گوگل واقعاً باعث شد بازدید صفحه من بیشتر شود.",
     },
     {
         id: 3,
-        name: "Neda R.",
+        name: "حسین کریمی",
         rating: 5,
-        comment: "Sold my property quickly thanks to them.",
+        comment: "در کمتر از یک هفته چندین تماس از طریق گوگل داشتم. ممنون از تیم پشتیبانی آجر!",
+    },
+    {
+        id: 4,
+        name: "علی احمدی",
+        rating: 5,
+        comment: "خیلی راحت تونستم ملک‌هام رو ثبت کنم و با خرید تبلیغ، صفحه‌ام در گوگل دیده شد.",
+    },
+    {
+        id: 5,
+        name: "رضا شریفی",
+        rating: 4,
+        comment: "پیشنهاد می‌کنم به همه مشاورین املاک. تبلیغات گوگل آجر واقعاً موثر بود.",
     },
 ];
 
@@ -69,7 +81,7 @@ function ReviewsSwiper() {
                         <div className={Style["review-card"]}>
                             <h4 className={Style["review-name"]}>{review.name}</h4>
                             <Stars amount={review.rating} />
-                            <p className={Style["review-comment"]}>{review.comment}</p>
+                            <p className={Style["review-comment"]} dir="rtl" style={{ textAlign: 'center' }}>{review.comment}</p>
                         </div>
                     </SwiperSlide>
                 ))}

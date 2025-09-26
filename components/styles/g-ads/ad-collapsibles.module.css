@@ -149,6 +149,7 @@
 
 /* Half containers inside shared box */
 .half-container {
+    display: inline;
     flex: 1;
     padding: 12px;
     font-size: 14px;
@@ -164,6 +165,7 @@
 /* Optional: keep tight vertical spacing inside containers */
 .container p,
 .half-container p {
+    display: inline;
     margin: 0 0 4px;
 }
 

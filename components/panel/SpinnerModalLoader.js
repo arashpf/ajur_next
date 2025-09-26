@@ -7,10 +7,10 @@ const SpinnerLoader = (props) => {
   return (
   <div className={styles["spinner-modal-wrapper"]}>
     <div className={styles["spinner-modal-single"]}>
-    <MagicSpinner
-       size={50} color="#686769" loading={true}
-     />
-     </div>
+      <div className={styles["spinner-box"]}>
+        <MagicSpinner size={80} color="#686769" loading={true} />
+      </div>
+    </div>
     </div>
   )
 }

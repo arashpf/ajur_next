@@ -9,12 +9,18 @@ import { Pagination, Navigation, Autoplay } from 'swiper';
 import { Header } from "../../components/G-ads/Header";
 import { ActiveAds } from "../../components/G-ads/ActiveAds";
 import Style from "../../styles/G-ads/user-dashboard.module.css"
+
 import NewAd from "../../components/G-ads/new-add";
 import Button from "@mui/material/Button";
 
+import KeywordClicksBarChart from "../../components/G-ads/KeywordClicksBarChart";
+import KeywordClicksDoughnutChart from "../../components/G-ads/KeywordClicksDoughnutChart";
+import axios from "axios";
+import Cookies from 'js-cookie';
+import { useRouter } from "next/router";
 
 
-
+// Dummy data for initial state
 const dummyAds = [
     {
         AdUrl: "#",
@@ -25,11 +31,19 @@ const dummyAds = [
         clicksLeft: "150",
         callCount: "20",
         status: "active",
+        plan: "diamond",
         chart: [
             { date: "2025/07/13", views: 20 },
             { date: "2025/07/14", views: 40 },
             { date: "2025/07/15", views: 45 },
             { date: "2025/07/16", views: 45 },
+        ],
+        keywordClicks: [
+            { keyword: "خانه", clicks: 20 },
+            { keyword: "ویلایی", clicks: 10 },
+            { keyword: "زمین", clicks: 5 },
+            { keyword: "زیر قیمت", clicks: 2 },
+            { keyword: "سند دار", clicks: 6 },
         ],
     }, {
         AdUrl: "#",
@@ -40,7 +54,10 @@ const dummyAds = [
         clicksLeft: "100",
         callCount: "0",
         status: "pending",
+        plan: "gold",
         chart: [
+        ],
+        keywordClicks: [
         ],
     }, {
         AdUrl: "#",
@@ -51,6 +68,7 @@ const dummyAds = [
         clicksLeft: "0",
         callCount: "40",
         status: "unactive",
+        plan: "silver",
         chart: [
             { date: "2025/05/12", views: 20 },
             { date: "2025/05/13", views: 40 },
@@ -60,26 +78,102 @@ const dummyAds = [
             { date: "2025/05/17", views: 25 },
             { date: "2025/05/18", views: 40 },
         ],
+        keywordClicks: [
+            { keyword: "آپارتمان", clicks: 15 },
+            { keyword: "خانه", clicks: 12 },
+            { keyword: "تجاری", clicks: 7 },
+        ],
     },
 ]
 
 
-function UserDashboard() {
 
+function aggregateKeywordClicks(ads) {
+  if (!Array.isArray(ads)) return {};  // defensive check
+
+  const keywordMap = {};
+  ads.forEach(ad => {
+    if (Array.isArray(ad.keywords)) {
+      ad.keywords.forEach(kc => {
+        if (!kc || !kc.keyword) return; // skip bad entries
+        if (!keywordMap[kc.keyword]) keywordMap[kc.keyword] = 0;
+        keywordMap[kc.keyword] += kc.clicks || 0;
+      });
+    }
+  });
+
+  return keywordMap;
+}
+
+
+
+
+
+function UserDashboard() {
+    const [ads, setAds] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+    const token = Cookies.get("id_token");
+
+    useEffect(() => {
+  setLoading(true);
+
+  axios.post("https://api.ajur.app/api/user-gads", null, {
+    params: { token },
+  })
+  .then((response) => {
+
+    setAds(response.data.all_user_gads);
+
+    console.log("+++++++++++++ the response from the get-user-gads");
+    console.log(JSON.stringify(response.data.all_user_gads, null, 2));
+
+  })
+  .catch((err) => {
+    console.error("Error fetching ads:", err);
+  })
+  .finally(() => {
+    setLoading(false);
+  });
+}, []);
+
+
+    if (loading) {
+        return (
+            <div className="spinnerImageView">
+                <img
+                    className="spinner-image"
+                    src="/logo/ajour-gif.gif"
+                    alt="ajur logo"
+                />
+            </div>
+        );
+    }
+
+
+    const keywordClicksData = aggregateKeywordClicks(ads);
+
+    const router = useRouter();
+    if (!token) {
+        router.replace(`/panel/auth/login?next=${encodeURIComponent(router.asPath)}`);
+    }
 
     return (
         <div id="dashboard" className={Style["main-wrapper"]}>
             <div className={Style["active-ads"]}>
-                <ActiveAds ads={dummyAds} />
+                <ActiveAds ads={ads} />
             </div>
             <div className={Style["new-ad-container"]}>
                 <NewAd />
             </div>
             <div className={Style["graphs"]}>
-
+                <div style={{ textAlign: "center", fontWeight: 600, fontSize: 18, margin: "24px 0 8px 0" }}>
+                    تعداد کلیک هر کلیدواژه
+                </div>
+                <KeywordClicksDoughnutChart data={keywordClicksData} style={{ width: 300, height: 300 }} />
             </div>
         </div>
-    )
+    );
 }
 
 export default UserDashboard;

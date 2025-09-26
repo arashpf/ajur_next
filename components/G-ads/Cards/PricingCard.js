@@ -12,6 +12,7 @@ const PricingCard = ({
     buttonText,
     active,
     features = [], // ✅ NEW: expects an array of {label, value}
+    onButtonClick = () => { },
 }) => {
     const formattedPrice = price ? num2persian(price) : "";
 
@@ -74,13 +75,13 @@ const PricingCard = ({
                         );
                     })}
                 </div>
-                <a
-                    href="/#"
+                <button
+                    onClick={onButtonClick}
                     className={`${Style['button']} text-center border border-primary text-base font-medium transition block w-full rounded-md p-3
                         }`}
                 >
                     {buttonText}
-                </a>
+                </button>
             </div>
         </div>
     );

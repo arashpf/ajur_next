@@ -205,14 +205,14 @@ const Profile = (props) => {
     // const [name, set_name] = useState("arash");
     // const [family, set_family] = useState("pf");
     // const [description, set_description] = useState("description");
-    if(!name){
+    if (!name) {
       setProblem("نام را وارد کنید");
       set_alert_type('warning');
       setOpenAlert(true);
       return;
     }
 
-    if(!family){
+    if (!family) {
       setProblem("فامیلی  را وارد کنید");
       set_alert_type('warning');
       setOpenAlert(true);
@@ -246,7 +246,7 @@ const Profile = (props) => {
       if (response.status == 200) {
         console.log("edited successfully");
 
-        
+
         set_alert_type('success');
         setProblem("پروفایل با موفقیت بروز شد");
 
@@ -290,7 +290,7 @@ const Profile = (props) => {
               {/* <Button style={{marginTo:20,marginBottom:20,fontSize:20}} variant="contained" color="success">وضعیت : فعال</Button> */}
 
               <Grid container spacing={3} sx={{ my: { xs: 0 } }}>
-                <Grid item xs={12} md={12} style={{textAlign:'center',margin:10}}>
+                <Grid item xs={12} md={12} style={{ textAlign: 'center', margin: 10 }}>
                   <ProfilePicker img={realstate.profile_url} size={100} />
                   <Stars amount={realstate.stars} />
                 </Grid>

@@ -10,10 +10,9 @@ import NewAd from "./new-add";
 export function ActiveAds({ ads }) {
 
 
-    if (ads.length === 0) return (
+    if (!ads || ads.length === 0) return (
         <div style={{ justifyItems: 'center' }}>
             <p>!هنوز تبلیغی ندارید</p>
-            <NewAd />
         </div>)
     return (
         <div className={Style["ads-container"]}>

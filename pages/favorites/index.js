@@ -95,7 +95,7 @@ const favoritesIndex = (props) => {
   const renderFavotited = () => {
     if (is_have_favorited) {
       return (
-        <Box sx={{ padding: '10px 2px', flexGrow: 1 }}>
+        <Box sx={{ padding: '10px 2px', flexGrow: 1, marginBottom:'70px'}}>
           <h1 style={{textAlign:'right',padding:10,color:'#555',fontSize:22,fontFamily:'iransans'}}>فایل های مورد پسند شما در آجر</h1>
           <Grid container spacing={2}>
 

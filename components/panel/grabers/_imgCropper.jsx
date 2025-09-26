@@ -5,7 +5,7 @@ import Slider from "@mui/material/Slider";
 import Button from "@mui/material/Button";
 import Typography from "@mui/material/Typography";
 
-import { styled } from '@mui/material/styles';
+import { withStyles } from '@mui/styles';
 
 import ImgDialog from "./easy_croper/ImgDialog";
 import getCroppedImg from "./easy_croper/CropImage";
@@ -211,5 +211,4 @@ const ImageCropper = ({
   );
 };
 
-const ImgCropper = styled(styles)(ImageCropper);
-export default ImgCropper;
+export default withStyles(styles)(ImageCropper);
