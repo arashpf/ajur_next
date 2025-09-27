@@ -13,8 +13,9 @@ import HomeIcon from "@mui/icons-material/Home";
 import SearchIcon from "@mui/icons-material/Search";
 import FavoriteIcon from "@mui/icons-material/Favorite";
 import PersonIcon from "@mui/icons-material/Person";
-import CampaignIcon from "@mui/icons-material/Campaign";
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
+import ShareLocationIcon from '@mui/icons-material/ShareLocation';
+import FavoriteBorderIcon from "@mui/icons-material/FavoriteBorder"
 
 import Paper from "@mui/material/Paper";
 import { useRouter } from "next/router";

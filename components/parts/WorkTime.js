@@ -7,7 +7,7 @@ import "font-awesome/css/font-awesome.min.css";
 import { styled } from "@mui/material/styles";
 import Box from "@mui/material/Box";
 import Paper from "@mui/material/Paper";
-import Grid from "@mui/material/Unstable_Grid2";
+import Grid from "@mui/system/Unstable_Grid";
 import Image from "next/image";
 
 const WorkTime = (props) => {

@@ -7,8 +7,8 @@ body {
 @tailwind utilities;
 
 
-img.notailwind{
-  height: 190px;
+.notailwind{
+  height: 180px;
   width: auto;
 }
 

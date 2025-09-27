@@ -4,7 +4,6 @@ import Image from "next/image";
 import styles from "../styles/Home.module.css";
 import SearchDiv from "../components/others/SearchDiv";
 import WorkerCard from "../components/cards/WorkerCard";
-import ListingCard from "../components/cards/ListingCards";
 import RealStateSmalCard from "../components/cards/realestate/RealStateSmalCard";
 import DepartmentSmalCard from "../components/cards/department/DepartmentSmalCard";
 import CatCard from "../components/cards/CatCard";
@@ -108,37 +107,6 @@ function Home(props) {
     clearAction();
   };
 
-  useEffect(
-    () => {
-      //  Cookies.set('selected_city','');
-
-      //  var selected_city = Cookies.get('selected_city');
-      var selected_city = props.trigeredcity;
-
-      //  if(props.url_city){
-      //   alert('city set in url');
-      //   Cookies.set('selected_city',props.url_city);
-      //  }else
-
-      if (!selected_city) {
-        //  router.push("/city-selection");
-        // Cookies.set('selected_city','رباط کریم');
-        selected_city = "رباط کریم";
-        //   Cookies.set('selected_city_lat', '35.47229675', { expires: 365 });
-        // Cookies.set('selected_city_lng', '51.08457936', { expires: 365 });
-      }
-
-      axios({
-        method: "get",
-        url: "https://api.ajur.app/api/base",
-        params: {
-          city: props.url_city ? props.url_city : selected_city
-        }
-      }).then(function(response) {
-        set_cats(response.data.cats);
-        set_the_city(response.data.the_city);
-        set_the_neighborhoods(response.data.the_neighborhoods);
-
   useEffect(() => {
     //  Cookies.set('selected_city','');
 
@@ -197,6 +165,10 @@ function Home(props) {
         set_collection1(response.data.collection1);
         set_collection2(response.data.collection2);
         set_collection3(response.data.collection3);
+
+        set_loading(false);
+    });
+  },[props.trigeredcity]);
 
   useEffect(() => {
     var faviorited = Cookies.get("favorited");
@@ -324,7 +296,7 @@ function Home(props) {
       <SwiperSlide key={worker.id} onClick={AlterLoading}>
         <Link href={`/worker/${worker.id}?slug=${worker.slug}`}>
           <a>
-            <WorkerCard key={worker.id} file={worker} />
+            <WorkerCard key={worker.id} worker={worker} />
           </a>
         </Link>
       </SwiperSlide>
@@ -622,7 +594,7 @@ function Home(props) {
                 // className={styles["cat-swiper"]}
               >
                 {renderSliderCategories()}
-              </Swiper> */}
+              </Swiper> 
                 <div>
                   <div className={styles["title"]}>
                     <Link

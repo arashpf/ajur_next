@@ -4,7 +4,7 @@ import Cookies from "js-cookie";
 import FavoriteIcon from "@mui/icons-material/Favorite";
 import FavoriteBorderIcon from "@mui/icons-material/FavoriteBorder";
 
-function ListingCard({ file }) {
+function WorkerCard({ file }) {
   const [properties, setProperties] = useState([]);
   const [isFavorite, setIsFavorite] = useState(false);
 
@@ -176,4 +176,4 @@ function ListingCard({ file }) {
   );
 }
 
-export default ListingCard;
+export default WorkerCard;

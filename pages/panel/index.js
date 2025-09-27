@@ -51,7 +51,6 @@ import Department from "../../components/panel/department";
 import Tab from "react-bootstrap/Tab";
 import Tabs from "react-bootstrap/Tabs";
 import AppBar from "@mui/material/AppBar";
-import ListingCard from "../../components/cards/ListingCards";
 
 function Copyright(props) {
   return (
@@ -264,7 +263,7 @@ const DashboardContent = (props) => {
       return workers.map((worker) => (
         <Grid item md={4} xs={12} key={worker.id}>
           <a>
-            <WorkerCard key={worker.id} file={worker} />
+            <WorkerCard key={worker.id} worker={worker} />
             {/* <WorkerCard key={worker.id} worker={worker} /> */}
           </a>
         </Grid>
