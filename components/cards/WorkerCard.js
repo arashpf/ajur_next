@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import Card from "@mui/material/Card";
 import CardActions from "@mui/material/CardActions";
 import CardContent from "@mui/material/CardContent";
@@ -18,6 +18,7 @@ import Styles from "../styles/WorkerCard.module.css";
 
 export default function ImgMediaCard(props) {
   const worker = props.worker;
+  const [imageLoaded, setImageLoaded] = useState(false);
   const [properties, set_properties] = useState([]);
 
   const [isfavorite, set_isfavorite] = useState("off");
@@ -168,10 +169,25 @@ export default function ImgMediaCard(props) {
   };
 
   const renderHeart = () => {
+    const handleUnfavoriteClick = (e) => {
+      e.stopPropagation();
+      e.preventDefault();
+      onPressMakeWorkerUnfavorite(worker);
+    };
+
+    const handleFavoriteClick = (e) => {
+      e.stopPropagation();
+      e.preventDefault();
+      onPressMakeWorkerfavorite(worker);
+    };
+
     if (isfavorite == "on") {
       return (
         <div
-          onClick={() => onPressMakeWorkerUnfavorite(worker)}
+          onClick={handleUnfavoriteClick}
+          onKeyDown={(e) => { if (e.key === 'Enter') handleUnfavoriteClick(e); }}
+          role="button"
+          tabIndex={0}
           className={Styles["card-inside-heart"]}
         >
           <FavoriteIcon style={{ color: "#b92a31" }} />
@@ -180,7 +196,10 @@ export default function ImgMediaCard(props) {
     } else if (isfavorite == "off") {
       return (
         <div
-          onClick={() => onPressMakeWorkerfavorite(worker)}
+          onClick={handleFavoriteClick}
+          onKeyDown={(e) => { if (e.key === 'Enter') handleFavoriteClick(e); }}
+          role="button"
+          tabIndex={0}
           className={Styles["card-inside-heart"]}
         >
           <FavoriteBorderIcon />
@@ -202,23 +221,25 @@ export default function ImgMediaCard(props) {
       var price_no_format = price_item[0].value;
       var price_per_m2 = price_per_m2[0].value;
 
-      return (
+      const priceInner = (
         <p style={{ direction: "rtl" }}>
           <strong style={{ fontSize: "17px", color: "#111" }}>
             {" "}
-            {String(price_no_format).replace(/(.)(?=(\d{3})+$)/g, "$1,")}{" "}
+            {String(price_no_format).replace(/(.)(?=(\d{3})+$)/g, "$1,")} {" "}
             {"تومان"}
             {" | "}
           </strong>
           {" متری "}
-          {String(price_per_m2).replace(/(.)(?=(\d{3})+$)/g, "$1,")} {"تومان"}{" "}
+          {String(price_per_m2).replace(/(.)(?=(\d{3})+$)/g, "$1,")} {"تومان"} {" "}
         </p>
       );
+
+      return <PriceBubble>{priceInner}</PriceBubble>;
     } else if (rent_front[0]) {
       var rent_front_no_format = rent_front[0].value;
       var rent_per_mounth_no_format = rent_per_mounth[0].value;
 
-      return (
+      const rentInner = (
         <div
           style={{
             display: "flex",
@@ -230,11 +251,8 @@ export default function ImgMediaCard(props) {
             <p style={{ direction: "rtl", paddingRight: 4 }}>
               <strong style={{ fontSize: "16px" }}>
                 {" "}
-                {String(rent_per_mounth_no_format).replace(
-                  /(.)(?=(\d{3})+$)/g,
-                  "$1,"
-                )}{" "}
-                {" اجاره "}{" "}
+                {String(rent_per_mounth_no_format).replace(/(.)(?=(\d{3})+$)/g, "$1,")} {" "}
+                {" اجاره "} {" "}
               </strong>
             </p>
           ) : (
@@ -246,16 +264,49 @@ export default function ImgMediaCard(props) {
           <p style={{ direction: "rtl" }}>
             <strong style={{ fontSize: "16px" }}>
               {" "}
-              {String(rent_front_no_format).replace(
-                /(.)(?=(\d{3})+$)/g,
-                "$1,"
-              )}{" "}
-              {" رهن  "}{" "}
+              {String(rent_front_no_format).replace(/(.)(?=(\d{3})+$)/g, "$1,")} {" "}
+              {" رهن  "} {" "}
             </strong>
           </p>
         </div>
       );
+
+      return <PriceBubble>{rentInner}</PriceBubble>;
     }
+  };
+
+  // PriceBubble component: detects if summary is truncated and shows a bubble on hover only then
+  const PriceBubble = ({ children }) => {
+    const summaryRef = useRef(null);
+    const [truncated, setTruncated] = useState(false);
+
+    useEffect(() => {
+      const el = summaryRef.current;
+      if (!el) return;
+
+      const check = () => {
+        // if scrollWidth > clientWidth then text is truncated
+        setTruncated(el.scrollWidth > el.clientWidth + 1);
+      };
+
+      check();
+      const ro = new ResizeObserver(check);
+      ro.observe(el);
+      window.addEventListener("resize", check);
+      return () => {
+        ro.disconnect();
+        window.removeEventListener("resize", check);
+      };
+    }, [children]);
+
+    return (
+      <div className={`${Styles["price-container"]} ${truncated ? "has-overflow" : ""}`}>
+        <div ref={summaryRef} className={Styles["price-summary"]}>
+          {children}
+        </div>
+        {truncated && <div className={Styles["price-bubble"]}>{children}</div>}
+      </div>
+    );
   };
 
   const rednerProperties = () => {
@@ -424,19 +475,23 @@ export default function ImgMediaCard(props) {
   };
   return (
     <Card
-      sx={{ maxHeight: 300, height: 300}}
+      sx={{ width: '100%', borderRadius: '10px' }}
       className={`notailwind ${Styles["card-wrapper"]}`}
     >
       {renderNeighborHoodRibbon()}
       {renderHeart(worker)}
       {renderDate(worker)}
 
+      {/* image skeleton shown until the image loads */}
+      {!imageLoaded && <div className={Styles['image-skeleton']} aria-hidden="true" />}
       <CardMedia
         component="img"
         alt={worker.name}
-        height="190"
-        className="notailwind"
+        className={`notailwind ${Styles['card-media']} card-media-global`}
         image={worker.thumb}
+        onLoad={() => setImageLoaded(true)}
+        onError={() => setImageLoaded(true)}
+        style={{ display: imageLoaded ? 'block' : 'none' }}
       ></CardMedia>
       <div className={Styles["card-inside-top"]}>
         <p className={Styles["inside-top-left"]}>{renderVideoOrImageIcon()}</p>
@@ -445,10 +500,10 @@ export default function ImgMediaCard(props) {
         </div>
       </div>
 
-      <CardContent>
+      <CardContent className={Styles['card-content']}>
         <div className={Styles["price-wrapper"]}> {rednerPrice()} </div>
         <div className={Styles["properties-wrapper"]}>{rednerProperties()}</div>
-        <div className={Styles["properties-hint"]}>{renderQuickHint()}</div>
+        <div style={{marginBottom: '-15px'}} className={Styles["properties-hint"]}>{renderQuickHint()}</div>
         
       </CardContent>
     </Card>

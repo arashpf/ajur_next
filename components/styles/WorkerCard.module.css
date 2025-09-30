@@ -6,34 +6,49 @@
   position: relative;
   border-radius: 10px;
   box-shadow: rgba(0, 0, 0, 0.35) 0px 5px 15px;
+  margin: 0; /* remove extra vertical spacing around cards; mobile overrides remain */
+}
+
+/* make card a column flex container so media + content size predictably */
+.card-wrapper {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.card-media {
+  width: 100%;
+  max-height: 140px; /* decreased image height for a tighter card */
+  object-fit: cover;
+  flex: 0 0 auto;
+}
+
+/* image loading skeleton (subtle shimmer) */
+.image-skeleton {
+  width: 100%;
+  height: 160px;
+  background: linear-gradient(90deg, #f0f0f0 0%, #e8e8e8 50%, #f0f0f0 100%);
+  background-size: 200% 100%;
+  animation: shimmer 1.2s linear infinite;
+  border-radius: 8px 8px 0 0;
+}
+
+@keyframes shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+.card-content {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
 }
 
 .card-inside-heart {
   position: absolute;
-  top: 5px;
-  left: 1px;
-
-  /* width: 360px; */
-  /* height: 8%; */
-  /* top: 1px; */
-  display: flex;
-  flex-direction: row;
-  justify-content: space-between;
-  /* height: 30px;
-  width: 30px; */
-
-  padding: 10px;
-
-  background-color: rgba(255, 255, 255, 0.7);
-
-  /* margin: 0 5px; */
-  /* padding: 0 10px; */
-  border-radius: 50px;
-}
-
-.card-inside-date {
-  position: absolute;
-  top: 155px;
+  /* place heart over the lower-right of the image area */
+  top: 120px; /* adjusted to align with smaller image */
   right: 10px;
 
   /* width: 360px; */
@@ -45,20 +60,57 @@
   /* height: 30px;
   width: 30px; */
 
-  padding: 2px;
+  padding: 6px;
 
   background-color: rgba(255, 255, 255, 0.7);
 
   /* margin: 0 5px; */
   /* padding: 0 10px; */
-  border-radius: 5px;
+  border-radius: 6px;
+  z-index: 25;
+}
+
+.card-inside-date {
+  position: absolute;
+  /* position to the left of the heart at the same vertical level */
+  top: 132px;
+  right: 55px; /* leaves space for the heart (adjust if heart width changes) */
+
+  /* width: 360px; */
+  /* height: 8%; */
+  /* top: 1px; */
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  /* height: 30px;
+  width: 30px; */
+
+  padding: 0 6px;
+
+  background-color: rgba(255, 255, 255, 0.7);
+
+  /* margin: 0 5px; */
+  /* padding: 0 10px; */
+  border-radius: 6px;
+  z-index: 24;
 }
 
 .price-wrapper {
-  font-size: 15px;
+  font-size: 14px; /* slightly smaller to reduce wrapping */
   text-align: right;
   color: #444;
   margin-bottom: -5px;
+  white-space: nowrap; /* prevent wrapping */
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: block;
+  max-width: 100%;
+}
+
+/* on hover show full price (allow wrapping / full visibility) */
+.card-wrapper:hover .price-wrapper {
+  white-space: normal;
+  overflow: visible;
 }
 
 .properties-wrapper {
@@ -76,10 +128,22 @@
   margin-top: 10px;
   display: flex;
   flex-direction: row;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 4px;
-  width: 90%;
+  flex-wrap: nowrap; /* keep badges on a single row */
+  justify-content: flex-start;
+  gap: 6px;
+  width: 100%;
+  overflow-x: auto; /* allow horizontal scroll instead of wrapping */
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: 0px;
+}
+
+/* reserve space when there are no bottom tags: insert an invisible placeholder
+   so card heights remain consistent (acts like a skeleton but hidden) */
+.properties-hint:empty::after {
+  content: "";
+  display: block;
+  height: 24px; /* same approximate height as a tag */
+  visibility: hidden;
 }
 
 .absolute-center {
@@ -108,29 +172,22 @@
   height: 30px;
 }
 
-.inside-top-left {
-  /* font-size: 18px;
-  color: rgb(255, 255, 255);
 
-  border-radius: 999px;
-  padding: 2px 8px;
-  margin-right: 8px;
-  margin-top: 3px; */
-}
 
 .inside-top-right {
   position: absolute;
-  top: 10px;
-  right: 10px;
+  top: 1px;
+  right: 5px;
   font-size: 12px;
   color: rgb(255, 255, 255);
-  background: #0a0a1499;
+  background: #0a0a14bd;
   border-radius: 999px;
   padding: 2px 8px;
 
   margin-top: 3px;
   direction: rtl;
 }
+
 
 .card-top-icon-wrapper {
   /* background: white; */
@@ -141,6 +198,39 @@
   padding: 1px 2px;
   margin: 3px;
   font-size: 12px;
+}
+
+/* price bubble: summary + bubble shown on hover */
+.price-container {
+  position: relative;
+  display: inline-block;
+  width: 100%;
+}
+
+.price-summary {
+  font-size: 13px; /* slightly smaller */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.price-bubble {
+  display: none;
+  position: absolute;
+  right: 0;
+  top: 0;
+  transform: translateY(-8px);
+  background: white;
+  box-shadow: 0 6px 16px rgba(0,0,0,0.2);
+  padding: 8px 10px;
+  border-radius: 8px;
+  white-space: nowrap;
+  z-index: 60;
+}
+
+/* show the bubble on card hover, and keep the summary truncated */
+.card-wrapper:hover .price-bubble {
+  display: block;
 }
 
 .specials-wrapper {
@@ -173,9 +263,6 @@
     position: absolute;
     top: 0%;
     left: 0%;
-    /* width: 360px; */
-    /* height: 8%; */
-    /* top: 1px; */
     display: flex;
     flex-direction: row;
     justify-content: space-between;
@@ -184,21 +271,19 @@
 
   .card-inside-bottom {
     position: absolute;
-    top: 160px;
-
-    /* width: 360px; */
-    /* height: 8%; */
-    /* top: 1px; */
+    /* lift bottom ribbon up to overlap the image bottom */
+    top: 135px; /* slightly below the image (image height 120px) */
+    left: 8px;
+    right: 8px;
     display: flex;
     flex-direction: row;
     justify-content: space-between;
-    height: 20px;
-
-    background-color: rgba(255, 255, 255, 0.7);
-
+    height: 28px;
+    background-color: rgba(255, 255, 255, 0.9);
     margin: 0 5px;
-    padding: 0 10px;
-    border-radius: 5px;
+    padding: 4px 8px;
+    border-radius: 6px;
+    z-index: 22;
   }
 
   .properties-wrapper {
@@ -219,7 +304,7 @@
 
 .card-inside-bottom {
   position: absolute;
-  top: 160px;
+  top: 135px;
 
   /* width: 360px; */
   /* height: 8%; */

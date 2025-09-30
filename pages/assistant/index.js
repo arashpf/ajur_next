@@ -12,7 +12,7 @@ export default function AssistantButtons() {
   const buttons = [
     {
       key: "phonebook",
-      link: "/phonebook",
+      link: "/assistant/notebook",
       label: "دفترچه تلفن",
       color: "#ffffff",
       icon: "/Assistant-Icons/notebook",

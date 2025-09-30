@@ -8,9 +8,75 @@ body {
 
 
 .notailwind{
-  height: 180px;
-  width: auto;
+  /* avoid forcing a fixed height which breaks grid row sizing; allow natural height */
+  width: 100%;
+  height: auto !important;
+  object-fit: cover;
+  box-sizing: border-box;
 }
+
+/* make sure images and media with this helper class fill their grid cell */
+.notailwind img, .notailwind[data-component="img"], .notailwind .MuiCardMedia-root {
+  width: 100% !important;
+  height: auto !important;
+  display: block;
+}
+
+/* layout for LazyLoader grid (fallback when not using MUI Grid) */
+.lazy-grid {
+  width: 100%;
+  /* Use breakpoint-based columns to cap the maximum number of columns */
+  display: grid;
+  grid-template-columns: repeat(1, minmax(120px, 1fr));
+  gap: 16px;
+}
+
+@media (min-width: 600px) {
+  /* 2 columns, each can shrink to 110px */
+  .lazy-grid { grid-template-columns: repeat(2, minmax(110px, 1fr)); }
+}
+
+@media (min-width: 900px) {
+  /* 3 columns, each can shrink to 100px */
+  .lazy-grid { grid-template-columns: repeat(3, minmax(100px, 1fr)); }
+}
+
+@media (min-width: 1200px) {
+  /* 4 columns, each can shrink to 90px */
+  .lazy-grid { grid-template-columns: repeat(4, minmax(90px, 1fr)); }
+}
+
+.lazy-item {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0; /* remove extra padding to avoid horizontal overflow */
+}
+
+/* ensure the grid doesn't cause page-level horizontal overflow */
+.lazy-grid {
+  box-sizing: border-box;
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+/* Ensure card-media height overrides the generic notailwind img rules */
+.notailwind.card-media {
+  /* allow images to scale up to a reasonable max but not force a fixed height */
+  height: auto !important;
+  max-height: 160px !important;
+  object-fit: cover !important;
+}
+
+/* stronger global helper in case module selectors are overridden */
+.card-media-global {
+  max-height: 160px !important;
+  height: auto !important;
+  object-fit: cover !important;
+  display: block;
+}
+
+/* auto-fit/minmax handles responsiveness; if you want stricter breakpoints,
+   adjust the minmax value above (smaller -> more columns, larger -> fewer). */
 
 @font-face {
   font-family: iransans;
@@ -37,6 +103,30 @@ body {
   /* background: #f7f7f7; */
   background: white;
 }
+
+/* Reserve space for a fixed bottom navbar so it doesn't cover page content.
+   Adjust --bottom-nav-height to match your navbar's height. */
+:root {
+  --bottom-nav-height: 76px;
+}
+
+/* Ensure the root containers include bottom padding for the navbar */
+#__next {
+  padding-bottom: var(--bottom-nav-height);
+}
+
+.main-content {
+  padding-bottom: var(--bottom-nav-height);
+}
+
+/* Ensure the document main and common page wrappers reserve space for
+   any fixed/sticky bottom UI (bottom nav, fixed buttons). FrontLayout
+   renders a plain <main> so adding this here ensures pages receive the
+   padding even when they don't use the .main-content class. */
+main {
+  padding-bottom: var(--bottom-nav-height);
+}
+
 
 h1 {
   font-family: 'iransans';

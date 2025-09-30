@@ -16,6 +16,11 @@ import FileRequest from "../components/request/FileRequest";
 import Cookies from "js-cookie";
 import { useRouter } from "next/router";
 import LandingPage from "./G-ads/landing-page";
+import Dialog from '@mui/material/Dialog';
+import DialogTitle from '@mui/material/DialogTitle';
+import DialogContent from '@mui/material/DialogContent';
+import DialogActions from '@mui/material/DialogActions';
+import Button from '@mui/material/Button';
 // simplified buttons: using plain HTML buttons instead of animated ActionButton
 import DealButton from "../components/parts/DealButton";
 
@@ -64,6 +69,8 @@ function Home(props) {
   const [dealCats, setDealCats] = useState();
   const [animState, setAnimState] = useState(null); // null | 'pushed' | 'pullIn'
   const [dealAnim, setDealAnim] = useState(null); // null | 'popOut'
+  const [showVpnDialog, setShowVpnDialog] = useState(false);
+  const [vpnChecked, setVpnChecked] = useState(false);
   // simplified visibility control
   const selectAction = (type) => {
     // start push animation; after animation finishes, show deal grid and hide buttons
@@ -90,17 +97,90 @@ function Home(props) {
   };
 
   console.log(dealCats);
-  
+
   useEffect(() => {
     // update stacked/side-by-side state based on viewport width
     function updateStacked() {
       // keep in sync with CSS breakpoint (600px)
-      setIsStacked(typeof window !== "undefined" ? window.innerWidth < 600 : true);
+      setIsStacked(
+        typeof window !== "undefined" ? window.innerWidth < 600 : true
+      );
     }
 
     updateStacked();
     window.addEventListener("resize", updateStacked);
     return () => window.removeEventListener("resize", updateStacked);
+  }, []);
+
+  // Lightweight VPN/proxy detection using a public IP info service and heuristics.
+  // If detected, show a dialog asking user to disable VPN. Respect a cookie "hide_vpn_warning" when set.
+  async function detectVpn() {
+    try {
+      const res = await fetch('https://ipapi.co/json/');
+      if (!res.ok) return false;
+      const data = await res.json();
+
+      const org = (data.org || data.asn || '').toString().toLowerCase();
+      // Keywords that commonly indicate VPN / proxy / datacenter providers.
+      const vpnKeywords = [
+        'vpn',
+        'proxy',
+        'vpn service',
+        'expressvpn',
+        'nordvpn',
+        'surfshark',
+        'private internet access',
+        'pia',
+        'ipvanish',
+        'purevpn',
+        'windscribe',
+        'protonvpn',
+        'torguard',
+        'openvpn',
+        'digitalocean',
+        'amazon',
+        'amazon.com',
+        'amazon web services',
+        'google cloud',
+        'google llc',
+        'microsoft',
+        'linode',
+        'hetzner',
+        'ovh',
+        'vultr',
+        'cloudflare',
+      ];
+
+      for (const k of vpnKeywords) {
+        if (org.includes(k)) return true;
+      }
+
+      return false;
+    } catch (e) {
+      // network errors or blocked requests — silently fail
+      // console.warn('vpn detect failed', e);
+      return false;
+    }
+  }
+
+  useEffect(() => {
+    // run detection once on client when not hidden by cookie
+    if (typeof window === 'undefined') return;
+    if (Cookies.get('hide_vpn_warning')) {
+      setVpnChecked(true);
+      return;
+    }
+
+    let mounted = true;
+    detectVpn().then((isVpn) => {
+      if (!mounted) return;
+      if (isVpn) setShowVpnDialog(true);
+      setVpnChecked(true);
+    });
+
+    return () => {
+      mounted = false;
+    };
   }, []);
 
   const handleBackButtons = () => {
@@ -143,32 +223,32 @@ function Home(props) {
       set_realestates(response.data.realstates);
 
       setDealCats(response.data.sub_cats);
-      
+
       console.log("the maincat data in base is --------------------");
       console.log(response.data.main_cats);
 
       console.log(response.data.sub_cats);
 
-        set_realestates(response.data.realstates);
+      set_realestates(response.data.realstates);
 
-        console.log("the departments data in base is --------------------");
-        console.log(response.data.departments);
+      console.log("the departments data in base is --------------------");
+      console.log(response.data.departments);
 
-        set_departments(response.data.departments);
+      set_departments(response.data.departments);
 
-        set_title1(response.data.title1);
+      set_title1(response.data.title1);
 
-        set_title2(response.data.title2);
+      set_title2(response.data.title2);
 
-        set_title3(response.data.title3);
+      set_title3(response.data.title3);
 
-        set_collection1(response.data.collection1);
-        set_collection2(response.data.collection2);
-        set_collection3(response.data.collection3);
+      set_collection1(response.data.collection1);
+      set_collection2(response.data.collection2);
+      set_collection3(response.data.collection3);
 
-        set_loading(false);
+      set_loading(false);
     });
-  },[props.trigeredcity]);
+  }, [props.trigeredcity]);
 
   useEffect(() => {
     var faviorited = Cookies.get("favorited");
@@ -184,9 +264,9 @@ function Home(props) {
       method: "get",
       url: "https://api.ajur.app/api/history-workers",
       params: {
-        workers_holder: newProduct
-      }
-    }).then(function(response) {
+        workers_holder: newProduct,
+      },
+    }).then(function (response) {
       set_favorite_workers(response.data);
 
       if (response.data.length == 0) {
@@ -216,9 +296,9 @@ function Home(props) {
       method: "get",
       url: "https://api.ajur.app/api/history-workers",
       params: {
-        workers_holder: newProduct
-      }
-    }).then(function(response) {
+        workers_holder: newProduct,
+      },
+    }).then(function (response) {
       set_history_workers(response.data);
 
       if (response.data.length == 0) {
@@ -248,27 +328,27 @@ function Home(props) {
   const renderSliderCategories = () => {
     var selected_city = Cookies.get("selected_city");
 
-    return main_cats.map(cat =>
+    return main_cats.map((cat) => (
       <SwiperSlide
         key={cat.id}
         onClick={AlterLoading}
         className={styles["single_cat_swipper"]}
       >
         <Link
-          href={`/${props.trigeredcity
-            ? props.trigeredcity
-            : renderDefaultCity()}/${cat.name}`}
+          href={`/${
+            props.trigeredcity ? props.trigeredcity : renderDefaultCity()
+          }/${cat.name}`}
         >
           <a>
             <MainCatCard key={cat.id} cat={cat} />
           </a>
         </Link>
       </SwiperSlide>
-    );
+    ));
   };
 
   const renderSliderOne = () => {
-    return collection1.map(worker =>
+    return collection1.map((worker) => (
       <SwiperSlide key={worker.id} onClick={AlterLoading}>
         <Link href={`/worker/${worker.id}?slug=${worker.slug}`}>
           <a>
@@ -276,11 +356,11 @@ function Home(props) {
           </a>
         </Link>
       </SwiperSlide>
-    );
+    ));
   };
 
   const renderSlidertwo = () => {
-    return collection2.map(worker =>
+    return collection2.map((worker) => (
       <SwiperSlide key={worker.id} onClick={AlterLoading}>
         <Link href={`/worker/${worker.id}?slug=${worker.slug}`}>
           <a>
@@ -288,11 +368,11 @@ function Home(props) {
           </a>
         </Link>
       </SwiperSlide>
-    );
+    ));
   };
 
   const renderSliderthree = () => {
-    return collection3.map(worker =>
+    return collection3.map((worker) => (
       <SwiperSlide key={worker.id} onClick={AlterLoading}>
         <Link href={`/worker/${worker.id}?slug=${worker.slug}`}>
           <a>
@@ -300,11 +380,11 @@ function Home(props) {
           </a>
         </Link>
       </SwiperSlide>
-    );
+    ));
   };
 
   const renderSliderDepartments = () => {
-    return departments.map(department =>
+    return departments.map((department) => (
       <SwiperSlide key={department.id} onClick={AlterLoading}>
         <Link href={`/department/${department.id}?slug=${department.slug}`}>
           <a>
@@ -312,11 +392,11 @@ function Home(props) {
           </a>
         </Link>
       </SwiperSlide>
-    );
+    ));
   };
 
   const renderSliderRealState = () => {
-    return realestates.map(realstate =>
+    return realestates.map((realstate) => (
       <SwiperSlide key={realstate.id} onClick={AlterLoading}>
         <Link href={`/realestates/${realstate.id}?slug=${realstate.slug}`}>
           <a>
@@ -324,11 +404,11 @@ function Home(props) {
           </a>
         </Link>
       </SwiperSlide>
-    );
+    ));
   };
 
   const renderSomeHistoryeWorkers = () => {
-    return history_workers.map(worker =>
+    return history_workers.map((worker) => (
       <SwiperSlide key={worker.id} onClick={AlterLoading}>
         <Link href={`/worker/${worker.id}?slug=${worker.slug}`}>
           <a>
@@ -336,11 +416,11 @@ function Home(props) {
           </a>
         </Link>
       </SwiperSlide>
-    );
+    ));
   };
 
   const renderSomeFavoriteWorkers = () => {
-    return favorite_workers.map(worker =>
+    return favorite_workers.map((worker) => (
       <SwiperSlide key={worker.id} onClick={AlterLoading}>
         <Link href={`/worker/${worker.id}?slug=${worker.slug}`}>
           <a>
@@ -348,64 +428,65 @@ function Home(props) {
           </a>
         </Link>
       </SwiperSlide>
-    );
+    ));
   };
 
   const renderHistoryWorkers = () => {
     if (1) {
       return (
-        history_workers.length > 0 &&
-        <div style={{ paddingBottom: 10 }}>
-          <div className={styles["title"]}>
-            <h2>آخرین بازدید های شما</h2>
+        history_workers.length > 0 && (
+          <div style={{ paddingBottom: 10 }}>
+            <div className={styles["title"]}>
+              <h2>آخرین بازدید های شما</h2>
+            </div>
+            <Swiper
+              slidesPerView={1}
+              spaceBetween={8}
+              autoplay={{
+                delay: 3000,
+                disableOnInteraction: true,
+                pauseOnMouseEnter: true,
+              }}
+              pagination={{ clickable: true }}
+              breakpoints={{
+                200: {
+                  slidesPerView: 1,
+                  spaceBetween: 2,
+
+                  navigation: {
+                    enabled: true,
+                  },
+                },
+
+                640: {
+                  slidesPerView: 2,
+                  spaceBetween: 3,
+                  navigation: {
+                    enabled: true,
+                  },
+                },
+                768: {
+                  slidesPerView: 2,
+                  spaceBetween: 20,
+                  navigation: {
+                    enabled: true,
+                  },
+                },
+                1400: {
+                  slidesPerView: 4,
+                  spaceBetween: 20,
+                  navigation: {
+                    enabled: true,
+                  },
+                },
+              }}
+              modules={[Pagination, Navigation]}
+              className={styles["worker-swiper"]}
+            >
+              {renderSomeHistoryeWorkers()}
+            </Swiper>
           </div>
-          <Swiper
-            slidesPerView={1}
-            spaceBetween={8}
-            autoplay={{
-              delay: 3000,
-              disableOnInteraction: true,
-              pauseOnMouseEnter: true
-            }}
-            pagination={{ clickable: true }}
-            breakpoints={{
-              200: {
-                slidesPerView: 1,
-                spaceBetween: 2,
-
-                navigation: {
-                  enabled: true
-                }
-              },
-
-              640: {
-                slidesPerView: 2,
-                spaceBetween: 3,
-                navigation: {
-                  enabled: true
-                }
-              },
-              768: {
-                slidesPerView: 3,
-                spaceBetween: 20,
-                navigation: {
-                  enabled: true
-                }
-              },
-              1400: {
-                slidesPerView: 4,
-                spaceBetween: 20,
-                navigation: {
-                  enabled: true
-                }
-              }
-            }}
-            modules={[Pagination, Navigation]}
-            className={styles["worker-swiper"]}
-          >
-            {renderSomeHistoryeWorkers()}
-          </Swiper>
-        </div>
+        )
       );
     }
   };
@@ -413,58 +494,59 @@ function Home(props) {
   const renderFavoriteWorkers = () => {
     if (1) {
       return (
-        favorite_workers.length > 0 &&
-        <div style={{ paddingBottom: 20 }}>
-          <div className={styles["title"]}>
-            <h2>آخرین مورد پسند های شما</h2>
+        favorite_workers.length > 0 && (
+          <div style={{ paddingBottom: 20 }}>
+            <div className={styles["title"]}>
+              <h2>آخرین مورد پسند های شما</h2>
+            </div>
+            <Swiper
+              slidesPerView={1}
+              spaceBetween={8}
+              autoplay={{
+                delay: 3000,
+                disableOnInteraction: true,
+                pauseOnMouseEnter: true,
+              }}
+              pagination={{ clickable: true }}
+              breakpoints={{
+                200: {
+                  slidesPerView: 1,
+                  spaceBetween: 2,
+
+                  navigation: {
+                    enabled: true,
+                  },
+                },
+
+                640: {
+                  slidesPerView: 2,
+                  spaceBetween: 3,
+                  navigation: {
+                    enabled: true,
+                  },
+                },
+                768: {
+                  slidesPerView: 2,
+                  spaceBetween: 20,
+                  navigation: {
+                    enabled: true,
+                  },
+                },
+                1400: {
+                  slidesPerView: 4,
+                  spaceBetween: 20,
+                  navigation: {
+                    enabled: true,
+                  },
+                },
+              }}
+              modules={[Pagination, Navigation]}
+              className={styles["worker-swiper"]}
+            >
+              {renderSomeFavoriteWorkers()}
+            </Swiper>
           </div>
-          <Swiper
-            slidesPerView={1}
-            spaceBetween={8}
-            autoplay={{
-              delay: 3000,
-              disableOnInteraction: true,
-              pauseOnMouseEnter: true
-            }}
-            pagination={{ clickable: true }}
-            breakpoints={{
-              200: {
-                slidesPerView: 1,
-                spaceBetween: 2,
-
-                navigation: {
-                  enabled: true
-                }
-              },
-
-              640: {
-                slidesPerView: 2,
-                spaceBetween: 3,
-                navigation: {
-                  enabled: true
-                }
-              },
-              768: {
-                slidesPerView: 3,
-                spaceBetween: 20,
-                navigation: {
-                  enabled: true
-                }
-              },
-              1400: {
-                slidesPerView: 4,
-                spaceBetween: 20,
-                navigation: {
-                  enabled: true
-                }
-              }
-            }}
-            modules={[Pagination, Navigation]}
-            className={styles["worker-swiper"]}
-          >
-            {renderSomeFavoriteWorkers()}
-          </Swiper>
-        </div>
+        )
       );
     }
   };
@@ -485,34 +567,60 @@ function Home(props) {
         <div>
           <main className={styles["main"]}>
             {/* Quick action buttons for Buy / Rent (stacked on small, side-by-side on larger) */}
-            <div className={`${styles.actionButtonsRow} ${animState === 'pushed' ? styles.pushed : ''} ${animState === 'pullIn' ? styles.pullIn : ''}`}>
-              <div className={styles.actionBtnWrap}>
-                {buyVisible && (
-                  <div className={styles.actionCard} onClick={() => selectAction("buy")}>
-                    <div className={styles.actionCardIcon}>
-                      {/* icon image */}
-                      <img src="/logo/buy-home.png" alt="خرید" width="56" height="56" />
-                    </div>
-                    <div className={styles.actionCardContent}>
-                      <div className={styles.actionCardTitle}>خرید</div>
-                      <div className={styles.actionCardDesc}>آگهی‌ها برای خرید را ببینید و با مشاور تماس بگیرید</div>
-                      <button className={styles.actionCardCTA}>مشاهده گزینه‌ها</button>
-                    </div>
-                  </div>
-                )}
-              </div>
+            <div
+              className={`${styles.actionButtonsRow} ${
+                animState === "pushed" ? styles.pushed : ""
+              } ${animState === "pullIn" ? styles.pullIn : ""}`}
+            >
 
               <div className={styles.actionBtnWrap}>
                 {rentVisible && (
-                  <div className={styles.actionCard} onClick={() => selectAction("rent")}>
-                    <div className={styles.actionCardIcon}>
-                      <img src="/logo/rent-home.png" alt="اجاره" width="56" height="56" />
-                    </div>
-                    <div className={styles.actionCardContent}>
-                      <div className={styles.actionCardTitle}>اجاره</div>
-                      <div className={styles.actionCardDesc}>آگهی‌های اجاره را مشاهده کنید و سریع تماس بگیرید</div>
-                      <button className={styles.actionCardCTA}>مشاهده گزینه‌ها</button>
-                    </div>
+                  <div
+                    className={styles.actionCard}
+                    onClick={() => selectAction("rent")}
+                    role="button"
+                    tabIndex={0}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ")
+                        selectAction("rent");
+                    }}
+                    aria-label="اجاره"
+                  >
+                    <img
+                      src="/buttons/rent.png"
+                      alt="اجاره"
+                      style={{
+                        width: "100%",
+                        height: "auto",
+                        display: "block",
+                      }}
+                    />
+                  </div>
+                )}
+              </div>
+              <div className={styles.actionBtnWrap}>
+                {buyVisible && (
+                  <div
+                    className={styles.actionCard}
+                    onClick={() => selectAction("buy")}
+                    role="button"
+                    tabIndex={0}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ")
+                        selectAction("buy");
+                    }}
+                    aria-label="خرید"
+                  >
+                    {/* Replaced content with single PNG to keep layout & animations but simplify visuals */}
+                    <img
+                      src="/buttons/buy.png"
+                      alt="خرید"
+                      style={{
+                        width: "100%",
+                        height: "auto",
+                        display: "block",
+                      }}
+                    />
                   </div>
                 )}
               </div>
@@ -520,32 +628,75 @@ function Home(props) {
 
             {/* Deal categories grid when buy or rent is selected */}
             {clickedAction && (
-              <div className={`${styles.dealGrid} ${dealAnim === 'popOut' ? styles.dealPopOut : ''}`} style={{ maxWidth: 760, margin: '12px auto', padding: 12 }}>
-                  <div className={styles.dealHeader}>
-                    <button className={styles.backButton} onClick={handleBackButtons} aria-label="بازگشت">
-                      <svg className={styles.backIcon} viewBox="0 0 24 24" fill="none" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M20 12 H8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                        <path d="M9 7 L4 12 L9 17" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                      </svg>
-                    </button>
-                    <div className={styles.dealTitle}>{clickedAction === 'buy' ? '\u062f\u0633\u062a\u0647 \u0628\u0646\u062f\u06cc \u0647\u0627\u06cc \u062e\u0631\u06cc\u062f' : '\u062f\u0633\u062a\u0647 \u0628\u0646\u062f\u06cc \u0647\u0627\u06cc \u0627\u062c\u0627\u0631\u0647'}</div>
+              <div
+                className={`${styles.dealGrid} ${
+                  dealAnim === "popOut" ? styles.dealPopOut : ""
+                }`}
+                style={{ maxWidth: 760, margin: "12px auto", padding: 12 }}
+              >
+                <div className={styles.dealHeader}>
+                  <button
+                    className={styles.backButton}
+                    onClick={handleBackButtons}
+                    aria-label="بازگشت"
+                  >
+                    <svg
+                      className={styles.backIcon}
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      aria-hidden="true"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <path
+                        d="M20 12 H8"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                      <path
+                        d="M9 7 L4 12 L9 17"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                  </button>
+                  <div className={styles.dealTitle}>
+                    {clickedAction === "buy"
+                      ? "\u062f\u0633\u062a\u0647 \u0628\u0646\u062f\u06cc \u0647\u0627\u06cc \u062e\u0631\u06cc\u062f"
+                      : "\u062f\u0633\u062a\u0647 \u0628\u0646\u062f\u06cc \u0647\u0627\u06cc \u0627\u062c\u0627\u0631\u0647"}
                   </div>
+                </div>
                 <div className={styles.dealGridInner}>
-                  {sub_cats.filter(c => (clickedAction === 'buy' ? c.type === 'sell' : c.type === 'rent')).map((cat, idx) => (
-                    <DealButton
-                      key={cat.id}
-                      title={cat.name}
-                      src={`/cats_image/sub-cats/${cat.id}.png`}
-                      onClick={() => {
-                        // navigate to the same URL pattern the old main category links used
-                        const city = props.trigeredcity ? props.trigeredcity : renderDefaultCity();
-                        // use router.push to change the path so pages/index.js will receive the category segment
-                        // encodeURIComponent in case cat.name contains spaces or non-latin chars
-                        router.push(`/${encodeURIComponent(city)}/${encodeURIComponent(cat.name)}`);
-                      }}
-                      style={{ animationDelay: `${idx * 80}ms` }}
-                    />
-                  ))}
+                  {sub_cats
+                    .filter((c) =>
+                      clickedAction === "buy"
+                        ? c.type === "sell"
+                        : c.type === "rent"
+                    )
+                    .map((cat, idx) => (
+                      <DealButton
+                        key={cat.id}
+                        title={cat.name}
+                        src={`/cats_image/sub-cats/${cat.id}.png`}
+                        onClick={() => {
+                          // navigate to the same URL pattern the old main category links used
+                          const city = props.trigeredcity
+                            ? props.trigeredcity
+                            : renderDefaultCity();
+                          // use router.push to change the path so pages/index.js will receive the category segment
+                          // encodeURIComponent in case cat.name contains spaces or non-latin chars
+                          router.push(
+                            `/${encodeURIComponent(city)}/${encodeURIComponent(
+                              cat.name
+                            )}`
+                          );
+                        }}
+                        style={{ animationDelay: `${idx * 80}ms` }}
+                      />
+                    ))}
                 </div>
               </div>
             )}
@@ -582,11 +733,11 @@ function Home(props) {
                     spaceBetween: 10
                   },
                   768: {
-                    slidesPerView: 4,
+                    slidesPerView: 2,
                     spaceBetween: 20
                   },
                   1400: {
-                    slidesPerView: 5,
+                    slidesPerView: 4,
                     spaceBetween: 30
                   }
                 }}
@@ -750,17 +901,17 @@ function Home(props) {
                 </div>
               )} */}
 
-              {collection3.length > 0 &&
+              {collection3.length > 0 && (
                 <div>
                   <div className={styles["title"]}>
                     <Link
-                      href={`/${props.trigeredcity
-                        ? props.trigeredcity
-                        : renderDefaultCity()}/فروش باغ و باغچه`}
+                      href={`/${
+                        props.trigeredcity
+                          ? props.trigeredcity
+                          : renderDefaultCity()
+                      }/فروش باغ و باغچه`}
                     >
-                      <h2>
-                        {title3}{" "}
-                      </h2>
+                      <h2>{title3} </h2>
                     </Link>
                   </div>
                   <Swiper
@@ -774,31 +925,31 @@ function Home(props) {
                         spaceBetween: 2,
 
                         navigation: {
-                          enabled: true
-                        }
+                          enabled: true,
+                        },
                       },
 
                       640: {
                         slidesPerView: 2,
                         spaceBetween: 10,
                         navigation: {
-                          enabled: true
-                        }
+                          enabled: true,
+                        },
                       },
                       768: {
-                        slidesPerView: 3,
+                        slidesPerView: 2,
                         spaceBetween: 20,
                         navigation: {
-                          enabled: true
-                        }
+                          enabled: true,
+                        },
                       },
                       1400: {
                         slidesPerView: 4,
                         spaceBetween: 20,
                         navigation: {
-                          enabled: true
-                        }
-                      }
+                          enabled: true,
+                        },
+                      },
                     }}
                     modules={[Pagination, Navigation]}
                     className={styles["worker-swiper"]}
@@ -807,13 +958,16 @@ function Home(props) {
 
                     <SwiperSlide>
                       <Link
-                        href={`/${props.trigeredcity
-                          ? props.trigeredcity
-                          : renderDefaultCity()}/فروش باغ و باغچه`}
+                        href={`/${
+                          props.trigeredcity
+                            ? props.trigeredcity
+                            : renderDefaultCity()
+                        }/فروش باغ و باغچه`}
                       >
                         <div className={styles["more-swiper"]}>
                           <p className={styles["more-swiper-p"]}>
-                            {" "}<p>نمایش موارد بیشتر</p>{" "}
+                            {" "}
+                            <p>نمایش موارد بیشتر</p>{" "}
                             <ForwardIcon
                               className={styles["more-swiper-icon"]}
                             />{" "}
@@ -822,14 +976,13 @@ function Home(props) {
                       </Link>
                     </SwiperSlide>
                   </Swiper>
-                </div>}
+                </div>
+              )}
 
               <FileRequest />
 
               <div className={styles["title"]}>
-                <h2>
-                  بهترین دپارتمان های املاک آجر {the_city.title}
-                </h2>
+                <h2>بهترین دپارتمان های املاک آجر {the_city.title}</h2>
               </div>
 
               <div>
@@ -841,26 +994,26 @@ function Home(props) {
                   autoplay={{
                     delay: 5000,
                     disableOnInteraction: false,
-                    pauseOnMouseEnter: true
+                    pauseOnMouseEnter: true,
                   }}
                   breakpoints={{
                     200: {
                       slidesPerView: 2,
-                      spaceBetween: 15
+                      spaceBetween: 15,
                     },
 
                     640: {
-                      slidesPerView: 3,
-                      spaceBetween: 20
+                      slidesPerView: 4,
+                      spaceBetween: 20,
                     },
                     768: {
-                      slidesPerView: 4,
+                      slidesPerView: 6,
                       spaceBetween: 25,
                     },
                     1400: {
-                      slidesPerView: 7,
-                      spaceBetween: 35
-                    }
+                      slidesPerView: 8,
+                      spaceBetween: 35,
+                    },
                   }}
                   modules={[Pagination, Navigation]}
                   className={styles["cat-swiper"]}
@@ -870,9 +1023,7 @@ function Home(props) {
               </div>
 
               <div className={styles["title"]}>
-                <h2>
-                  بهترین مشاورین املاک آجر {the_city.title}
-                </h2>
+                <h2>بهترین مشاورین املاک آجر {the_city.title}</h2>
               </div>
 
               <div>
@@ -884,26 +1035,26 @@ function Home(props) {
                   breakpoints={{
                     200: {
                       slidesPerView: 2,
-                      spaceBetween: 15
+                      spaceBetween: 15,
                     },
 
                     640: {
-                      slidesPerView: 3,
-                      spaceBetween: 20
+                      slidesPerView: 4,
+                      spaceBetween: 20,
                     },
                     768: {
-                      slidesPerView: 4,
+                      slidesPerView: 5,
                       spaceBetween: 25,
                     },
                     1400: {
                       slidesPerView: 7,
-                      spaceBetween: 35
-                    }
+                      spaceBetween: 35,
+                    },
                   }}
                   modules={[Pagination, Navigation]}
                   className={styles["cat-swiper"]}
                   style={{
-                    marginBottom: '30px'
+                    marginBottom: "30px",
                   }}
                 >
                   {renderSliderRealState()}
@@ -965,9 +1116,83 @@ function Home(props) {
         <link rel="canonical" href="https://ajur.app" />
       </Head>
 
-      <main className={styles.main}>
-        {renderOrSpinner()}
-      </main>
+      {/* VPN warning dialog - non-modal floating widget on bottom-left */}
+      <Dialog
+        open={showVpnDialog}
+        onClose={(event, reason) => {
+          // ignore backdrop clicks (we hide backdrop) so clicks on page don't close it
+          if (reason === 'backdropClick') return;
+          setShowVpnDialog(false);
+        }}
+        aria-labelledby="vpn-warning-title"
+        hideBackdrop
+        // prevent focus trapping so background remains interactive
+        disableEnforceFocus
+        disableAutoFocus
+        // ModalProps: make the modal container pass pointer events through so page stays interactive
+        ModalProps={{
+          keepMounted: true,
+          disableEnforceFocus: true,
+          disableAutoFocus: true,
+          // make container ignore pointer events so clicks go through to the page
+          style: { pointerEvents: 'none' },
+        }}
+        // PaperProps: position fixed bottom-left and accept pointer events
+        PaperProps={{
+          style: {
+            pointerEvents: 'auto',
+            position: 'fixed',
+            bottom: 16,
+            left: 16,
+            margin: 0,
+            borderRadius: 12,
+            padding: '10px 14px',
+            minWidth: 220,
+            zIndex: 1400,
+          },
+          className: styles.vpnDialogPaper,
+        }}
+      >
+        <DialogTitle id="vpn-warning-title"></DialogTitle>
+        <DialogContent>
+          برای استفاده بهتر از آجر، لطفا فیلترشکن خود را خاموش کنید
+        </DialogContent>
+          <DialogActions>
+          <Button
+            onClick={() => {
+              // hide for the rest of today (until local midnight)
+              try {
+                const now = new Date();
+                const endOfDay = new Date(
+                  now.getFullYear(),
+                  now.getMonth(),
+                  now.getDate() + 1
+                );
+                Cookies.set('hide_vpn_warning', '1', { expires: endOfDay });
+              } catch (e) {
+                // fallback to 1 day expiry if Date isn't accepted
+                Cookies.set('hide_vpn_warning', '1', { expires: 1 });
+              }
+              setShowVpnDialog(false);
+            }}
+            color="primary"
+          >
+            بستن
+          </Button>
+          <Button
+            onClick={() => {
+              // set cookie to hide future warnings for 365 days
+              Cookies.set('hide_vpn_warning', '1', { expires: 365 });
+              setShowVpnDialog(false);
+            }}
+            color="primary"
+          >
+            دیگر نمایش نده
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      <main className={styles.main}>{renderOrSpinner()}</main>
     </div>
   );
 }
@@ -980,8 +1205,8 @@ export function getServerSideProps(props) {
 
   return {
     props: {
-      url_city: city
-    } // will be passed to the page component as props
+      url_city: city,
+    }, // will be passed to the page component as props
   };
 }
 

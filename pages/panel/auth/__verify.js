@@ -158,6 +158,9 @@ export default function Verify() {
 
 
             Cookies.set('id_token', response.data.result.token, { expires: 30 });
+            if (typeof window !== 'undefined' && window.localStorage) {
+              localStorage.setItem('id_token', response.data.result.token);
+            }
             Cookies.set('stars', JSON.stringify(response.data.stars));
             Cookies.set('user_name', response.data.user.name);
             Cookies.set('user_family', response.data.user.family);

@@ -4,23 +4,23 @@ import { useRouter } from "next/router";
 import Head from "next/head";
 import dynamic from "next/dynamic";
 import axios from "axios";
-import Cookies from 'js-cookie';
+import Cookies from "js-cookie";
 import { styled } from "@mui/material/styles";
 import Box from "@mui/material/Box";
 import Paper from "@mui/material/Paper";
 import Grid from "@mui/material/Grid";
 import Button from "@mui/material/Button";
 import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown";
-import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
-import FavoriteIcon from '@mui/icons-material/Favorite';
+import FavoriteBorderIcon from "@mui/icons-material/FavoriteBorder";
+import FavoriteIcon from "@mui/icons-material/Favorite";
 import Link from "next/link";
-
 
 // Components
 import WorkerMedia from "../../components/workers/WorkerMedia";
 import WorkerCard from "../../components/cards/WorkerCard";
 import WorkerDetails from "../../components/workers/WorkerDetails";
 import WorkerShare from "../../components/workers/WorkerShare";
+import LazyLoader from "../../components/lazyLoader/Loading";
 
 // Dynamic imports
 const LocationNoSsr = dynamic(() => import("../../components/map/Location"), {
@@ -51,36 +51,31 @@ const WorkerSingle = (props) => {
     relateds,
     images,
     videos,
-    virtual_tours
+    virtual_tours,
   } = props;
-
-
-  
-
-
 
   useEffect(() => {
     // Check if this worker is favorited
-    const favorited = Cookies.get('favorited');
+    const favorited = Cookies.get("favorited");
     if (favorited) {
       const favoriteItems = JSON.parse(favorited);
       setIsFavorite(favoriteItems.includes(details.id));
     }
 
     // Add to browsing history
-    let history = Cookies.get("history") || '[]';
+    let history = Cookies.get("history") || "[]";
     let historyItems = JSON.parse(history);
-    
+
     // Remove if already exists and add to end
-    historyItems = historyItems.filter(item => item !== details.id);
+    historyItems = historyItems.filter((item) => item !== details.id);
     historyItems.push(details.id);
-    
+
     // Keep only last 10 items
     if (historyItems.length > 10) {
       historyItems = historyItems.slice(-10);
     }
-    
-    Cookies.set('history', JSON.stringify(historyItems));
+
+    Cookies.set("history", JSON.stringify(historyItems));
 
     // Set loading to false when data is ready
     if (details) {
@@ -89,13 +84,13 @@ const WorkerSingle = (props) => {
   }, [details, id]);
 
   const toggleFavorite = () => {
-    let favorited = Cookies.get('favorited') || '[]';
+    let favorited = Cookies.get("favorited") || "[]";
     let favoriteItems = JSON.parse(favorited);
-    
+
     if (isFavorite) {
       // Remove from favorites
-      favoriteItems = favoriteItems.filter(item => item !== details.id);
-      Cookies.set('favorited', JSON.stringify(favoriteItems));
+      favoriteItems = favoriteItems.filter((item) => item !== details.id);
+      Cookies.set("favorited", JSON.stringify(favoriteItems));
     } else {
       // Add to favorites
       if (!favoriteItems.includes(details.id)) {
@@ -104,10 +99,10 @@ const WorkerSingle = (props) => {
         if (favoriteItems.length > 20) {
           favoriteItems = favoriteItems.slice(-20);
         }
-        Cookies.set('favorited', JSON.stringify(favoriteItems));
+        Cookies.set("favorited", JSON.stringify(favoriteItems));
       }
     }
-    
+
     setIsFavorite(!isFavorite);
   };
 
@@ -174,16 +169,34 @@ const WorkerSingle = (props) => {
   };
 
   const renderRelatedWorkers = () => {
-    return relateds.map((worker) => (
-      <Grid item xs={12} md={4} key={worker.id}>
-        <a
-          style={{ cursor: "pointer" }}
-          onClick={() => goToRelatedWorker(worker)}
-        >
-          <WorkerCard worker={worker} />
-        </a>
-      </Grid>
-    ));
+    if (!Array.isArray(relateds) || relateds.length === 0) {
+      return <p>هیچ مورد مشابهی یافت نشد</p>;
+    }
+
+    return (
+      <LazyLoader
+        items={relateds} // ✅ the whole array
+        itemsPerPage={8}
+        delay={800}
+        renderItem={(worker) => (
+          <Link
+            href={`/worker/${worker.id}?slug=${worker.slug}`}
+            key={worker.id}
+          >
+            <WorkerCard worker={worker} />
+          </Link>
+        )}
+        loadingComponent={
+          <p style={{ textAlign: "center" }}>در حال بارگذاری...</p>
+        }
+        endComponent={
+          <p style={{ textAlign: "center" }}>همه فایل‌ها بارگذاری شدند✅</p>
+        }
+        grid={true}
+        gridProps={{ spacing: 2 }}
+        itemProps={{ xl: 3, md: 4, xs: 12 }}
+      />
+    );
   };
 
   return (
@@ -202,17 +215,16 @@ const WorkerSingle = (props) => {
             <Grid item xs={12} md={5}>
               <div className={Styles["favorite-icon"]} onClick={toggleFavorite}>
                 {isFavorite ? (
-                  <FavoriteIcon style={{ color: '#b92a31' }} />
+                  <FavoriteIcon style={{ color: "#b92a31" }} />
                 ) : (
                   <FavoriteBorderIcon />
                 )}
               </div>
-              <WorkerMedia 
-                images={images} 
-                videos={videos} 
+              <WorkerMedia
+                images={images}
+                videos={videos}
                 virtual_tours={virtual_tours}
-                loading={loading} 
-                 
+                loading={loading}
               />
             </Grid>
 
@@ -240,7 +252,8 @@ const WorkerSingle = (props) => {
 
         <div className={Styles["title"]}>
           <h2>
-            {"موارد دیگر"} {details.category_name} {"در"} {details.neighbourhood} {details.city}
+            {"موارد دیگر"} {details.category_name} {"در"}{" "}
+            {details.neighbourhood} {details.city}
           </h2>
         </div>
 
@@ -250,7 +263,7 @@ const WorkerSingle = (props) => {
           </Grid>
         </div>
 
-        <div className={Styles["more-wrapper"]}>
+        {/* <div className={Styles["more-wrapper"]}>
           <Link
             href={`/${details.city}/${details.category_name}?subcat=${details.category_name}&neighbor=${details.neighbourhood}&city=${details.city}`}
             passHref
@@ -264,7 +277,7 @@ const WorkerSingle = (props) => {
               دیدن موارد بیشتر
             </Button>
           </Link>
-        </div>
+        </div> */}
       </div>
     </>
   );
@@ -283,12 +296,10 @@ WorkerSingle.propTypes = {
 export async function getServerSideProps(context) {
   const { params } = context;
   const id = params.id;
-  
+
   try {
     const res = await fetch(`https://api.ajur.app/api/posts/${id}`);
     const data = await res.json();
-
-   
 
     return {
       props: {

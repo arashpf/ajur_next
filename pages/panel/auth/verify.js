@@ -77,6 +77,9 @@ function Verify() {
             if (res.data.status === 'success') {
                 const { token } = res.data.result;
                 Cookies.set('id_token', token, { expires: 30, sameSite: 'Lax' });
+                if (typeof window !== 'undefined' && window.localStorage) {
+                    localStorage.setItem('id_token', token);
+                }
                 Cookies.set('user_name', res.data.user.name);
 
                 // ✅ Clear cooldown so user can re-register cleanly later

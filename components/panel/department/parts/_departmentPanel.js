@@ -1855,12 +1855,15 @@ const DepartmentPanel = (props) => {
       );
       console.log(response.data.subcategories);
 
-      var selected_normal_field = response.data.colleagues.filter((cl) => {
-        if (cl.stauts == 0) return cl;
+      const colleagues = (response.data && response.data.colleagues) ? response.data.colleagues : [];
+
+      // normalize and guard against missing fields (some items used 'stauts' typo)
+      var selected_normal_field = colleagues.filter((cl) => {
+        return (cl && (cl.status == 0 || cl.stauts == 0));
       });
 
       set_department_waited_colleagues(
-        response.data.colleagues.filter((item) => item.status == 0)
+        colleagues.filter((item) => item && (item.status == 0 || item.stauts == 0))
       );
 
       set_loading(false);

@@ -10,7 +10,7 @@ import { useRouter } from "next/router";
 import Grid from "@mui/material/Grid";
 import Link from "next/link";
 import Box from "@mui/material/Box";
-
+import LazyLoader from "../../components/lazyLoader/Loading";
 
 import WorkerCard from "../../components/cards/WorkerCard";
 
@@ -57,41 +57,52 @@ const favoritesIndex = (props) => {
     router.push("/");
   };
 
-  const renderFavoritedWorkers = () => {
-    if (workers.length > 0) {
-      return workers.map((worker) => (
-        <Grid item xl={3} md={4} xs={12} key={worker.id}>
-          <a href="#">
-            <Link
-              href={`/worker/${worker.id}?slug=${worker.slug}`}
-              key={worker.id}
-            >
-              <a>
-                <WorkerCard key={worker.id} worker={worker} />
-              </a>
-            </Link>
-          </a>
-        </Grid>
-      ));
-    } else {
-      return (
-        <Grid item md={12} xs={12} style={{ background: "white" }}>
-          <p style={{ textAlign: "center", padding: 20 }}>
-            متاسفانه موردی یافت نشد
-          </p>
-          <div className="not-found-wrapper">
-            <img
-              className="not-found-image"
-              src="/logo/not-found.png"
-              alt="ملکی پیدا نشد"
-              width={200}
-              height={120}
-            />
-          </div>
-        </Grid>
-      );
-    }
-  };
+ const renderFavoritedWorkers = () => {
+  if (Array.isArray(workers) && workers.length > 0) {
+    return (
+      <LazyLoader
+        items={workers}             // whole array of workers
+        itemsPerPage={8}            // adjust as needed
+        delay={800}
+        renderItem={(worker) => (
+          <Link
+            href={`/worker/${worker.id}?slug=${worker.slug}`}
+            key={worker.id}
+          >
+            <WorkerCard worker={worker} />
+          </Link>
+        )}
+        loadingComponent={
+          <p style={{ textAlign: "center" }}>در حال بارگذاری...</p>
+        }
+        endComponent={
+          <p style={{ textAlign: "center" }}>همه فایل‌ها بارگذاری شدند✅</p>
+        }
+        grid={true}
+        gridProps={{ spacing: 2 }}
+        itemProps={{ xl: 3, md: 4, xs: 12 }}
+      />
+    );
+  } else {
+    return (
+      <Grid item md={12} xs={12} style={{ background: "white" }}>
+        <p style={{ textAlign: "center", padding: 20 }}>
+          متاسفانه موردی یافت نشد
+        </p>
+        <div className="not-found-wrapper">
+          <img
+            className="not-found-image"
+            src="/logo/not-found.png"
+            alt="ملکی پیدا نشد"
+            width={200}
+            height={120}
+          />
+        </div>
+      </Grid>
+    );
+  }
+};
+
   const renderFavotited = () => {
     if (is_have_favorited) {
       return (

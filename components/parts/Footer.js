@@ -145,9 +145,10 @@ const Footer = () => {
           left: 0,
           right: 0,
           // render footer above backdrop by placing it into body via portal; give it higher z-index
-          zIndex: 10030,
+          zIndex: 50,
 
-          height: 70,
+          // use the CSS variable so JS and CSS share the same source of truth
+          height: 'var(--bottom-nav-height)',
           background: 'rgba(255, 255, 255, 1)',
           backdropFilter: 'blur(6px)',
           WebkitBackdropFilter: 'blur(6px)',
@@ -160,7 +161,7 @@ const Footer = () => {
           boxShadow: "0 -6px 18px rgba(0,0,0,0.05)",
         }}
       >
-        <div style={{ position: 'absolute', left: '50%', transform: 'translateX(-50%)', bottom: 0, width: 'min(720px, calc(100% - 40px))', height: 66, borderRadius: 9999, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: 0, boxSizing: 'border-box' }}>
+  <div style={{ position: 'absolute', left: '50%', transform: 'translateX(-50%)', bottom: 0, width: 'min(720px, calc(100% - 40px))', height: 'calc(var(--bottom-nav-height) - 4px)', borderRadius: 9999, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: 0, boxSizing: 'border-box' }}>
       {/* subtle background oval (moved up a bit and slightly smaller) */}
       <div style={{ position: 'absolute', left: 0, right: 0, height: 52, bottom: 7, margin: '0 auto', borderRadius: 9999, background: 'rgba(236, 236, 236, 0.42)', backdropFilter: 'blur(12px) saturate(1.1)', WebkitBackdropFilter: 'blur(6px)', boxShadow: 'inset -4px 3px 15px rgba(199, 199, 199, 0.29)',}} />
 

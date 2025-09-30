@@ -13,7 +13,8 @@ const LazyLoader = ({
   endComponent = <p>تمام آیتم‌ها بارگذاری شدند!</p>,
   grid = true,
   gridProps = { spacing: 2 },
-  itemProps = { xl: 3, md: 4, xs: 12 },
+  // make default item width 3 (12/4) on medium+ so we get 4 columns
+  itemProps = { xl: 3, lg: 3, md: 3, sm: 6, xs: 12 },
   emptyComponent = <p>متاسفانه موردی یافت نشد ❌</p>,
   className = ""
 }) => {
@@ -59,51 +60,49 @@ const LazyLoader = ({
 
   // Handle empty state
   if (!items || items.length === 0) {
-    return grid ? (
-      <Grid container {...gridProps} className={className}>
-        <Grid item xs={12}>
-          {emptyComponent}
-        </Grid>
-      </Grid>
-    ) : (
-      <div className={className}>{emptyComponent}</div>
+    if (grid) {
+      const gap = gridProps && gridProps.spacing ? (gridProps.spacing * 8) + "px" : "16px";
+      return (
+        <div className={`lazy-grid ${className}`} style={{ display: "grid", gap }}>
+          <div style={{ gridColumn: "1 / -1" }}>{emptyComponent}</div>
+        </div>
+      );
+    }
+
+    return <div className={className}>{emptyComponent}</div>;
+  }
+
+  const content = visibleItems.map((item, index) => (
+    <div key={index} className="lazy-item">
+      {renderItem(item)}
+    </div>
+  ));
+
+  if (grid) {
+    const gap = gridProps && gridProps.spacing ? (gridProps.spacing * 8) + "px" : "16px";
+    return (
+      <div className={`lazy-grid ${className}`} style={{ display: "grid", gap }}>
+        {content}
+
+        <div
+          ref={loaderRef}
+          style={{
+            gridColumn: "1 / -1",
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            padding: "16px",
+            minHeight: "100px",
+            textAlign: "center",
+          }}
+        >
+          {visibleItems.length < items.length ? (isLoading ? loadingComponent : null) : endComponent}
+        </div>
+      </div>
     );
   }
 
-  const content = visibleItems.map((item, index) =>
-    grid ? (
-      <Grid item {...itemProps} key={index}>
-        {renderItem(item)}
-      </Grid>
-    ) : (
-      <div key={index}>{renderItem(item)}</div>
-    )
-  );
-
-  return grid ? (
-    <Grid container {...gridProps} className={className}>
-      {content}
-      <Grid
-        item
-        xs={12}
-        ref={loaderRef}
-        style={{
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-          padding: "16px",
-          minHeight: "100px",
-          textAlign: "center",
-        }}
-      >
-        {visibleItems.length < items.length
-          ? isLoading
-            ? loadingComponent
-            : null
-          : endComponent}
-      </Grid>
-    </Grid>
-  ) : (
+  return (
     <div className={className}>
       {content}
       <div
@@ -116,11 +115,7 @@ const LazyLoader = ({
           textAlign: "center",
         }}
       >
-        {visibleItems.length < items.length
-          ? isLoading
-            ? loadingComponent
-            : null
-          : endComponent}
+        {visibleItems.length < items.length ? (isLoading ? loadingComponent : null) : endComponent}
       </div>
     </div>
   );

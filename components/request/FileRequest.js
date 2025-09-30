@@ -4,7 +4,7 @@ import Grid from "@mui/material/Grid";
 import Button from "@mui/material/Button";
 import DoneIcon from "@mui/icons-material/Done";
 import Box from "@mui/material/Box";
-import { Typography } from "@mui/material";
+import { Typography, Skeleton, Stack } from "@mui/material";
 import TourOutlinedIcon from "@mui/icons-material/TourOutlined";
 import CallIcon from "@mui/icons-material/Call";
 import Modal from "@mui/material/Modal";
@@ -709,17 +709,75 @@ function InViewAnimationWrapper() {
       );
       observer.observe(ref.current);
     } else {
-      // Fallback: always show animation if IntersectionObserver is not supported
-      setInView(true);
+      // If IntersectionObserver is not supported (very old browsers / SSR),
+      // we keep `inView` false so the component renders a skeleton and
+      // reserves space — this avoids hydration/layout jumps.
     }
     return () => {
       if (observer && ref.current) observer.unobserve(ref.current);
     };
   }, []);
 
+  // Reserve an explicit height that matches the animation and surrounding
+  // text/buttons to avoid layout jumps when swapping skeleton -> animation.
+  const reservedHeight = 260; // animation (180) + text/buttons spacing
+
+  // Outer container always reserves the same height to avoid any jump.
+  // Inside, we absolutely layer the skeleton and animation and toggle
+  // opacity. This prevents any reflow when switching visuals and should
+  // eliminate even 1px jumps.
   return (
     <div ref={ref}>
-      {inView ? <FileRequestAnimation /> : null}
+      <Box sx={{ width: '100%', minHeight: reservedHeight, position: 'relative' }}>
+        {/* Skeleton layer (visible when not in view) */}
+        <Box
+          sx={{
+            position: 'absolute',
+            inset: 0,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            transition: 'opacity 200ms ease',
+            opacity: inView ? 0 : 1,
+            pointerEvents: inView ? 'none' : 'auto',
+          }}
+        >
+          <Stack spacing={1} alignItems="center">
+            <Skeleton variant="rectangular" width={180} height={180} />
+            <Skeleton variant="text" width={180} height={28} />
+            <Stack direction="row" spacing={1} sx={{ width: '100%', justifyContent: 'center', mt: 1 }}>
+              <Skeleton variant="rectangular" width={140} height={40} />
+              <Skeleton variant="rectangular" width={140} height={40} />
+            </Stack>
+          </Stack>
+        </Box>
+
+        {/* Animation layer (visible when in view). We only mount the
+            Lottie component after the element becomes visible so autoplay
+            happens at the right moment. When not mounted we render an
+            empty same-size container to avoid layout shifts. */}
+        <Box
+          sx={{
+            position: 'absolute',
+            inset: 0,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            transition: 'opacity 200ms ease',
+            opacity: inView ? 1 : 0,
+            pointerEvents: inView ? 'auto' : 'none',
+          }}
+        >
+          {/* Constrain animation to same size as skeleton */}
+          {inView ? (
+            <Box sx={{ width: 180, height: 180 }}>
+              <FileRequestAnimation />
+            </Box>
+          ) : (
+            <Box sx={{ width: 180, height: 180 }} aria-hidden />
+          )}
+        </Box>
+      </Box>
     </div>
   );
 }

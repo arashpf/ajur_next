@@ -51,6 +51,7 @@ import Department from "../../components/panel/department";
 import Tab from "react-bootstrap/Tab";
 import Tabs from "react-bootstrap/Tabs";
 import AppBar from "@mui/material/AppBar";
+import LazyLoader from "../../components/lazyLoader/Loading";
 
 function Copyright(props) {
   return (
@@ -117,21 +118,15 @@ const DashboardContent = (props) => {
   const [key, setKey] = React.useState("personal");
   const [department, set_department] = React.useState([]);
 
-  
-
-
   useEffect(() => {
-    
     var cookie_key = Cookies.get("cookie_key");
     if (cookie_key) {
-      setKey(cookie_key); 
-    } 
-
+      setKey(cookie_key);
+    }
   }, []);
 
   useEffect(() => {
-    
-  Cookies.set('cookie_key', key , { expires: 200 });
+    Cookies.set("cookie_key", key, { expires: 200 });
   }, [key]);
 
   useEffect(() => {
@@ -260,20 +255,43 @@ const DashboardContent = (props) => {
 
   const renderWorkers = () => {
     if (workers.length > 0) {
-      return workers.map((worker) => (
-        <Grid item md={4} xs={12} key={worker.id}>
-          <a>
-            <WorkerCard key={worker.id} worker={worker} />
-            {/* <WorkerCard key={worker.id} worker={worker} /> */}
-          </a>
-        </Grid>
-      ));
+      // Sort workers by date (newest first)
+      const sortedWorkers = [...workers].sort(
+        (a, b) => new Date(b.created_at) - new Date(a.created_at)
+      );
+
+      return (
+        <LazyLoader
+          items={sortedWorkers}
+          itemsPerPage={8}
+          delay={800}
+          renderItem={(worker) => (
+            <Grid item md={4} xs={12} key={worker.id}>
+              <a>
+                <WorkerCard worker={worker} />
+              </a>
+            </Grid>
+          )}
+          loadingComponent={
+            <p style={{ textAlign: "center" }}>در حال بارگذاری...</p>
+          }
+          endComponent={
+            <p style={{ textAlign: "center" }}>همه فایل‌ها بارگذاری شدند✅</p>
+          }
+          grid={true}
+          gridProps={{ spacing: 3 }}
+        />
+      );
     } else {
       return (
-        <Grid container spacing={3} className={` animate__animated animate__zoomIn   `}>
+        <Grid
+          container
+          spacing={3}
+          className={`animate__animated animate__zoomIn`}
+        >
           <Grid item xs={2} md={3}></Grid>
           <Grid item xs={8} md={6}>
-            <p style={{ textAlign: "center" }}>اولین فایل خود را ثبت کنید</p> 
+            <p style={{ textAlign: "center" }}>اولین فایل خود را ثبت کنید</p>
             <div
               onClick={onClickNew}
               className={styles.new_single_type_wrapper}
@@ -313,7 +331,7 @@ const DashboardContent = (props) => {
             sx={{ mt: 7, mb: 4, paddingTop: 5, textAlign: "center" }}
           >
             <Grid container spacing={3} sx={{ paddingLeft: 3 }}>
-              <Department department={department} user={data}  />
+              <Department department={department} user={data} />
             </Grid>
             <Copyright sx={{ pt: 4 }} />
           </Container>
@@ -377,15 +395,12 @@ const DashboardContent = (props) => {
       return (
         <Tabs
           fill
-          variant='tabs'
-          
+          variant="tabs"
           style={{
-            
-            
             position: "fixed",
             width: "100%",
-            background: 'white',
-            zIndex:100,
+            background: "white",
+            zIndex: 100,
             boxShadow: "0 4px 2px -2px gray",
           }}
           id="controlled-tab-example"
@@ -397,7 +412,6 @@ const DashboardContent = (props) => {
             eventKey="personal"
             title={<p>فایل ها ({all_workers.length})</p>}
             className={styles["personal-tab"]}
-            
           >
             {renderPersonalTab()}
           </Tab>
@@ -439,10 +453,12 @@ const DashboardContent = (props) => {
             {rendertabs()}
           </Box>
         </Box>
-  {/* keep only the new-file SpeedDial and push it higher to sit above the footer */}
-  <SpeedDial />
-  {/* main footer added to panel page */}
-  {typeof window !== 'undefined' && require('../../components/parts/Footer').default && React.createElement(require('../../components/parts/Footer').default)}
+        {/* keep only the new-file SpeedDial and push it higher to sit above the footer */}
+        <SpeedDial />
+        {/* main footer added to panel page */}
+        {typeof window !== "undefined" &&
+          require("../../components/parts/Footer").default &&
+          React.createElement(require("../../components/parts/Footer").default)}
       </ThemeProvider>
     );
   }

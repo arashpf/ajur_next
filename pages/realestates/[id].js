@@ -26,7 +26,7 @@ import AccordionDetails from "@mui/material/AccordionDetails";
 import AccordionSummary from "@mui/material/AccordionSummary";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import DeleteIcon from "@mui/icons-material/Delete";
-import CancelIcon from '@mui/icons-material/Cancel';
+import CancelIcon from "@mui/icons-material/Cancel";
 // Import Swiper styles
 import "swiper/css";
 import "swiper/css/pagination";
@@ -44,7 +44,7 @@ const RealestateSingle = (props) => {
   const router = useRouter();
   const { slug, id } = router.query;
 
-  const realstate =  props.realstate;
+  const realstate = props.realstate;
 
   console.log("the real estate come form the ssr is : --------");
 
@@ -128,10 +128,8 @@ const RealestateSingle = (props) => {
       set_loading(false);
     }
 
-    console.log('--------the realestate is --------------');
+    console.log("--------the realestate is --------------");
     console.log(props.realstate);
-    
-    
 
     // set_realstate(props.realstate);
     set_workers(props.workers);
@@ -341,42 +339,46 @@ const RealestateSingle = (props) => {
   // };
 
   const renderWorkers = () => {
-  if (workers.length > 0) {
-    // Sort workers by date (newest first)
-    const sortedWorkers = [...workers].sort(
-      (a, b) => new Date(b.created_at) - new Date(a.created_at)
-    );
+    if (workers.length > 0) {
+      // Sort workers by date (newest first)
+      const sortedWorkers = [...workers].sort(
+        (a, b) => new Date(b.created_at) - new Date(a.created_at)
+      );
 
-    return (
-      <LazyLoader
-        items={sortedWorkers}
-        itemsPerPage={8}
-        delay={800}
-        renderItem={(worker) => (
-          <Link
-            href={`/worker/${worker.id}?slug=${worker.slug}`}
-            key={worker.id}
-          >
-            <a>
-              <WorkerCard worker={worker} />
-            </a>
-          </Link>
-        )}
-        loadingComponent={<p style={{ textAlign: "center" }}>در حال بارگذاری...</p>}
-        endComponent={<p style={{ textAlign: "center" }}>همه فایل‌ها بارگذاری شدند✅</p>}
-        grid={true}
-        gridProps={{ spacing: 2 }}
-        itemProps={{ xl: 3, md: 4, xs: 12 }}
-      />
-    );
-  } else {
-    return (
-      <Grid item md={12} xs={12}>
-        <p style={{ textAlign: "center" }}>متاسفانه موردی یافت نشد</p>
-      </Grid>
-    );
-  }
-};
+      return (
+        <LazyLoader
+          items={sortedWorkers}
+          itemsPerPage={8}
+          delay={800}
+          renderItem={(worker) => (
+            <Link
+              href={`/worker/${worker.id}?slug=${worker.slug}`}
+              key={worker.id}
+            >
+              <a>
+                <WorkerCard worker={worker} />
+              </a>
+            </Link>
+          )}
+          loadingComponent={
+            <p style={{ textAlign: "center" }}>در حال بارگذاری...</p>
+          }
+          endComponent={
+            <p style={{ textAlign: "center" }}>همه فایل‌ها بارگذاری شدند✅</p>
+          }
+          grid={true}
+          gridProps={{ spacing: 2 }}
+          itemProps={{ xl: 3, md: 4, xs: 12 }}
+        />
+      );
+    } else {
+      return (
+        <Grid item md={12} xs={12}>
+          <p style={{ textAlign: "center" }}>متاسفانه موردی یافت نشد</p>
+        </Grid>
+      );
+    }
+  };
 
   const renderSliderCategories = () => {
     return cats.map((cat) => (
@@ -728,15 +730,13 @@ const RealestateSingle = (props) => {
                           <Button
                             component="label"
                             role={undefined}
-                            
                             variant="outlined"
                             color="error"
                             tabIndex={-1}
-                            startIcon={<DeleteIcon/>}
+                            startIcon={<DeleteIcon />}
                             onClick={() => deleteFlFilter(fl)}
                           >
-                           {fl.value} 
-                          
+                            {fl.value}
                           </Button>
                           {/* <Button
                             variant="outlined"
@@ -901,61 +901,100 @@ const RealestateSingle = (props) => {
   };
   return (
     <div className="realstate-contents-wrapper">
-       <Head>
-      {/* Basic Meta */}
-      <meta charSet="UTF-8" />
-      <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes" />
-      
-      {/* SEO */}
-      <title>{`${realstate.name} ${realstate.family} | مشاور املاک آجر`}</title>
-      <meta name="description" content={`صفحه اختصاصی ${realstate.name} ${realstate.family} در پلتفرم هوشمند آجر`} />
-      <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1" />
-      
-      {/* Open Graph */}
-      <meta property="og:locale" content="fa_IR" />
-      <meta property="og:type" content="profile" />
-      <meta property="og:title" content={`${realstate.name} ${realstate.family} | مشاور املاک آجر`} />
-      <meta property="og:description" content={`مشخصات و اطلاعات تماس ${realstate.name} ${realstate.family} در املاک هوشمند آجر`} />
-      <meta property="og:url" content={`https://ajur.app/realestates/${realstate.id}?slug=${realstate.slug}`} />
-      <meta property="og:site_name" content="آجر | املاک هوشمند املاک" />
-      <meta property="og:image" content={realstate.profile_url || '/default-profile.jpg'} />
-      <meta property="og:image:width" content="256" />
-      <meta property="og:image:height" content="256" />
-      <meta property="og:image:alt" content={`پروفایل ${realstate.name} ${realstate.family}`} />
-      <meta property="profile:first_name" content={realstate.name} />
-      <meta property="profile:last_name" content={realstate.family} />
-      
-      {/* Twitter Card */}
-      <meta name="twitter:card" content="summary_large_image" />
-      <meta name="twitter:site" content="@ajur_app" />
-      <meta name="twitter:creator" content="@ajur_app" />
-      <meta name="twitter:title" content={`${realstate.name} ${realstate.family} | آجر`} />
-      <meta name="twitter:description" content={`صفحه رسمی ${realstate.name} ${realstate.family} در آجر`} />
-      <meta name="twitter:image" content={realstate.profile_url || '/default-twitter.jpg'} />
-      <meta name="twitter:image:alt" content={`عکس پروفایل ${realstate.name} ${realstate.family}`} />
-      
-      {/* Canonical */}
-      <link rel="canonical" href={`https://ajur.app/realestates/${realstate.id}?slug=${realstate.slug}`} />
-      <link rel="icon" href="/favicon.ico" />
-      
-      {/* Structured Data (recommended) */}
-      <script type="application/ld+json">
-        {JSON.stringify({
-          "@context": "https://schema.org",
-          "@type": "RealEstateAgent",
-          "name": `${realstate.name} ${realstate.family}`,
-          "image": realstate.profile_url || '/default-profile.jpg',
-          "url": `https://ajur.app/realestates/${realstate.id}`,
-          "telephone": realstate.phone,
-          "address": {
-            "@type": "PostalAddress",
-            "addressLocality": "Tehran",
-            "addressRegion": "Tehran",
-            "addressCountry": "IR"
-          }
-        })}
-      </script>
-    </Head>
+      <Head>
+        {/* Basic Meta */}
+        <meta charSet="UTF-8" />
+        <meta
+          name="viewport"
+          content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes"
+        />
+
+        {/* SEO */}
+        <title>{`${realstate.name} ${realstate.family} | مشاور املاک آجر`}</title>
+        <meta
+          name="description"
+          content={`صفحه اختصاصی ${realstate.name} ${realstate.family} در پلتفرم هوشمند آجر`}
+        />
+        <meta
+          name="robots"
+          content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1"
+        />
+
+        {/* Open Graph */}
+        <meta property="og:locale" content="fa_IR" />
+        <meta property="og:type" content="profile" />
+        <meta
+          property="og:title"
+          content={`${realstate.name} ${realstate.family} | مشاور املاک آجر`}
+        />
+        <meta
+          property="og:description"
+          content={`مشخصات و اطلاعات تماس ${realstate.name} ${realstate.family} در املاک هوشمند آجر`}
+        />
+        <meta
+          property="og:url"
+          content={`https://ajur.app/realestates/${realstate.id}?slug=${realstate.slug}`}
+        />
+        <meta property="og:site_name" content="آجر | املاک هوشمند املاک" />
+        <meta
+          property="og:image"
+          content={realstate.profile_url || "/default-profile.jpg"}
+        />
+        <meta property="og:image:width" content="256" />
+        <meta property="og:image:height" content="256" />
+        <meta
+          property="og:image:alt"
+          content={`پروفایل ${realstate.name} ${realstate.family}`}
+        />
+        <meta property="profile:first_name" content={realstate.name} />
+        <meta property="profile:last_name" content={realstate.family} />
+
+        {/* Twitter Card */}
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:site" content="@ajur_app" />
+        <meta name="twitter:creator" content="@ajur_app" />
+        <meta
+          name="twitter:title"
+          content={`${realstate.name} ${realstate.family} | آجر`}
+        />
+        <meta
+          name="twitter:description"
+          content={`صفحه رسمی ${realstate.name} ${realstate.family} در آجر`}
+        />
+        <meta
+          name="twitter:image"
+          content={realstate.profile_url || "/default-twitter.jpg"}
+        />
+        <meta
+          name="twitter:image:alt"
+          content={`عکس پروفایل ${realstate.name} ${realstate.family}`}
+        />
+
+        {/* Canonical */}
+        <link
+          rel="canonical"
+          href={`https://ajur.app/realestates/${realstate.id}?slug=${realstate.slug}`}
+        />
+        <link rel="icon" href="/favicon.ico" />
+
+        {/* Structured Data (recommended) */}
+        <script type="application/ld+json">
+          {JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "RealEstateAgent",
+            name: `${realstate.name} ${realstate.family}`,
+            image: realstate.profile_url || "/default-profile.jpg",
+            url: `https://ajur.app/realestates/${realstate.id}`,
+            telephone: realstate.phone,
+            address: {
+              "@type": "PostalAddress",
+              addressLocality: "Tehran",
+              addressRegion: "Tehran",
+              addressCountry: "IR",
+            },
+          })}
+        </script>
+      </Head>
       {renderOrSpinner()}
       {renderModal()}
     </div>

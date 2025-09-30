@@ -180,18 +180,23 @@
 
 /* Button Section */
 .button-container {
-    position: fixed;
-    bottom: 0;
+    /* Keep CTA in the normal document flow so it doesn't overlap content
+       The container spans full width and centers its content. */
+    position: static;
     left: 0;
     width: 100%;
     z-index: 999;
+    display: flex;
+    justify-content: center;
+    padding: 1rem 1rem 2rem; /* give breathing room from content */
+    box-sizing: border-box;
 }
 
 .start-button {
-    position: fixed;
-    bottom: 0;
-    left: 0;
+    /* Full-width button visually, but part of the flow */
+    position: static;
     width: 100%;
+    max-width: 720px;
     padding: 15px 0;
     font-size: 18px;
     font-weight: 600;
@@ -199,8 +204,8 @@
     color: white;
     border: none;
     cursor: pointer;
-    z-index: 1000;
     transition: background-color 0.3s ease;
+    border-radius: 8px;
 }
 
 .start-button:hover {
@@ -212,10 +217,10 @@
 }
 
 .intro-next-button {
-    position: fixed;
-    bottom: 0;
-    left: 0;
+    /* Same style for continuity when used inside intro overlays */
+    position: static;
     width: 100%;
+    max-width: 720px;
     padding: 15px 0;
     font-size: 18px;
     font-weight: 600;
@@ -223,8 +228,8 @@
     color: white;
     border: none;
     cursor: pointer;
-    z-index: 1000;
     transition: background-color 0.3s ease;
+    border-radius: 8px;
 }
 
 .intro-next-button:hover {

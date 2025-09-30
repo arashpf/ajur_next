@@ -120,10 +120,7 @@ const SingleCategory = (props) => {
     console.log("------------what is the props.details------------?");
     console.log(props.details);
 
-    
-
     if (props.details.has_child == 0) {
-
       set_selectedcat(props.details.id);
       set_subcategory_flag(true);
       axios({
@@ -133,11 +130,11 @@ const SingleCategory = (props) => {
           cat: props.details.id,
         },
       }).then(function (response) {
-
-        console.log('the data came from category-field when category has no chind is ---------------');
+        console.log(
+          "the data came from category-field when category has no chind is ---------------"
+        );
         console.log(response.data);
-        
-        
+
         set_normal_fields(response.data.normal_fields);
 
         set_tick_fields(response.data.tick_fields);
@@ -453,7 +450,7 @@ const SingleCategory = (props) => {
     function deleteFlFilter(fl) {
       var filtered = normal_fields.filter((x) => {
         return x.id === fl.id;
-      }); 
+      });
       set_properties((filtered[0].low = 0));
       set_properties((filtered[0].high = 0));
     }
@@ -557,7 +554,9 @@ const SingleCategory = (props) => {
       } else {
         return (
           <>
-          <p style={{textAlign:'center'}}>ابتدا دسته بندی را انتخاب کنید</p>
+            <p style={{ textAlign: "center" }}>
+              ابتدا دسته بندی را انتخاب کنید
+            </p>
             {cats.map((cat) => (
               <SwiperSlide key={cat.id}>
                 <CatCard2
@@ -665,7 +664,6 @@ const SingleCategory = (props) => {
                 style={{ cursor: "pointer" }}
                 onClick={() => set_open_modal(false)}
               >
-                
                 <p></p>
                 <a onClick={() => set_open_modal(false)}>
                   <p
@@ -677,7 +675,7 @@ const SingleCategory = (props) => {
                       borderRadius: "5px",
                     }}
                   >
-                   (دسته بندی کنونی) {name}
+                    (دسته بندی کنونی) {name}
                   </p>
                 </a>
               </div>
@@ -906,14 +904,12 @@ const SingleCategory = (props) => {
           const lower = nf.low > 0 ? parseInt(nf.low) : parseInt(nf.min_range);
           const higher =
             nf.high > 0 ? parseInt(nf.high) : parseInt(nf.max_range);
-          if(matched_pr_nf){
-
+          if (matched_pr_nf) {
             if (matched_pr_nf.value > lower && matched_pr_nf.value < higher) {
             } else {
               is_googd_to_go = false;
             }
           }
-         
         }
       }
     });
@@ -927,49 +923,52 @@ const SingleCategory = (props) => {
   }
 
   const renderWorkers = () => {
-  if (workers.length > 0) {
-    return (
-      <LazyLoader
-        items={workers}
-        itemsPerPage={8}
-        delay={800}
-        renderItem={(worker) => (
-          <Link
-            href={`/worker/${worker.id}?slug=${worker.slug}`}
-            key={worker.id}
-          >
-            <a onClick={AlterLoading}>
-              <WorkerCard worker={worker} />
-            </a>
-          </Link>
-        )}
-        loadingComponent={<p style={{ textAlign: "center" }}>در حال بارگذاری...</p>}
-        endComponent={<p style={{ textAlign: "center" }}>همه آیتم‌ها بارگذاری شدند ✅</p>}
-        grid={true}
-        gridProps={{ spacing: 2 }}
-        itemProps={{ xl: 3, md: 4, xs: 12 }}
-      />
-    );
-  } else {
-    return (
-      <Grid item md={12} xs={12} style={{ background: "white" }}>
-        <p style={{ textAlign: "center", padding: 20 }}>
-          متاسفانه موردی یافت نشد
-        </p>
-        <div className="not-found-wrapper">
-          <img
-            className="not-found-image"
-            src="/logo/not-found.png"
-            alt="ملکی پیدا نشد"
-            width={200}
-            height={120}
-          />
-        </div>
-      </Grid>
-    );
-  }
-};
-
+    if (workers.length > 0) {
+      return (
+        <LazyLoader
+          items={workers}
+          itemsPerPage={8}
+          delay={800}
+          renderItem={(worker) => (
+            <Link
+              href={`/worker/${worker.id}?slug=${worker.slug}`}
+              key={worker.id}
+            >
+              <a onClick={AlterLoading}>
+                <WorkerCard worker={worker} />
+              </a>
+            </Link>
+          )}
+          loadingComponent={
+            <p style={{ textAlign: "center" }}>در حال بارگذاری...</p>
+          }
+          endComponent={
+            <p style={{ textAlign: "center" }}>همه آیتم‌ها بارگذاری شدند ✅</p>
+          }
+          grid={true}
+          gridProps={{ spacing: 2 }}
+          itemProps={{ xl: 3, md: 4, xs: 12 }}
+        />
+      );
+    } else {
+      return (
+        <Grid item md={12} xs={12} style={{ background: "white" }}>
+          <p style={{ textAlign: "center", padding: 20 }}>
+            متاسفانه موردی یافت نشد
+          </p>
+          <div className="not-found-wrapper">
+            <img
+              className="not-found-image"
+              src="/logo/not-found.png"
+              alt="ملکی پیدا نشد"
+              width={200}
+              height={120}
+            />
+          </div>
+        </Grid>
+      );
+    }
+  };
 
   // const Main =() => {
   //   return cats.map(cat =>

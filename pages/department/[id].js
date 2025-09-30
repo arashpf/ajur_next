@@ -332,17 +332,29 @@ const singleDeparment = (props) => {
 
   return (
     <LazyLoader
-      items={workers}
-      itemsPerPage={8}
-      delay={800}
-      renderItem={(worker) => (
-        <Link href={`/worker/${worker.id}?slug=${worker.slug}`} key={worker.id}>
-          <WorkerCard worker={worker} />
-        </Link>
-      )}
-      loadingComponent={<p className="text-center">در حال بارگذاری...</p>}
-      endComponent={<p>همه فایل‌ها بارگذاری شدند ✅</p>}
-    />
+          items={workers}
+          itemsPerPage={8}
+          delay={800}
+          renderItem={(worker) => (
+            <Link
+              href={`/worker/${worker.id}?slug=${worker.slug}`}
+              key={worker.id}
+            >
+              <a>
+                <WorkerCard worker={worker} />
+              </a>
+            </Link>
+          )}
+          loadingComponent={
+            <p style={{ textAlign: "center" }}>در حال بارگذاری...</p>
+          }
+          endComponent={
+            <p style={{ textAlign: "center" }}>همه فایل‌ها بارگذاری شدند✅</p>
+          }
+          grid={true}
+          gridProps={{ spacing: 2 }}
+          itemProps={{ xl: 3, md: 4, xs: 12 }}
+        />
   );
 };
 
@@ -917,11 +929,8 @@ const singleDeparment = (props) => {
             {renderSelectedFilters()}
 
            
-            <div style={{ display: "flex" }}>
-              <Grid container spacing={2}>
-                {renderWorkers()}
-              </Grid>
-            </div>
+            {/* renderWorkers already returns a Grid container when using grid mode; avoid extra nesting */}
+            {renderWorkers()}
           </div>
         </div>
       );
