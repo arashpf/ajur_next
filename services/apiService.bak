@@ -1,0 +1,93 @@
+import axios from 'axios';
+
+const AsyncStorage = {
+  getItem: async (key) => typeof window !== 'undefined' ? localStorage.getItem(key) : null,
+  setItem: async (key, val) => typeof window !== 'undefined' ? localStorage.setItem(key, val) : null,
+  removeItem: async (key) => typeof window !== 'undefined' ? localStorage.removeItem(key) : null,
+};
+import Cookies from 'js-cookie';
+
+const API_BASE_URL = 'https://api.ajur.app/api';
+
+// Create axios instance
+const api = axios.create({
+  baseURL: API_BASE_URL,
+  timeout: 10000,
+  headers: {
+    'Content-Type': 'application/json',
+    'Accept': 'application/json',
+  },
+});
+
+// Always send token in params
+api.interceptors.request.use(
+  async (config) => {
+    try {
+        // prefer localStorage token but fallback to cookie token if present
+        let token = await AsyncStorage.getItem('id_token');
+        if (!token && typeof window !== 'undefined') {
+          token = Cookies.get('id_token') || null;
+        }
+      if (token) {
+        config.params = { ...config.params, token };
+      }
+    } catch (error) {
+      console.error('Error getting token:', error);
+    }
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
+
+// Handle response errors
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    console.error('API Error:', error.response?.status, error.response?.data);
+
+    if (error.response?.status === 401) {
+      AsyncStorage.removeItem('id_token');
+      // also remove cookie token if present
+      if (typeof window !== 'undefined') Cookies.remove('id_token');
+      if (typeof window !== 'undefined') window.alert('Please log in again');
+    } else if (error.response?.status >= 500) {
+      if (typeof window !== 'undefined') window.alert('A server error occurred');
+    } else if (error.code === 'NETWORK_ERROR') {
+      if (typeof window !== 'undefined') window.alert('No internet connection');
+    }
+
+    return Promise.reject(error);
+  }
+);
+
+const ApiService = {
+  // Contacts
+  createContact: (contactData) => api.post('/contacts', contactData),
+  getContacts: () => api.get('/contacts'),
+  getContactById: (id) => api.get(`/contacts/${id}`),
+  updateContact: (id, contactData) => api.put(`/contacts/${id}`, contactData),
+  // Some backends expect token as form-data in the body for delete — send FormData with token
+  deleteContact: async (id) => {
+    try {
+      const formData = new FormData();
+      let token = await AsyncStorage.getItem('id_token');
+      if (!token && typeof window !== 'undefined') {
+        token = Cookies.get('id_token') || null;
+      }
+      if (token) formData.append('token', token);
+
+      return api.post(`/contact-delete/${id}`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+    } catch (error) {
+      return Promise.reject(error);
+    }
+  },
+  searchContacts: (query) => api.get(`/contacts/search/${encodeURIComponent(query)}`),
+  getContactsByCategory: (category) => api.get(`/contacts/category/${encodeURIComponent(category)}`),
+
+  // Test API connection
+  testConnection: () => api.get('/test'),
+};
+
+export default ApiService;

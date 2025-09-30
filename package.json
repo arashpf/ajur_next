@@ -8,7 +8,9 @@
     "build": "next build",
     "postbuild": "next-sitemap",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    
+    "clean-and-build": "rm -rf .next && yarn build"
   },
   "dependencies": {
     "@emotion/react": "^11.14.0",

@@ -1,15 +1,15 @@
 import React from "react";
 import { Modal } from "react-bootstrap";
-import styles from "./styles";
+import styles from "./styles.module.css";
 
 const ContactFormModal = ({
-  visible,
-  onClose,
-  contactForm,
-  onFormChange,
-  onSubmit,
-  isEditing,
-  onCancelEdit,
+  visible = false,
+  onClose = () => {},
+  contactForm = { name: '', mobile: '', phone: '', description: '' },
+  onFormChange = () => {},
+  onSubmit = () => {},
+  isEditing = false,
+  onCancelEdit = () => {},
 }) => {
   return (
     <Modal

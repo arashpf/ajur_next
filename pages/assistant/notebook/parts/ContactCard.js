@@ -18,16 +18,16 @@ const isDesktop = () => {
 };
 
 const ContactCard = ({
-  note,
-  categories,
-  onEdit,
-  onSaveToContacts,
-  onDelete,
-  onCall,
-  onViewDetails,
+  note = {},
+  categories = [],
+  onEdit = () => {},
+  onSaveToContacts = () => {},
+  onDelete = () => {},
+  onCall = () => {},
+  onViewDetails = () => {},
 }) => {
   const categoryColor =
-    categories.find((c) => c.id === note.category)?.color || "#795548";
+    (categories || []).find((c) => c?.id === note?.category)?.color || "#795548";
 
   const [showModal, setShowModal] = useState(false);
   const [snackbarOpen, setSnackbarOpen] = useState(false);
