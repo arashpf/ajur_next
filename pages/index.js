@@ -15,7 +15,7 @@ import Link from "next/link";
 import FileRequest from "../components/request/FileRequest";
 import Cookies from "js-cookie";
 import { useRouter } from "next/router";
-import LandingPage from "./G-ads/landing-page";
+import LandingPage from "./assistant/G-ads/landing-page";
 import Dialog from '@mui/material/Dialog';
 import DialogTitle from '@mui/material/DialogTitle';
 import DialogContent from '@mui/material/DialogContent';
@@ -33,14 +33,18 @@ import SwiperCore, { Autoplay } from "swiper";
 import "swiper/css";
 import "swiper/css/pagination";
 import "swiper/css/navigation";
-import "swiper/css/autoplay";
 import { display, style } from "@mui/system";
 // import "./styles.css";
 // import required modules
 
 function Home(props) {
   const router = useRouter();
-  SwiperCore.use([Autoplay]);
+  // Register Autoplay only on the client to avoid server-side runtime issues
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      SwiperCore.use([Autoplay]);
+    }
+  }, []);
 
   const [loading, set_loading] = useState(true);
   const [cats, set_cats] = useState();
@@ -480,7 +484,7 @@ function Home(props) {
                   },
                 },
               }}
-              modules={[Pagination, Navigation]}
+              modules={[Pagination, Navigation, Autoplay]}
               className={styles["worker-swiper"]}
             >
               {renderSomeHistoryeWorkers()}
@@ -540,7 +544,7 @@ function Home(props) {
                   },
                 },
               }}
-              modules={[Pagination, Navigation]}
+              modules={[Pagination, Navigation, Autoplay]}
               className={styles["worker-swiper"]}
             >
               {renderSomeFavoriteWorkers()}
@@ -1015,7 +1019,7 @@ function Home(props) {
                       spaceBetween: 35,
                     },
                   }}
-                  modules={[Pagination, Navigation]}
+                  modules={[Pagination, Navigation, Autoplay]}
                   className={styles["cat-swiper"]}
                 >
                   {renderSliderDepartments()}
@@ -1051,7 +1055,7 @@ function Home(props) {
                       spaceBetween: 35,
                     },
                   }}
-                  modules={[Pagination, Navigation]}
+                  modules={[Pagination, Navigation, Autoplay]}
                   className={styles["cat-swiper"]}
                   style={{
                     marginBottom: "30px",

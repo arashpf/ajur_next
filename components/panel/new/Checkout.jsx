@@ -31,8 +31,8 @@ function Copyright() {
 
 const steps = ['Shipping address', 'Payment details', 'Review your order'];
 
-function getStepContent(step: number) {
-  switch (step) {
+function getStepContent(Step) {
+  switch (Step) {
     case 0:
       return <AddressForm />;
     case 1:

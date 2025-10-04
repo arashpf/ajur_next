@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from "react";
-import GDashboardLayout from "../../components/layouts/GDashboardLayout";
+import GDashboardLayout from "../../../components/layouts/GDashboardLayout";
 import Style from "../../styles/G-ads/user-dashboard.module.css";
-import { ActiveAds } from "../../components/G-ads/ActiveAds";
-import NewAd from "../../components/G-ads/new-add";
-import KeywordClicksDoughnutChart from "../../components/G-ads/KeywordClicksDoughnutChart";
+import { ActiveAds } from "../../../components/G-ads/ActiveAds";
+import NewAd from "../../../components/G-ads/new-add";
+import KeywordClicksDoughnutChart from "../../../components/G-ads/KeywordClicksDoughnutChart";
 import axios from "axios";
 import Cookies from 'js-cookie';
 import { useRouter } from "next/router";

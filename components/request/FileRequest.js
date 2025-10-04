@@ -615,7 +615,7 @@ const FileRequest = (props) => {
           <InViewAnimationWrapper />
         </Box>
 
-        <Typography variant="body2" sx={{ fontSize: 14, color: "#555", mb: 1 }}>
+        <Typography variant="body2" sx={{ fontSize: 15, color: "#555", mb: 1 }}>
           هنوز فایل دلخواهتان را نیافتید یا موردی برای سپردن دارید؟
         </Typography>
 

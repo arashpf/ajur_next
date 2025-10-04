@@ -1,7 +1,7 @@
 // components/LazyLoader.jsx
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import Grid from "@mui/material/Grid";
 
 const LazyLoader = ({
@@ -13,6 +13,9 @@ const LazyLoader = ({
   endComponent = <p>تمام آیتم‌ها بارگذاری شدند!</p>,
   grid = true,
   gridProps = { spacing: 2 },
+  // optional: provide a horizontal padding value (e.g. '12px' or '24px')
+  // to apply to the left/right of the rendered grid. If null, global CSS applies.
+  gridPadding = null,
   // make default item width 3 (12/4) on medium+ so we get 4 columns
   itemProps = { xl: 3, lg: 3, md: 3, sm: 6, xs: 12 },
   emptyComponent = <p>متاسفانه موردی یافت نشد ❌</p>,
@@ -25,7 +28,7 @@ const LazyLoader = ({
 
   // Reset when items change
   useEffect(() => {
-    setVisibleItems(items.slice(0, itemsPerPage));
+    setVisibleItems((items || []).slice(0, itemsPerPage));
     setPage(1);
   }, [items, itemsPerPage]);
 
@@ -61,10 +64,14 @@ const LazyLoader = ({
   // Handle empty state
   if (!items || items.length === 0) {
     if (grid) {
-      const gap = gridProps && gridProps.spacing ? (gridProps.spacing * 8) + "px" : "16px";
+      const paddingStyle = gridPadding ? { paddingLeft: gridPadding, paddingRight: gridPadding } : {};
       return (
-        <div className={`lazy-grid ${className}`} style={{ display: "grid", gap }}>
-          <div style={{ gridColumn: "1 / -1" }}>{emptyComponent}</div>
+        <div className={className} style={{ width: "100%", ...paddingStyle }}>
+          <Grid container className={`lazy-grid-inner`} {...gridProps}>
+            <Grid item xs={12}>
+              {emptyComponent}
+            </Grid>
+          </Grid>
         </div>
       );
     }
@@ -79,25 +86,33 @@ const LazyLoader = ({
   ));
 
   if (grid) {
-    const gap = gridProps && gridProps.spacing ? (gridProps.spacing * 8) + "px" : "16px";
-    return (
-      <div className={`lazy-grid ${className}`} style={{ display: "grid", gap }}>
-        {content}
+    const paddingStyle = gridPadding ? { paddingLeft: gridPadding, paddingRight: gridPadding } : {};
 
-        <div
-          ref={loaderRef}
-          style={{
-            gridColumn: "1 / -1",
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-            padding: "16px",
-            minHeight: "100px",
-            textAlign: "center",
-          }}
-        >
-          {visibleItems.length < items.length ? (isLoading ? loadingComponent : null) : endComponent}
-        </div>
+    return (
+      <div className={className} style={{ width: "100%", ...paddingStyle }}>
+        <Grid container className={`lazy-grid-inner`} {...gridProps}>
+          {visibleItems.map((item, index) => (
+            // renderItem is expected to return a `<Grid item ...>` element when used with `grid=true`.
+            // We render it directly so MUI Grid sizing works as intended.
+            <React.Fragment key={index}>{renderItem(item)}</React.Fragment>
+          ))}
+
+          <Grid
+            item
+            xs={12}
+            ref={loaderRef}
+            style={{
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              padding: "16px",
+              minHeight: "100px",
+              textAlign: "center",
+            }}
+          >
+            {visibleItems.length < (items || []).length ? (isLoading ? loadingComponent : null) : endComponent}
+          </Grid>
+        </Grid>
       </div>
     );
   }

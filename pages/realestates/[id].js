@@ -347,7 +347,7 @@ const RealestateSingle = (props) => {
 
       return (
         <LazyLoader
-          items={sortedWorkers}
+          items={workers}
           itemsPerPage={8}
           delay={800}
           renderItem={(worker) => (
@@ -880,9 +880,8 @@ const RealestateSingle = (props) => {
             {renderSelectedFilters()}
 
             <div style={{ display: "flex" }}>
-              <Grid container spacing={2}>
+              
                 {renderWorkers()}
-              </Grid>
             </div>
           </div>
         </div>

@@ -69,6 +69,18 @@
   height: auto;
   /* padding: 50px 40px; */
 
+
+/* Provide symmetric horizontal gutters so cards don't touch viewport edges */
+.main {
+  padding: 12px; /* small gutter on mobile */
+  box-sizing: border-box;
+}
+
+@media (min-width: 600px) {
+  .main {
+    padding: 18px 24px; /* wider gutters on tablet/desktop */
+  }
+}
 }
 
 /* Action buttons wrapper: stacked on small, side-by-side on larger screens */
@@ -203,12 +215,22 @@
 }
 
 .spinnerView {
+  /* Local spinner container: use flexbox to center children and be
+     positioned to cover the available area of the parent. Avoid fragile
+     calc offsets; let flex centering do the work. */
   display: flex;
+  align-items: center;
   justify-content: center;
   position: absolute;
-  top: calc(50% - 2em);
-  left: calc(50% - 2em);
+  inset: 0; /* top:0; right:0; bottom:0; left:0; */
+  z-index: 9999;
+}
 
+.spinnerView .spinner {
+  /* Ensure any inline spinner text or image inside this module is sized
+     for mobile-first design. */
+  width: clamp(300px, 80vw, 900px);
+  margin: 0 auto;
 }
 
 .spinner {

@@ -170,7 +170,7 @@ const handleSmartSearch = (filters) => {
               768: { slidesPerView: 7, spaceBetween: 3 },
               1024: { slidesPerView: 7, spaceBetween: 3 },
             }}
-            modules={[Pagination, Navigation]}
+            modules={[Pagination, Navigation, Autoplay]}
             className={styles["neighborh-swiper"]}
           >
             {renderNeighborhoods()}

@@ -26,7 +26,7 @@ export default function AssistantButtons() {
     },
     {
       key: "comissionfee",
-      link: "/comissioncalc",
+      link: "/assistant/comissioncalc",
       label: "محاسبه کمیسیون",
       color: "#ffffff",
       icon: "/Assistant-Icons/calculator",
@@ -40,21 +40,22 @@ export default function AssistantButtons() {
     },
     {
       key: "filebank",
-      link: "/filebank",
+      link: "/assistant/filebank",
       label: "بانک فایل",
       color: "#ffffff",
       icon: "/Assistant-Icons/file-bank",
     },
     {
       key: "education",
-      link: "/education",
+      link: "https://mag.ajur.app/category/real-estate-education/",
       label: "آموزش",
       color: "#ffffff",
       icon: "/Assistant-Icons/instruction",
+      external: true
     },
     {
       key: "views",
-      link: "/G-ads/landing-page",
+      link: "/assistant/G-ads/landing-page",
       label: "افزایش بازدید",
       color: "#ffffff",
       icon: "/Assistant-Icons/view",
@@ -82,9 +83,13 @@ export default function AssistantButtons() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
-  function handleClick(link) {
-    if (link) router.push(link);
+  function handleClick(button) {
+  if (button.external) {
+    window.open(button.link, '_blank', 'noopener,noreferrer');
+  } else if (button.link) {
+    router.push(button.link);
   }
+}
 
   return (
     <div
@@ -96,7 +101,7 @@ export default function AssistantButtons() {
           <button
             key={b.key}
             aria-label={b.label}
-            onClick={() => handleClick(b.link)}
+            onClick={() => handleClick(b)}
             className="group flex flex-row items-center gap-[14px] p-2 bg-white rounded-[14px] shadow-md hover:shadow-lg border border-[rgba(0,0,0,0.03)] cursor-pointer text-right w-full"
             dir="ltr"
           >

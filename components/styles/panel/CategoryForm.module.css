@@ -53,7 +53,7 @@
     border: 1px solid rgb(17, 147, 112);
     border-radius: 5px;
     padding-top: 5px;
-  
+    direction: ltr;
   }
 
 }
@@ -71,12 +71,13 @@
     border: 1px solid rgb(17, 147, 112);
     border-radius: 5px;
     padding-top: 5px;
-  
+    direction: ltr;
   }
 
   .new_single_type_wrapper p {
     font-size: 13px;
     text-align: right;
+    direction: ltr;
   }
   
 }

@@ -1,20 +1,22 @@
-import React, { useState } from "react";
-import { DashboardHeader } from "../G-ads/Header";
-import Button from "@mui/material/Button";
-import Style from "../../styles/G-ads/user-dashboard.module.css"
+import React from "react";
+import Header from "../parts/Header";
+import Footer from "../parts/Footer";
+import Style from "../../styles/G-ads/user-dashboard.module.css";
 import ContactUsButton from "../G-ads/ContactUsButton";
 
 function GDashboardLayout({ children }) {
     return (
         <div>
-            <DashboardHeader />
+            <Header />
 
-            <main>{children}</main>
+                <main>{children}</main>
 
 
-            <div className={Style["contact-us"]}>
-                <ContactUsButton />
-            </div>
+                <div className={Style["contact-us"]}>
+                    <ContactUsButton />
+                </div>
+
+                <Footer />
         </div>
     )
 }

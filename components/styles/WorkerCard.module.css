@@ -6,7 +6,7 @@
   position: relative;
   border-radius: 10px;
   box-shadow: rgba(0, 0, 0, 0.35) 0px 5px 15px;
-  margin: 0; /* remove extra vertical spacing around cards; mobile overrides remain */
+  margin: 0; /* keep card itself margin-free; page container will provide symmetric gutters */
 }
 
 /* make card a column flex container so media + content size predictably */

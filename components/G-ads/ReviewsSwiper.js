@@ -2,7 +2,7 @@ import react, { useState, useEffect, useRef } from 'react';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import 'swiper/css';
 import 'swiper/css/pagination';
-import { Pagination, Navigation, Autoplay } from 'swiper';
+import { Pagination, Navigation } from 'swiper';
 import Stars from '../../components/others/Stars';
 import Style from '../../styles/G-ads/LandingPage.module.css';
 
@@ -50,11 +50,6 @@ function ReviewsSwiper() {
                 spaceBetween={8}
                 navigation
                 pagination={{ clickable: true }}
-                autoplay={{
-                    delay: 5000,
-                    disableOnInteraction: false,
-                    pauseOnMouseEnter: true,
-                }}
                 breakpoints={{
                     200: {
                         slidesPerView: 1,
@@ -73,7 +68,7 @@ function ReviewsSwiper() {
                         spaceBetween: 35,
                     },
                 }}
-                modules={[Pagination, Navigation, Autoplay]}
+                modules={[Pagination, Navigation]}
                 className={Style["portfolio-swiper"]}
             >
                 {reviews.map((review) => (

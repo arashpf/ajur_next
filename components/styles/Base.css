@@ -26,15 +26,15 @@
   position: absolute;
   top: calc(50% - 2em);
   left: calc(50% - 2em);
-
+.spinner-image {
+  /* Responsive sizing: keeps intrinsic GIF ratio while scaling with viewport */
+  width: clamp(180px, 30vw, 720px);
+  max-width: 98vw;
+  height: auto;
+  margin: auto;
+  display: block;
+  object-fit: contain;
 }
-
-.spinner {
-  text-align: center;
-
-}
-
-h2 {
   position: relative;
   padding: 0;
   margin: 0;
@@ -124,10 +124,11 @@ h2 em {
 }
 
 .spinner-image {
-
-  width: 300px;
-  /* Or whatever */
-  height: 300px;
-  /* Or whatever */
+  /* Responsive sizing: keeps intrinsic GIF ratio while scaling with viewport */
+  width: clamp(120px, 24vw, 480px);
+  max-width: 95vw;
+  height: auto;
   margin: auto;
+  display: block;
+  object-fit: contain;
 }

@@ -2,7 +2,7 @@ import react, { useEffect, useState, useRef } from 'react'
 import { Swiper, SwiperSlide } from 'swiper/react';
 import 'swiper/css';
 import 'swiper/css/pagination';
-import { Pagination, Navigation, Autoplay } from 'swiper';
+import { Pagination, Navigation} from 'swiper';
 import Style from '../../styles/G-ads/LandingPage.module.css';
 import Cookies from 'js-cookie';
 

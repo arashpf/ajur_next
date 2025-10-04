@@ -4,7 +4,7 @@ import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import 'swiper/css';
 import 'swiper/css/pagination';
-import { Pagination, Navigation, Autoplay } from 'swiper';
+import { Pagination, Navigation} from 'swiper';
 import Style from "../styles/g-ads/offers-modal.module.css";
 import PricingCard from "./Cards/PricingCard";
 import IconButton from "@mui/material/IconButton";

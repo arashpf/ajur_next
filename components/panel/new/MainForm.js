@@ -876,7 +876,7 @@ export default function MainForm(props) {
             ثبت مشخصات ملک در دسته {cat.name}{" "}
           </p>
           <Grid container spacing={3}>
-            <Grid item xs={12} md={12}>
+            <Grid item fullWidth xs={12} md={12}>
               <TextField
                 required
                 id="Name"
@@ -891,6 +891,13 @@ export default function MainForm(props) {
                   textAlign: "right",
                   direction: "rtl",
                   backgroundColor: "#f8f8f8",
+                  width: "100% !important",
+                }}
+                sx={{
+                  textAlign: "right",
+                  direction: "rtl",
+                  backgroundColor: "#f8f8f8",
+                  width: "100% !important",
                 }}
               />
             </Grid>

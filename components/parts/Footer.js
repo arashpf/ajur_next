@@ -141,32 +141,32 @@ const Footer = () => {
         <div
         style={{
           position: "fixed",
-          bottom: 0,
+          bottom: -4,
           left: 0,
           right: 0,
           // render footer above backdrop by placing it into body via portal; give it higher z-index
-          zIndex: 50,
+          zIndex: 1000,
 
           // use the CSS variable so JS and CSS share the same source of truth
           height: 'var(--bottom-nav-height)',
-          background: 'rgba(255, 255, 255, 1)',
-          backdropFilter: 'blur(6px)',
-          WebkitBackdropFilter: 'blur(6px)',
+          background: 'rgba(255, 255, 255, 0)',
+          // backdropFilter: 'blur(6px)',
+          // WebkitBackdropFilter: 'blur(6px)',
           borderTopLeftRadius: 30,
           borderTopRightRadius: 30,
-          margin: '0 2px',
+          margin: '0 0',
           // borderRadius: '37px',
           // margin: '0 2px 1px',
           overflow: 'visible',
-          boxShadow: "0 -6px 18px rgba(0,0,0,0.05)",
+          // boxShadow: "0 -6px 18px rgba(0,0,0,0.05)",
         }}
       >
   <div style={{ position: 'absolute', left: '50%', transform: 'translateX(-50%)', bottom: 0, width: 'min(720px, calc(100% - 40px))', height: 'calc(var(--bottom-nav-height) - 4px)', borderRadius: 9999, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: 0, boxSizing: 'border-box' }}>
       {/* subtle background oval (moved up a bit and slightly smaller) */}
-      <div style={{ position: 'absolute', left: 0, right: 0, height: 52, bottom: 7, margin: '0 auto', borderRadius: 9999, background: 'rgba(236, 236, 236, 0.42)', backdropFilter: 'blur(12px) saturate(1.1)', WebkitBackdropFilter: 'blur(6px)', boxShadow: 'inset -4px 3px 15px rgba(199, 199, 199, 0.29)',}} />
+      <div style={{ position: 'absolute', left: 0, right: 0, height: 52, bottom: 7, margin: '0 auto', borderRadius: 9999, background: 'rgba(236, 236, 236, 0.8)   ', backdropFilter: 'blur(12px) saturate(1.1)', WebkitBackdropFilter: 'blur(6px)', boxShadow: 'inset -4px 3px 15px rgba(199, 199, 199, 0.29)',}} />
 
-      {/* active pill: centered vertically so reducing height trims both top & bottom */}
-  <div style={{ position: 'absolute', top: '50%', left: 0, height: 50, width: `calc(100% / 5)`, borderRadius: 9999, transform: `translate(${value * 100}%, -50%)`, transition: 'transform 520ms cubic-bezier(0.175,0.885,0.32,1.275)', boxShadow: '0 8px 20px rgba(185,39,46,0.14), inset 0 2px 6px rgba(255,255,255,0.06)', background: 'linear-gradient(135deg, rgba(192,36,42,0.9), rgba(170,30,36,0.75))', border: '1px solid rgba(255,255,255,0.06)', zIndex: 2 }} aria-hidden />
+        {/* active pill: centered both vertically and horizontally within each tab slot */}
+      <div style={{ position: 'absolute', top: '53%', left: `${value * 20 + 10}%`, height: 53, width: `calc(20% + 5px)`, borderRadius: 9999, transform: 'translate(-50%, -50%)', transition: 'left 520ms cubic-bezier(0.175,0.885,0.32,1.275)', boxShadow: '0 8px 20px rgba(185,39,46,0.14), inset 0 2px 6px rgba(255,255,255,0.06)', background: 'linear-gradient(135deg, rgba(192,36,42,0.9), rgba(170,30,36,0.75))', border: '1px solid rgba(255,255,255,0.06)', zIndex: 2 }} aria-hidden />
   <div onClick={() => { setValue(0); onClickHome(); }} role="button" aria-label="خانه" style={{ position: 'relative', zIndex: 3, flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', padding: '8px 0' }}>
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
         <HomeIcon style={{ color: value === 0 ? '#fff' : 'rgba(0,0,0,0.50)', fontSize: 26 }} />

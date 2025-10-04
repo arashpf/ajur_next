@@ -29,21 +29,25 @@ body {
   display: grid;
   grid-template-columns: repeat(1, minmax(120px, 1fr));
   gap: 16px;
+  /* add symmetric horizontal gutters so grid items don't touch the viewport edges */
+  padding-left: 12px;
+  padding-right: 12px;
+  box-sizing: border-box;
 }
 
 @media (min-width: 600px) {
   /* 2 columns, each can shrink to 110px */
-  .lazy-grid { grid-template-columns: repeat(2, minmax(110px, 1fr)); }
+  .lazy-grid { grid-template-columns: repeat(2, minmax(110px, 1fr)); padding-left: 24px; padding-right: 24px; }
 }
 
 @media (min-width: 900px) {
   /* 3 columns, each can shrink to 100px */
-  .lazy-grid { grid-template-columns: repeat(3, minmax(100px, 1fr)); }
+  .lazy-grid { grid-template-columns: repeat(3, minmax(100px, 1fr)); padding-left: 24px; padding-right: 24px; }
 }
 
 @media (min-width: 1200px) {
   /* 4 columns, each can shrink to 90px */
-  .lazy-grid { grid-template-columns: repeat(4, minmax(90px, 1fr)); }
+  .lazy-grid { grid-template-columns: repeat(4, minmax(90px, 1fr)); padding-left: 32px; padding-right: 32px; }
 }
 
 .lazy-item {
@@ -124,7 +128,7 @@ body {
    renders a plain <main> so adding this here ensures pages receive the
    padding even when they don't use the .main-content class. */
 main {
-  padding-bottom: var(--bottom-nav-height);
+  padding-bottom: 10px;
 }
 
 
@@ -187,16 +191,17 @@ div {
 }
 
 .spinnerImageView {
-
+  /* Fullscreen overlay that centers its contents. Use flexbox so child
+     elements (spinner image / text) are perfectly centered on all viewports. */
   position: fixed;
-  left: 0px;
-  top: 0px;
+  inset: 0; /* top:0; right:0; bottom:0; left:0; */
+  display: flex;
+  align-items: center;
+  justify-content: center;
   width: 100%;
   height: 100%;
   z-index: 9999;
   background: white;
-
-
 }
 
 .swiper-button-next {}
@@ -356,21 +361,8 @@ lines of codes to the CatCard2.module.css */
 
 @media (max-width: 600px) {
 
-  .spinner-image {
-
-    /* width: 300px;  */
-    height: 40%;
-    /* Or whatever */
-    margin: auto;
-    position: fixed;
-    top: 50%;
-    left: 47%;
-    transform: translate(-50%, -50%);
-    transform: -webkit-translate(-50%, -50%);
-    transform: -moz-translate(-50%, -50%);
-    transform: -ms-translate(-50%, -50%);
-
-  }
+  /* no per-breakpoint sizing here anymore; the global .spinner-image rule
+     below handles responsive sizing with a fixed aspect-ratio. */
 
 
 
@@ -383,27 +375,41 @@ lines of codes to the CatCard2.module.css */
     padding: 0 40px !important;
   }
 
-  .spinner-image {
-
-    /* width: 300px;  */
-    height: 40%;
-    /* Or whatever */
-    margin: auto;
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    transform: -webkit-translate(-50%, -50%);
-    transform: -moz-translate(-50%, -50%);
-    transform: -ms-translate(-50%, -50%);
-
-  }
+  /* keep other breakpoint-specific styles here if needed; spinner sizing
+     is centralized below */
 
 }
 html, body {
   height: 100%;
   margin: 0;
   padding: 0;
+}
+
+/* Centralized spinner-image rules: keep the GIF centered and preserve its
+   aspect-ratio at all sizes. Use aspect-ratio where supported; width-driven
+   sizing with height:auto ensures legacy-browsers also keep the intrinsic
+   ratio. */
+.spinner-image {
+  display: block;
+  /* Larger on small viewports: increase the minimum and viewport fraction so
+     mobile shows a noticeably bigger loader. Keep a large cap for desktops. */
+  width: clamp(300px, 90vw, 900px);
+  max-width: 98vw;
+  height: auto; /* preserve intrinsic aspect ratio */
+  object-fit: contain;
+  margin: 0 auto;
+  /* let the parent (.spinnerImageView) handle centering via flexbox */
+  position: relative;
+  /* nudge the centered spinner slightly left */
+  transform: translateX(-10px);
+  z-index: 10000;
+}
+
+/* Extra boost for very small devices to make the loader more visible */
+@media (max-width: 420px) {
+  .spinner-image {
+    width: clamp(320px, 94vw, 560px);
+  }
 }
 
 #__next {

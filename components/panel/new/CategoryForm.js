@@ -94,18 +94,11 @@ const [basecategories, set_basecategories] = useState([]);
   }
   return (
     <React.Fragment>
-      <h5 className={Styles['head-title']}>انتخاب دسته بندی</h5>
-      <Grid container spacing={3}>
-
-
-        {rendCategries()}
-
-
-
-
-
-        
-      </Grid>
+      <div dir="rtl">
+        <h5 className={Styles['head-title']}>انتخاب دسته بندی</h5>
+        <Grid container spacing={3} dir="rtl">
+          {rendCategries()}
+        </Grid>
+      </div>
     </React.Fragment>
-  );
-}
+  );}

@@ -474,8 +474,9 @@ export default function ImgMediaCard(props) {
     }
   };
   return (
+    <div>
     <Card
-      sx={{ width: '100%', borderRadius: '10px' }}
+      sx={{ width: '100%', borderRadius: '10px',}}
       className={`notailwind ${Styles["card-wrapper"]}`}
     >
       {renderNeighborHoodRibbon()}
@@ -507,5 +508,6 @@ export default function ImgMediaCard(props) {
         
       </CardContent>
     </Card>
+    </div>
   );
 }

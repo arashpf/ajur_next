@@ -2,7 +2,7 @@ import react, { useState, useEffect, useRef } from 'react';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import 'swiper/css';
 import 'swiper/css/pagination';
-import { Pagination, Navigation, Autoplay } from 'swiper';
+import { Pagination, Navigation } from 'swiper';
 import Link from 'next/link';
 import SmallCard from '../../components/cards/SmallCard';
 import axios from 'axios';
@@ -37,11 +37,6 @@ function Portfolio() {
                 spaceBetween={8}
                 navigation
                 pagination={{ clickable: true }}
-                autoplay={{
-                    delay: 5000,
-                    disableOnInteraction: false,
-                    pauseOnMouseEnter: true,
-                }}
                 breakpoints={{
                     200: {
                         slidesPerView: 2,
@@ -60,7 +55,7 @@ function Portfolio() {
                         spaceBetween: 50,
                     },
                 }}
-                modules={[Pagination, Navigation, Autoplay]}
+                modules={[Pagination, Navigation]}
                 className={Style["portfolio-swiper"]}
             >
                 {data.map((department) => (

@@ -1,5 +1,6 @@
-import React, { useState } from "react";
-import SimpleHeader from "../parts/SimpleHeader";
+import React from "react";
+import Header from "../parts/Header";
+import Footer from "../parts/Footer";
 
 
 
@@ -12,8 +13,9 @@ function GAdsLayout({ children }) {
 
 
         <div>
-            <SimpleHeader />
+            <Header />
             <main>{children}</main>
+            <Footer />
         </div>
 
 

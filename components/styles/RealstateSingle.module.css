@@ -7,6 +7,20 @@
   min-height: 400px;
 }
 
+/* ensure content inside this wrapper doesn't touch the viewport edges */
+.realstate-items-wrapper {
+  box-sizing: border-box;
+  padding-left: 12px;
+  padding-right: 12px;
+}
+
+@media (min-width: 600px) {
+  .realstate-items-wrapper {
+    padding-left: 24px;
+    padding-right: 24px;
+  }
+}
+
 .modal-wrapper {
   background-color: white;
   position: absolute;
@@ -94,6 +108,13 @@
 
 .wrapper{
   text-align: right;
+}
+
+/* add symmetric horizontal gutters so content doesn't touch the viewport edges */
+.wrapper {
+  box-sizing: border-box;
+  padding-left: 12px;
+  padding-right: 12px;
 }
 
 @media (min-width: 600px) {
