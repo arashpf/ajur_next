@@ -1,0 +1,47 @@
+# ---- dependencies ----
+node_modules/
+.pnp
+.pnp.js
+
+# ---- next.js ----
+.next/
+out/
+build/
+dist/
+
+# ---- misc ----
+.DS_Store
+*.pem
+.vscode/
+.idea/
+*.swp
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# ---- env / secrets ----
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+*.env.local
+
+# ---- vercel ----
+.vercel
+
+# ---- typescript ----
+*.tsbuildinfo
+next-env.d.ts
+
+# ---- local-only content you don't want public ----
+temp/
+videos/
+public/uploads/
+public/tmp/
+
+# ---- keep these if you actually want them tracked ----
+# public/logo/
+# public/img/

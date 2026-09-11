@@ -1,0 +1,19 @@
+User-agent: *
+Allow: /
+Disallow: /404
+
+Host: https://ajur.app
+
+Sitemap: https://ajur.app/sitemap.xml
+Sitemap: https://ajur.app/sitemap-static.xml
+Sitemap: https://ajur.app/server-sitemap.xml
+Sitemap: https://ajur.app/cities-sitemap.xml
+Sitemap: https://ajur.app/cities-categories-sitemap.xml
+Sitemap: https://ajur.app/cities-neighborhoods-sitemap.xml
+Sitemap: https://ajur.app/cities-neighborhoods-hub-sitemap.xml
+Sitemap: https://ajur.app/complex-sitmap.xml
+Sitemap: https://ajur.app/image-sitmap.xml
+Sitemap: https://ajur.app/agent-sitmap.xml
+Sitemap: https://ajur.app/agents-sitmap.xml
+Sitemap: https://ajur.app/cat-city-sitmap.xml
+Sitemap: https://ajur.app/neighborhoods-sitmap.xml

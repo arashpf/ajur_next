@@ -1,0 +1,121 @@
+
+
+.card-wrapper {
+  background-color: #3d4351;
+  flex-direction: column;
+  max-height: 25%;
+  color: white;
+
+}
+
+
+.card-image-wrapper {
+  float: left;
+  width: 35%;
+  height: 100px;
+
+}
+
+.card-image-wrapper img {
+
+  height: 100px;
+  width: 100%;
+
+
+}
+
+.card-content-wrapper {
+
+
+  height: 100px;
+  direction: rtl;
+
+}
+
+.card-content-wrapper h3 {
+  font-size: 16px;
+  color: #f8f8f8;
+  padding-right: 5px;
+  text-align: right;
+  font-family: iransans;
+
+}
+
+.card-content-section-1 {
+  height: 30%;
+}
+.card-content-section-2 {
+  height: 30%;
+  font-size: 14px;
+}
+
+.card-content-section-3 {
+  height: 30%;
+}
+
+.card-content-section-2 .part-one {
+
+  float: left;
+  width: 35%;
+}
+
+.card-content-section-2 .part-two {
+
+  float: left;
+  width: 30%;
+}
+
+
+
+
+.card-content-section-3 .part-one {
+
+  float: left;
+  width: 22%;
+}
+
+.card-content-section-3 .part-two {
+
+  float: left;
+  width: 22%;
+}
+
+.card-content-section-3 .part-three {
+
+  float: left;
+  width: 21%;
+}
+
+.search-wrapper {
+  position: absolute;
+  overflow: hidden;
+  color: white;
+  height: 50%;
+  width:50%;
+  background-color: #3d4351;
+  top: 10%;
+  right: 25%;
+  z-index: 10;
+  border-radius: 10px;
+  border: 2px;
+  padding: 5px;
+  margin: 10px;
+  box-shadow: -5px 5px 5px 1px #ccc;
+
+}
+
+.search-wrapper-close-btn {
+  position: absolute;
+  color: white;
+  background-color: #3d4351;
+  top: 0;
+  left: 2%;
+  z-index: 10;
+  border-radius: 50%;
+  border: 2px;
+}
+
+.slider-width {
+  max-width: 30% !important;
+  display: none !important;
+}

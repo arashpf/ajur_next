@@ -1,0 +1,21 @@
+/* styles/G-ads/new-ad.module.css */
+.new-ad-button {
+    width: 200px;
+    height: 80px;
+    background-color: #bc323a;
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-size: 16px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.new-ad-button:hover {
+    background-color: #a72b31;
+    transform: scale(1.05);
+}

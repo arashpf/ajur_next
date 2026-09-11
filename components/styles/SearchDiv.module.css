@@ -1,0 +1,119 @@
+.search-div-wrapper {
+  height: 100vh;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  margin-bottom: 50px;
+}
+
+.navbar-about-place {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  background: rgba(255, 255, 255, 0.7);
+  display: flex;
+  flex-direction: row;
+  padding: 10px;
+  border-radius: 8px;
+  font-family: iransans;
+  z-index: 10;
+}
+
+.navbar-about-place p {
+  font-size: 16px;
+  color: #444;
+  margin: 0 10px;
+  text-align: center;
+}
+
+/* Optional Swiper styling */
+.neighborhoods-wrapper {
+  width: 90%;
+  margin-top: 40px;
+  background: rgba(255, 255, 255, 0.4);
+  backdrop-filter: blur(10px);
+  padding: 5px;
+  border-radius: 12px;
+  box-shadow: 0 3px 14px rgba(0, 0, 0, 0.3);
+  overflow-x: scroll;
+}
+
+/* Center the SmartSearchBox fully */
+.search-box-wrapper {
+  width: 100%;
+  max-width: 1400px; /* ← Allow more breathing room */
+  margin: 0 auto;
+  padding: 0 20px;
+  box-sizing: border-box;
+}
+
+
+/* Mobile tweaks */
+@media (max-width: 600px) {
+  .search-div-wrapper {
+    height: auto;
+    padding-top: 60px;
+  }
+
+  .neighborhoods-wrapper {
+    margin-top: 20px;
+  }
+
+  .navbar-about-place {
+    position: relative;
+    top: 0;
+    left: 0;
+    margin: 10px auto;
+    justify-content: center;
+  }
+}
+
+.suggestion-container {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 16px;
+  padding: 0 8px;
+  animation: popIn 0.6s ease-out forwards;
+}
+
+.suggestion-chip {
+  padding: 8px 14px;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  color: #fff;
+  font-size: 0.9rem;
+  font-family: inherit;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  cursor: pointer;
+  transition: transform 0.3s ease, background 0.3s ease;
+}
+
+.suggestion-chip:hover {
+  transform: translateY(-3px) scale(1.05);
+  background: rgba(255, 255, 255, 0.25);
+  box-shadow: 0 0 12px rgba(255, 255, 255, 0.3);
+}
+
+@keyframes popIn {
+  0% {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  60% {
+    opacity: 0.6;
+    transform: scale(1.05);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}

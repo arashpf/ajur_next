@@ -1,0 +1,72 @@
+.sectionNavContainer {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.7);
+  border-radius: 20px;
+  padding: 10px;
+  z-index: 1000;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(5px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.sectionNavContainer.minimized {
+  padding: 5px 10px;
+  background: rgba(0, 0, 0, 0.3);
+}
+
+.grabHandle {
+  position: absolute;
+  top: -20px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 40px;
+  height: 20px;
+  background: rgba(0, 0, 0, 0.7);
+  border-radius: 10px 10px 0 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  cursor: pointer;
+  font-size: 12px;
+  user-select: none;
+}
+
+.sectionsSlider {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  scroll-behavior: smooth;
+  padding: 5px;
+  max-width: 90vw;
+  scrollbar-width: none;
+}
+
+.sectionsSlider::-webkit-scrollbar {
+  display: none;
+}
+
+.sectionButton {
+  flex: 0 0 auto;
+  padding: 8px 16px;
+  border: none;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+  cursor: pointer;
+  font-size: 14px;
+  white-space: nowrap;
+  transition: all 0.2s ease;
+}
+
+.sectionButton:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.sectionButton.active {
+  background: #b92a31;
+  font-weight: bold;
+  box-shadow: 0 0 10}

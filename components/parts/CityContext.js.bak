@@ -1,0 +1,98 @@
+import React, { createContext, useState, useEffect } from "react";
+import Cookies from 'js-cookie';
+
+export const CityContext = createContext();
+
+export const CityProvider = ({ children }) => {
+  const [currentCity, setCurrentCity] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Load city from cookies on mount
+  useEffect(() => {
+    const loadCity = async () => {
+      try {
+        const savedCity = Cookies.get('persian_city');
+        if (savedCity) {
+          try {
+            const parsedCity = JSON.parse(savedCity);
+            // Validate city structure
+            if (parsedCity?.id && parsedCity?.title) {
+              setCurrentCity(parsedCity);
+            } else {
+              // Clear invalid data
+              Cookies.remove('city');
+              Cookies.remove('persian_city');
+            }
+          } catch (error) {
+            // If JSON parsing fails, treat it as just a city title string
+            const cityTitle = savedCity;
+            if (cityTitle && typeof cityTitle === 'string') {
+              // Create a simple city object with the title
+              // You might want to fetch the full city data here if needed
+              setCurrentCity({ id: Date.now(), title: cityTitle });
+            }
+          }
+        }
+      } catch (error) {
+        console.error("Failed to load city from cookies:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadCity();
+  }, []);
+
+  // Update city in cookies
+  const updateCity = async (city) => {
+    try {
+      if (!city?.title) {
+        throw new Error("Invalid city object");
+      }
+
+      // Store city as JSON string in cookie
+      Cookies.set('city', JSON.stringify(city.slug), {
+        expires: 365, // 1 year
+        path: '/',
+        sameSite: 'strict'
+      });
+
+      Cookies.set('persian_city', JSON.stringify(city.title), {
+        expires: 365, // 1 year
+        path: '/',
+        sameSite: 'strict'
+      });
+      
+      setCurrentCity(city);
+      return true;
+    } catch (error) {
+      console.error("Failed to save city to cookies:", error);
+      throw error;
+    }
+  };
+
+  // Clear selected city from cookies
+  const clearCity = async () => {
+    try {
+      Cookies.remove('city', { path: '/' });
+      Cookies.remove('persian_city', { path: '/' });
+      setCurrentCity(null);
+    } catch (error) {
+      console.error("Failed to clear city from cookies:", error);
+      throw error;
+    }
+  };
+
+  return (
+    <CityContext.Provider
+      value={{
+        currentCity,
+        updateCity,
+        clearCity,
+        isLoading,
+      }}
+    >
+      {children}
+    </CityContext.Provider>
+  );
+};

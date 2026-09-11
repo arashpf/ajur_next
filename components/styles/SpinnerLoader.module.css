@@ -1,0 +1,18 @@
+.spinner-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /* leave room for footer (approx 70px) */
+  height: calc(100vh - 70px);
+  z-index: 10000;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.spinner-single{
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  width: 100%;
+}

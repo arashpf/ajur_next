@@ -1,0 +1,6125 @@
+import React, { useState, useEffect, useCallback } from "react";
+import Head from "next/head";
+import Image from "next/image";
+import styles from "../styles/Home.module.css";
+import dynamic from "next/dynamic";
+import Link from "next/link";
+import { useRouter } from "next/router";
+
+// Optimized dynamic imports
+const SearchDiv = dynamic(() => import("../components/others/SearchDiv"), {
+  ssr: false,
+  loading: () => <div className="search-skeleton" />
+});
+
+const WorkerCard = dynamic(() => import("../components/cards/WorkerCard"), {
+  ssr: false,
+  loading: () => <div className="card-skeleton" />
+});
+
+const RealStateSmalCard = dynamic(() => import("../components/cards/realestate/RealStateSmalCard"), {
+  ssr: false,
+  loading: () => <div className="card-skeleton" />
+});
+
+const DepartmentSmalCard = dynamic(() => import("../components/cards/department/DepartmentSmalCard"), {
+  ssr: false,
+  loading: () => <div className="card-skeleton" />
+});
+
+const CatCard = dynamic(() => import("../components/cards/CatCard"), {
+  ssr: false,
+  loading: () => <div className="card-skeleton" />
+});
+
+const MainCatCard = dynamic(() => import("../components/cards/MainCatCard"), {
+  ssr: false,
+  loading: () => <div className="card-skeleton" />
+});
+
+const FileRequest = dynamic(() => import("../components/request/FileRequest"), {
+  ssr: false,
+  loading: () => <div className="section-skeleton" />
+});
+
+const CityChangeAlertDialog = dynamic(() => import("../components/dialogs/CityChangeAlertDialog"), {
+  ssr: false
+});
+
+const FeaturesHub = dynamic(() => import("../components/accesshub"), {
+  ssr: false,
+  loading: () => <div className="hub-skeleton" />
+});
+
+const BestSection = dynamic(() => import("../components/bestsection"), {
+  ssr: false,
+  loading: () => <div className="section-skeleton" />
+});
+
+const Cards = dynamic(() => import("../components/Cards"), {
+  ssr: false,
+  loading: () => (
+    <div className="max-w-7xl mx-auto my-8">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {[1, 2, 3].map(i => (
+          <div key={i} className="card-skeleton h-64" />
+        ))}
+      </div>
+    </div>
+  )
+});
+
+const Download = dynamic(() => import("../components/Download"), {
+  ssr: false,
+  loading: () => <div className="section-skeleton h-40" />
+});
+
+const DealButton = dynamic(() => import("../components/parts/DealButton"), {
+  ssr: false,
+  loading: () => <div className="button-skeleton h-24" />
+});
+
+// Critical CSS inline
+const criticalCSS = `
+  /* Skeleton loaders */
+  .search-skeleton,
+  .card-skeleton,
+  .section-skeleton,
+  .hub-skeleton,
+  .button-skeleton {
+    background: linear-gradient(90deg, #f5f5f5 25%, #e8e8e8 50%, #f5f5f5 75%);
+    background-size: 200% 100%;
+    animation: skeleton-loading 1.5s ease-in-out infinite;
+    border-radius: 8px;
+  }
+
+  .search-skeleton {
+    height: 56px;
+    margin: 16px 0;
+  }
+
+  .card-skeleton {
+    height: 280px;
+    margin: 8px;
+  }
+
+  .section-skeleton {
+    height: 200px;
+    margin: 24px 0;
+  }
+
+  .hub-skeleton {
+    height: 120px;
+    margin: 24px 0;
+  }
+
+  .button-skeleton {
+    height: 100px;
+    margin: 8px;
+  }
+
+  @keyframes skeleton-loading {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+  }
+
+  /* Performance optimizations */
+  .above-the-fold {
+    opacity: 0;
+    animation: fade-in 0.3s ease forwards;
+  }
+
+  @keyframes fade-in {
+    to { opacity: 1; }
+  }
+`;
+
+function Home(props) {
+  const router = useRouter();
+
+  // useEffect(() => {
+  //   console.log('Props received:', props);
+  //   console.log('Router query:', router.query);
+  //   console.log('Router path:', router.asPath);
+  //   console.log('Selected city for API:', props.url_city);
+  // }, [props, router]);
+  
+  // City change modal state
+  const [cityChangeModal, setCityChangeModal] = useState({
+    show: false,
+    currentCity: "",
+    newCity: "",
+  });
+
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
+  const [cats, setCats] = useState([]);
+  const [mainCats, setMainCats] = useState([]);
+  const [subCats, setSubCats] = useState([]);
+  const [realestates, setRealestates] = useState([]);
+  const [departments, setDepartments] = useState([]);
+  const [title1, setTitle1] = useState("");
+  const [title2, setTitle2] = useState("");
+  const [title3, setTitle3] = useState("");
+  const [collection1, setCollection1] = useState([]);
+  const [collection2, setCollection2] = useState([]);
+  const [collection3, setCollection3] = useState([]);
+  const [theCity, setTheCity] = useState("");
+  const [theNeighborhoods, setTheNeighborhoods] = useState([]);
+
+  const [favoriteWorkers, setFavoriteWorkers] = useState([]);
+  const [historyWorkers, setHistoryWorkers] = useState([]);
+  const [clickedAction, setClickedAction] = useState(null);
+  const [showVpnDialog, setShowVpnDialog] = useState(false);
+
+  const homepageCardsFeatures = [
+    {
+      id: 1,
+      title: "خرید",
+      description: "آگهی‌های خرید ملک، خانه و آپارتمان",
+      illustration: "/img/card1.png",
+      action: "مشاهده آگهی‌ها",
+      onClick: () => selectAction("buy"),
+    },
+    {
+      id: 2,
+      title: "ثبت آگهی",
+      description: "ملک خود را برای فروش یا اجاره در آجر ثبت کنید",
+      illustration: "/img/card2.png",
+      action: "ثبت آگهی",
+      onClick: () => router.push("/panel/new"),
+    },
+    {
+      id: 3,
+      title: "اجاره",
+      description: "آگهی‌های اجاره مسکونی، تجاری و اداری",
+      illustration: "/img/card3.png",
+      action: "مشاهده آگهی‌ها",
+      onClick: () => selectAction("rent"),
+    },
+  ];
+
+  // Simplified visibility control
+  const selectAction = useCallback((type) => {
+    setClickedAction(type);
+  }, []);
+
+  const clearAction = useCallback(() => {
+    setClickedAction(null);
+  }, []);
+
+  // Simple cookie utility
+  const cookieUtils = {
+    get: (name) => {
+      if (typeof window === 'undefined') return null;
+      const value = `; ${document.cookie}`;
+      const parts = value.split(`; ${name}=`);
+      if (parts.length === 2) return parts.pop().split(';').shift();
+      return null;
+    },
+    set: (name, value, days = 365) => {
+      if (typeof window === 'undefined') return;
+      const date = new Date();
+      date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
+      const expires = `expires=${date.toUTCString()}`;
+      document.cookie = `${name}=${value};${expires};path=/;SameSite=Lax`;
+    }
+  };
+
+  // City handling logic
+  useEffect(() => {
+    const getCityFromPath = () => {
+      const path = router.asPath;
+      if (path === '/') return null;
+      const cityFromPath = decodeURIComponent(path.substring(1));
+      return cityFromPath;
+    };
+
+    const urlCity = getCityFromPath();
+    const cookieCity = cookieUtils.get('city');
+
+    // Case 1: Home page with city cookie
+    if (!urlCity && cookieCity) {
+      router.push(`/${cookieCity}`, undefined, { shallow: true });
+      return;
+    }
+
+    // Case 2: Different city than cookie city
+    if (urlCity && cookieCity && urlCity !== cookieCity) {
+      setCityChangeModal({
+        show: true,
+        currentCity: cookieCity,
+        newCity: urlCity,
+      });
+      return;
+    }
+
+    // Case 3: City page with no cookie
+    if (urlCity && !cookieCity) {
+      cookieUtils.set('city', urlCity);
+    }
+  }, [router.asPath]);
+
+  // Handle city change confirmation
+  const handleCityChangeConfirm = () => {
+    cookieUtils.set('city', cityChangeModal.newCity);
+    setCityChangeModal({ show: false, currentCity: "", newCity: "" });
+    if (typeof window !== 'undefined') {
+      window.location.reload();
+    }
+  };
+
+  // Handle city change cancellation
+  const handleCityChangeCancel = () => {
+    router.push(`/${cityChangeModal.currentCity}`, undefined, { shallow: true });
+    setCityChangeModal({ show: false, currentCity: "", newCity: "" });
+  };
+
+  // Main data fetching effect - FIXED JSON PARSE ERROR
+  useEffect(() => {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => {
+      if (loading) {
+        console.error("Loading timeout - showing error state");
+        setLoading(false);
+        setError(true);
+      }
+    }, 10000);
+
+    const selectedCity = props.url_city || "tehran";
+
+    const fetchData = async () => {
+      try {
+        // console.log(`Fetching data for city: ${selectedCity}`);
+        
+        // Try cache first
+        const cacheKey = `homeData_${selectedCity}`;
+        const cachedData = sessionStorage.getItem(cacheKey);
+        
+        if (cachedData) {
+          const parsed = JSON.parse(cachedData);
+          // Use cache if less than 5 minutes old
+          if (Date.now() - parsed.timestamp < 5 * 60 * 1000) {
+            // console.log("Using cached data");
+            setDataFromCache(parsed.data);
+            setLoading(false);
+            clearTimeout(timeoutId);
+            return;
+          }
+        }
+
+        // FIX: Use correct API endpoint and handle HTML responses
+        const apiUrl = `https://api.ajur.app/api/base?city=${selectedCity}`;
+        // console.log(`API URL: ${apiUrl}`);
+        
+        const response = await fetch(apiUrl, {
+          signal: controller.signal,
+          headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json'
+          }
+        });
+
+        // console.log(`Response status: ${response.status}`);
+        
+        // Check if response is JSON
+        const contentType = response.headers.get("content-type");
+        if (!contentType || !contentType.includes("application/json")) {
+          // Response is not JSON, probably HTML error page
+          const text = await response.text();
+          console.error("Server returned non-JSON response:", text.substring(0, 200));
+          throw new Error(`Server returned HTML instead of JSON. Status: ${response.status}`);
+        }
+
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error(`API error ${response.status}:`, errorText);
+          throw new Error(`API error: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        // console.log("API data received successfully");
+        
+        // Cache the data
+        const cacheData = {
+          timestamp: Date.now(),
+          data: data
+        };
+        sessionStorage.setItem(cacheKey, JSON.stringify(cacheData));
+        
+        setDataFromCache(data);
+        setLoading(false);
+        clearTimeout(timeoutId);
+      } catch (error) {
+        if (error.name === 'AbortError') {
+          // console.log("Request aborted");
+          return;
+        }
+        
+        console.error("API request failed:", error);
+        
+        // Try to load from cache as fallback
+        const cacheKey = `homeData_${selectedCity}`;
+        const cachedData = sessionStorage.getItem(cacheKey);
+        if (cachedData) {
+          // console.log("Using cached data as fallback");
+          try {
+            const parsed = JSON.parse(cachedData);
+            setDataFromCache(parsed.data);
+            setLoading(false);
+          } catch (cacheError) {
+            console.error("Cache parse error:", cacheError);
+            setLoading(false);
+            setError(true);
+          }
+        } else {
+          // console.log("No cache available, showing error");
+          setLoading(false);
+          setError(true);
+        }
+        
+        clearTimeout(timeoutId);
+      }
+    };
+
+    const setDataFromCache = (data) => {
+      // console.log("Setting data from cache/API:", data);
+      setCats(data.cats || []);
+      setTheCity(data.the_city || "");
+      setTheNeighborhoods(data.the_neighborhoods || []);
+      setMainCats(data.main_cats || []);
+      setSubCats(data.sub_cats || []);
+      setRealestates(data.realstates || []);
+      setDepartments(data.departments || []);
+      setTitle1(data.title1 || "");
+      setTitle2(data.title2 || "");
+      setTitle3(data.title3 || "");
+      setCollection1(data.collection1 || []);
+      setCollection2(data.collection2 || []);
+      setCollection3(data.collection3 || []);
+    };
+
+    fetchData();
+
+    return () => {
+      controller.abort();
+      clearTimeout(timeoutId);
+    };
+  }, [props.url_city]);
+
+  // Fetch favorite workers
+  // useEffect(() => {
+  //   const fetchFavoriteWorkers = async () => {
+  //     const favorited = cookieUtils.get("favorited");
+      
+  //     if (!favorited) {
+  //       setFavoriteWorkers([]);
+  //       return;
+  //     }
+    
+  //     try {
+  //       // Parse the cookie with error handling
+  //       let favoriteIds;
+  //       try {
+  //         favoriteIds = JSON.parse(favorited);
+  //       } catch (parseError) {
+  //         console.error("Error parsing favorites cookie:", parseError);
+  //         // If cookie is corrupted, clear it and return empty
+  //         cookieUtils.set("favorited", "[]");
+  //         setFavoriteWorkers([]);
+  //         return;
+  //       }
+    
+  //       // Validate that favoriteIds is an array
+  //       if (!Array.isArray(favoriteIds) || favoriteIds.length === 0) {
+  //         setFavoriteWorkers([]);
+  //         return;
+  //       }
+    
+  //       // Build the query parameter - ensure it's a proper JSON string
+  //       const workersHolder = encodeURIComponent(JSON.stringify(favoriteIds));
+  //       const apiUrl = `https://api.ajur.app/api/history-workers?workers_holder=${workersHolder}`;
+        
+  //       console.log("Fetching favorite workers from:", apiUrl);
+    
+  //       // Use AbortController for timeout
+  //       const controller = new AbortController();
+  //       const timeoutId = setTimeout(() => controller.abort(), 5000);
+    
+  //       const response = await fetch(apiUrl, {
+  //         signal: controller.signal,
+  //         headers: {
+  //           'Accept': 'application/json',
+  //           'Content-Type': 'application/json'
+  //         }
+  //       });
+    
+  //       clearTimeout(timeoutId);
+    
+  //       // Check response status
+  //       if (!response.ok) {
+  //         console.error(`API error ${response.status}: ${response.statusText}`);
+  //         setFavoriteWorkers([]);
+  //         return;
+  //       }
+    
+  //       // Check content type
+  //       const contentType = response.headers.get("content-type");
+  //       if (!contentType || !contentType.includes("application/json")) {
+  //         console.error("Invalid content type:", contentType);
+  //         setFavoriteWorkers([]);
+  //         return;
+  //       }
+    
+  //       const data = await response.json();
+        
+  //       // Validate response data is an array
+  //       if (!Array.isArray(data)) {
+  //         console.error("API response is not an array:", data);
+  //         setFavoriteWorkers([]);
+  //         return;
+  //       }
+    
+  //       console.log("Successfully loaded", data.length, "favorite workers");
+  //       setFavoriteWorkers(data);
+        
+  //     } catch (error) {
+  //       console.error("Error loading favorite workers:", error);
+        
+  //       // Differentiate between different types of errors
+  //       if (error.name === 'AbortError') {
+  //         console.error("Request timed out");
+  //       } else if (error instanceof SyntaxError) {
+  //         console.error("JSON parsing error - invalid JSON from API");
+  //       }
+        
+  //       setFavoriteWorkers([]);
+  //     }
+  //   };
+
+  //   if (!loading) {
+  //     fetchFavoriteWorkers();
+  //   }
+  // }, [loading]);
+
+  // Fetch history workers
+  // useEffect(() => {
+  //   const fetchHistoryWorkers = async () => {
+  //     const history = cookieUtils.get("history");
+      
+  //     if (!history) {
+  //       setHistoryWorkers([]);
+  //       return;
+  //     }
+    
+  //     try {
+  //       // Parse the cookie with error handling
+  //       let historyIds;
+  //       try {
+  //         historyIds = JSON.parse(history);
+  //       } catch (parseError) {
+  //         console.error("Error parsing history cookie:", parseError);
+  //         // If cookie is corrupted, clear it and return empty
+  //         cookieUtils.set("history", "[]");
+  //         setHistoryWorkers([]);
+  //         return;
+  //       }
+    
+  //       // Validate that historyIds is an array
+  //       if (!Array.isArray(historyIds) || historyIds.length === 0) {
+  //         setHistoryWorkers([]);
+  //         return;
+  //       }
+    
+  //       // Build the query parameter - ensure it's a proper JSON string
+  //       const workersHolder = encodeURIComponent(JSON.stringify(historyIds));
+  //       const apiUrl = `https://api.ajur.app/api/history-workers?workers_holder=${workersHolder}`;
+        
+  //       // console.log("Fetching history workers from:", apiUrl);
+    
+  //       // Use AbortController for timeout
+  //       const controller = new AbortController();
+  //       const timeoutId = setTimeout(() => controller.abort(), 5000);
+    
+  //       const response = await fetch(apiUrl, {
+  //         signal: controller.signal,
+  //         headers: {
+  //           'Accept': 'application/json',
+  //           'Content-Type': 'application/json'
+  //         }
+  //       });
+    
+  //       clearTimeout(timeoutId);
+    
+  //       // Check response status
+  //       if (!response.ok) {
+  //         console.error(`API error ${response.status}: ${response.statusText}`);
+  //         setHistoryWorkers([]);
+  //         return;
+  //       }
+    
+  //       // Check content type
+  //       const contentType = response.headers.get("content-type");
+  //       if (!contentType || !contentType.includes("application/json")) {
+  //         console.error("Invalid content type:", contentType);
+  //         setHistoryWorkers([]);
+  //         return;
+  //       }
+    
+  //       const data = await response.json();
+        
+  //       // Validate response data is an array
+  //       if (!Array.isArray(data)) {
+  //         console.error("API response is not an array:", data);
+  //         setHistoryWorkers([]);
+  //         return;
+  //       }
+    
+  //       // console.log("Successfully loaded", data.length, "history workers");
+  //       setHistoryWorkers(data);
+        
+  //     } catch (error) {
+  //       console.error("Error loading history workers:", error);
+        
+  //       // Differentiate between different types of errors
+  //       if (error.name === 'AbortError') {
+  //         console.error("Request timed out");
+  //       } else if (error instanceof SyntaxError) {
+  //         console.error("JSON parsing error - invalid JSON from API");
+  //       }
+        
+  //       setHistoryWorkers([]);
+  //     }
+  //   };
+
+  //   if (!loading) {
+  //     fetchHistoryWorkers();
+  //   }
+  // }, [loading]);
+
+  // VPN detection
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    
+    if (cookieUtils.get("hide_vpn_warning")) {
+      return;
+    }
+
+    const detectVpn = async () => {
+      try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 3000);
+
+        const res = await fetch("https://ipapi.co/json/", {
+          signal: controller.signal,
+        });
+        
+        clearTimeout(timeoutId);
+        
+        if (!res.ok) return;
+        
+        // Check content type
+        const contentType = res.headers.get("content-type");
+        if (!contentType?.includes("application/json")) {
+          return;
+        }
+        
+        const data = await res.json();
+
+        const org = (data.org || data.asn || "").toString().toLowerCase();
+        const vpnKeywords = [
+          "vpn", "proxy", "expressvpn", "nordvpn", "surfshark"
+        ];
+
+        for (const k of vpnKeywords) {
+          if (org.includes(k)) {
+            setShowVpnDialog(true);
+            return;
+          }
+        }
+      } catch (e) {
+        // Silent fail
+      }
+    };
+
+    detectVpn();
+  }, []);
+
+  const renderDefaultCity = useCallback(() => {
+    return "tehran";
+  }, []);
+
+  // Optimized loading spinner
+  const renderSpinner = () => (
+    <div className="spinnerImageView" style={{ 
+      minHeight: "60vh", 
+      display: "flex", 
+      flexDirection: "column",
+      alignItems: "center", 
+      justifyContent: "center",
+      backgroundColor: "white"
+    }}>
+      <div style={{ 
+        position: 'relative', 
+        width: '400px', 
+        height: '400px',
+        marginBottom: '20px'
+      }}>
+        <Image
+          src="/logo/ajour-gif.gif"
+          alt="در حال بارگذاری"
+          fill
+          sizes="400px"
+          style={{ objectFit: "contain" }}
+          priority
+        />
+      </div>
+      {/* <h2 style={{ 
+        color: '#333', 
+        marginTop: '20px',
+        fontSize: '1.5rem',
+        fontWeight: 'bold',
+      }}>
+        آجر - مشاور املاک هوشمند
+      </h2>
+      <p style={{ 
+        color: '#666', 
+        marginTop: '10px',
+        fontSize: '0.9rem'
+      }}>
+        در حال بارگذاری...
+      </p> */}
+    </div>
+  );
+
+  // Optimized error state
+  const renderError = () => (
+    <div className="flex flex-col items-center justify-center min-h-[60vh] p-8 text-center">
+      <div className="mb-6">
+        <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-red-50 mb-4">
+          <svg 
+            className="w-10 h-10"
+            viewBox="0 0 24 24"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <rect x="5" y="9" width="3" height="6" rx="0.5" fill="#B45309" />
+            <rect x="5.5" y="9.5" width="2" height="5" rx="0.3" fill="#F59E0B" />
+            <rect x="16" y="9" width="3" height="6" rx="0.5" fill="#B45309" />
+            <rect x="16.5" y="9.5" width="2" height="5" rx="0.3" fill="#F59E0B" />
+            <circle cx="6.5" cy="10.5" r="0.6" fill="#7C2D12" />
+            <circle cx="6.5" cy="12" r="0.6" fill="#7C2D12" />
+            <circle cx="6.5" cy="13.5" r="0.6" fill="#7C2D12" />
+            <circle cx="17.5" cy="10.5" r="0.6" fill="#7C2D12" />
+            <circle cx="17.5" cy="12" r="0.6" fill="#7C2D12" />
+            <circle cx="17.5" cy="13.5" r="0.6" fill="#7C2D12" />
+            <line x1="8" y1="9" x2="16" y2="9" stroke="#92400E" strokeWidth="0.8" />
+            <line x1="8" y1="15" x2="16" y2="15" stroke="#92400E" strokeWidth="0.8" />
+          </svg>
+        </div>
+        <h2 className="text-2xl font-bold text-gray-800 mb-2">
+          مشکلی در بارگذاری داده‌ها پیش آمده است
+        </h2>
+        <p className="text-gray-600 max-w-md">
+          متأسفانه در دریافت اطلاعات از سرور مشکل ایجاد شده است.
+          لطفاً اتصال اینترنت خود را بررسی کرده و دوباره تلاش کنید.
+        </p>
+       
+      </div>
+      <div className="flex flex-col sm:flex-row gap-4 mt-4">
+        <button
+          onClick={() => window.location.reload()}
+          className="px-6 py-3 bg-[#b92a31] text-white rounded-lg font-medium hover:bg-[#a0252c] transition-colors duration-200 shadow-md hover:shadow-lg flex items-center justify-center gap-2"
+        >
+          تلاش مجدد
+        </button>
+        <button
+          onClick={() => window.history.back()}
+          className="px-6 py-3 bg-gray-100 text-gray-700 rounded-lg font-medium hover:bg-gray-200 transition-colors duration-200 border border-gray-300 flex items-center justify-center gap-2"
+        >
+          بازگشت
+        </button>
+      </div>
+    </div>
+  );
+
+  // Render functions
+  const renderWorkerSlider = useCallback((workers) => {
+    if (!workers.length) return null;
+    
+    return workers.map((worker) => (
+      <div key={worker.id} style={{ minWidth: '250px', margin: '0 10px' }}>
+        <Link href={`/worker/${worker.id}?slug=${worker.slug}`}>
+          <WorkerCard worker={worker} />
+        </Link>
+      </div>
+    ));
+  }, []);
+
+  const renderHistoryWorkers = useCallback(() => {
+    if (historyWorkers.length === 0) return null;
+
+    return (
+      <div style={{ paddingBottom: 10 }}>
+        <div className={styles["title"]}>
+          <h2 onClick={() => router.push("/recents")}>آخرین بازدید های شما</h2>
+        </div>
+        <div style={{ display: 'flex', overflowX: 'auto', padding: '10px 0' }}>
+          {renderWorkerSlider(historyWorkers)}
+        </div>
+      </div>
+    );
+  }, [historyWorkers, renderWorkerSlider, router]);
+
+  const renderFavoriteWorkers = useCallback(() => {
+    if (favoriteWorkers.length === 0) return null;
+
+    return (
+      <div style={{ paddingBottom: 20 }}>
+        <div className={styles["title"]}>
+          <h2 onClick={() => router.push("/favorites")}>آخرین مورد پسند های شما</h2>
+        </div>
+        <div style={{ display: 'flex', overflowX: 'auto', padding: '10px 0' }}>
+          {renderWorkerSlider(favoriteWorkers)}
+        </div>
+      </div>
+    );
+  }, [favoriteWorkers, renderWorkerSlider, router]);
+
+  // Main content render
+  const renderContent = () => (
+    <div className="above-the-fold">
+      <main className={styles["main"]}>
+        {/* Header Title Above Cards */}
+        <div className={`max-w-7xl mx-auto mt-6 mb-1 text-center ${styles.headerTitleHover}`}>
+          <h1 className="text-3xl sm:text-4xl md:text-6xl font-extrabold leading-tight">
+            <span style={{ color: '#b92a31' }}>آجر</span>، مشاور املاک هوشمند
+          </h1>
+        </div>
+        
+        {/* Cards Section */}
+        <Cards features={homepageCardsFeatures} />
+
+        {/* Services heading */}
+        <div className="max-w-7xl mx-auto my-6 text-center">
+          <h1 className="text-3xl md:text-4xl font-bold">خدمات آجر</h1>
+        </div>
+
+        {/* Features Hub */}
+        <FeaturesHub />
+
+        {/* Best section */}
+        <div className="max-w-7xl mx-auto my-6 pt-8 text-center">
+          <h1 className="text-3xl md:text-4xl font-bold">بهترین‌های آجر</h1>
+        </div>
+
+        <BestSection />
+
+        {/* FileRequest section */}
+        <FileRequest
+          onCallClick={() => (window.location.href = "tel:+989382740488")}
+          onActionClick={() => router.push("/file-request")}
+        />
+
+        {/* Download section */}
+        <Download />
+
+        {/* Modal for subcategories */}
+        {(clickedAction === "buy" || clickedAction === "rent") && (
+          <div className="fixed inset-0 bg-white z-50 overflow-y-auto">
+            <div className="sticky top-0 mt-5 bg-white border-b border-gray-200 px-4 py-4 flex items-center justify-between shadow-sm z-10">
+              <button
+                onClick={clearAction}
+                className="p-2 hover:bg-gray-100 rounded-lg transition-colors flex items-center"
+                aria-label="بازگشت"
+              >
+                <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none">
+                  <path d="M20 12 H8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                  <path d="M9 7 L4 12 L9 17" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                </svg>
+                <span className="mr-2 text-sm font-medium">بازگشت</span>
+              </button>
+
+              <div className="text-xl font-bold text-gray-900">
+                {clickedAction === "buy" ? "دسته‌بندی‌های خرید" : "دسته‌بندی‌های اجاره"}
+              </div>
+
+              <button
+                onClick={clearAction}
+                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                aria-label="بستن"
+              >
+                <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none">
+                  <path d="M18 6L6 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                  <path d="M6 6L18 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                </svg>
+              </button>
+            </div>
+
+            <div className="p-2 md:p-4 lg:p-6">
+            <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2.5 md:gap-4 max-w-6xl mx-auto px-3 md:px-6">
+  {subCats
+    .filter((c) => clickedAction === "buy" ? c.type === "sell" : c.type === "rent")
+    .map((cat, idx) => (
+      <div key={cat.id} className="aspect-square">
+        <DealButton
+          title={cat.name}
+          src={`/cats_image/sub-cats/${cat.id}.png`}
+          onClick={() => {
+            setLoading(true);
+            const city = props.trigeredcity || renderDefaultCity();
+            router.push(
+              `/${encodeURIComponent(city)}/${encodeURIComponent(cat.eng_name)}`
+            );
+          }}
+          style={{ animationDelay: `${idx * 70}ms` }}
+        />
+      </div>
+    ))}
+</div>
+</div>
+          </div>
+        )}
+
+        {/* <div className={styles["main-row"]}>
+          {renderHistoryWorkers()}
+          {renderFavoriteWorkers()}
+        </div> */}
+      </main>
+    </div>
+  );
+
+  return (
+    <>
+      <Head>
+        <meta charSet="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0" />
+        
+        {/* Preload critical resources */}
+        <link rel="preload" href="/logo/ajour-gif.gif" as="image" />
+        <link rel="preconnect" href="https://api.ajur.app" />
+        <link rel="dns-prefetch" href="https://api.ajur.app" />
+        
+        {/* Critical CSS */}
+        <style dangerouslySetInnerHTML={{ __html: criticalCSS }} />
+        
+        {/* SEO Meta Tags */}
+        <title>آجر : مشاور املاک هوشمند</title>
+        <meta
+          name="description"
+          content="مشاور املاک هوشمند آجر مشاور املاکی به وسعت ایران با صدها مشاور مسلط به منطقه"
+        />
+        <meta
+          name="robots"
+          content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1"
+        />
+        
+        {/* Open Graph */}
+        <meta property="og:locale" content="fa_IR" />
+        <meta property="og:type" content="website" />
+        <meta property="og:title" content="آجر : مشاور املاک هوشمند" />
+        <meta
+          property="og:description"
+          content="از خرید و فروش خانه و ویلا تا مشاوره برای سرمایه گزاری در مشاور املاک هوشمند آجر"
+        />
+        <meta property="og:url" content="https://ajur.app" />
+        <meta property="og:site_name" content="آجر : مشاور املاک هوشمند" />
+        <meta property="og:image" content="https://ajur.app/logo/ajour-meta-image.jpg" />
+        <meta property="og:image:width" content="1080" />
+        <meta property="og:image:height" content="702" />
+        
+        {/* Twitter Card */}
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="آجر : مشاور املاک هوشمند" />
+        <meta name="twitter:description" content="مشاور املاک هوشمند آجر مشاور املاکی به وسعت ایران با صدها مشاور مسلط به منطقه" />
+        <meta name="twitter:image" content="https://ajur.app/logo/ajour-meta-image.jpg" />
+        
+        {/* Canonical */}
+        <link rel="canonical" href="https://ajur.app" />
+        <link rel="icon" href="/favicon.ico" />
+        
+        {/* PWA */}
+        <meta name="theme-color" content="#b92a31" />
+        <link rel="manifest" href="/manifest.json" />
+      </Head>
+
+      <div className={styles.container}>
+        {/* City Change Confirmation Modal */}
+        <CityChangeAlertDialog
+          open={cityChangeModal.show}
+          onClose={handleCityChangeCancel}
+          onConfirm={handleCityChangeConfirm}
+          currentCity={cityChangeModal.currentCity}
+          newCity={cityChangeModal.newCity}
+        />
+
+        {/* VPN warning dialog */}
+        {showVpnDialog && (
+          <div className="fixed bottom-4 left-4 right-4 md:left-auto md:right-4 md:max-w-sm bg-white rounded-lg shadow-xl border border-gray-200 p-4 z-50">
+            <div className="flex items-start">
+              <div className="flex-shrink-0">
+                <svg className="w-6 h-6 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.34 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                </svg>
+              </div>
+              <div className="mr-3">
+                <h3 className="text-sm font-medium text-gray-900">توجه</h3>
+                <p className="mt-1 text-sm text-gray-600">برای استفاده بهتر از آجر، لطفاً فیلترشکن خود را خاموش کنید</p>
+              </div>
+              <button
+                onClick={() => {
+                  cookieUtils.set("hide_vpn_warning", "1", 1);
+                  setShowVpnDialog(false);
+                }}
+                className="text-gray-400 hover:text-gray-500 focus:outline-none"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+          </div>
+        )}
+
+        {loading && renderSpinner()}
+        {error && renderError()}
+        {!loading && !error && renderContent()}
+      </div>
+    </>
+  );
+}
+
+export async function getServerSideProps(context) {
+  const { req, res, query } = context;
+  
+  // Set cache headers
+  
+  
+  // const city = query.city || null; 
+  const city = query.categories || 'tehran';
+  const decodedCity = city ? decodeURIComponent(city) : 'tehran';
+
+  console.log('----------------- City to use------------ :', decodedCity);
+
+  res.setHeader(
+    'Cache-Control',
+    'public, s-maxage=30, stale-while-revalidate=59'
+  );
+
+  // Test API connection on server side to verify it's working
+  try {
+    const testUrl = `https://api.ajur.app/api/base?city=${city || 'tehran'}`;
+    const response = await fetch(testUrl, {
+      headers: {
+        'User-Agent': req.headers['user-agent'] || '',
+        'Accept': 'application/json'
+      }
+    });
+    
+    if (!response.ok) {
+      console.error(`Server-side API test failed: ${response.status}`);
+    } else {
+      const contentType = response.headers.get("content-type");
+      if (!contentType?.includes("application/json")) {
+        console.error("Server-side API returned non-JSON response");
+      } else {
+        // console.log("Server-side API test successful");
+      }
+    }
+  } catch (error) {
+    console.error("Server-side API test error:", error.message);
+  }
+
+  return {
+    props: {
+      url_city: city
+    }
+  };
+}
+
+export default Home;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//////////////home page before the ceo fixing //////////////////////////
+
+
+
+
+
+import React, { useState, useEffect, useCallback } from "react";
+import Head from "next/head";
+import Image from "next/image";
+import styles from "../styles/Home.module.css";
+import dynamic from "next/dynamic";
+import Link from "next/link";
+import { useRouter } from "next/router";
+
+// Optimized dynamic imports
+const SearchDiv = dynamic(() => import("../components/others/SearchDiv"), {
+  ssr: false,
+  loading: () => <div className="search-skeleton" />
+});
+
+const WorkerCard = dynamic(() => import("../components/cards/WorkerCard"), {
+  ssr: false,
+  loading: () => <div className="card-skeleton" />
+});
+
+const RealStateSmalCard = dynamic(() => import("../components/cards/realestate/RealStateSmalCard"), {
+  ssr: false,
+  loading: () => <div className="card-skeleton" />
+});
+
+const DepartmentSmalCard = dynamic(() => import("../components/cards/department/DepartmentSmalCard"), {
+  ssr: false,
+  loading: () => <div className="card-skeleton" />
+});
+
+const CatCard = dynamic(() => import("../components/cards/CatCard"), {
+  ssr: false,
+  loading: () => <div className="card-skeleton" />
+});
+
+const MainCatCard = dynamic(() => import("../components/cards/MainCatCard"), {
+  ssr: false,
+  loading: () => <div className="card-skeleton" />
+});
+
+const FileRequest = dynamic(() => import("../components/request/FileRequest"), {
+  ssr: false,
+  loading: () => <div className="section-skeleton" />
+});
+
+const CityChangeAlertDialog = dynamic(() => import("../components/dialogs/CityChangeAlertDialog"), {
+  ssr: false
+});
+
+const FeaturesHub = dynamic(() => import("../components/accesshub"), {
+  ssr: false,
+  loading: () => <div className="hub-skeleton" />
+});
+
+const BestSection = dynamic(() => import("../components/bestsection"), {
+  ssr: false,
+  loading: () => <div className="section-skeleton" />
+});
+
+const Cards = dynamic(() => import("../components/Cards"), {
+  ssr: false,
+  loading: () => (
+    <div className="max-w-7xl mx-auto my-8">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {[1, 2, 3].map(i => (
+          <div key={i} className="card-skeleton h-64" />
+        ))}
+      </div>
+    </div>
+  )
+});
+
+const Download = dynamic(() => import("../components/Download"), {
+  ssr: false,
+  loading: () => <div className="section-skeleton h-40" />
+});
+
+const DealButton = dynamic(() => import("../components/parts/DealButton"), {
+  ssr: false,
+  loading: () => <div className="button-skeleton h-24" />
+});
+
+// Critical CSS inline
+const criticalCSS = `
+  /* Skeleton loaders */
+  .search-skeleton,
+  .card-skeleton,
+  .section-skeleton,
+  .hub-skeleton,
+  .button-skeleton {
+    background: linear-gradient(90deg, #f5f5f5 25%, #e8e8e8 50%, #f5f5f5 75%);
+    background-size: 200% 100%;
+    animation: skeleton-loading 1.5s ease-in-out infinite;
+    border-radius: 8px;
+  }
+
+  .search-skeleton {
+    height: 56px;
+    margin: 16px 0;
+  }
+
+  .card-skeleton {
+    height: 280px;
+    margin: 8px;
+  }
+
+  .section-skeleton {
+    height: 200px;
+    margin: 24px 0;
+  }
+
+  .hub-skeleton {
+    height: 120px;
+    margin: 24px 0;
+  }
+
+  .button-skeleton {
+    height: 100px;
+    margin: 8px;
+  }
+
+  @keyframes skeleton-loading {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+  }
+
+  /* Performance optimizations */
+  .above-the-fold {
+    opacity: 0;
+    animation: fade-in 0.3s ease forwards;
+  }
+
+  @keyframes fade-in {
+    to { opacity: 1; }
+  }
+`;
+
+function Home(props) {
+  const router = useRouter();
+
+  // useEffect(() => {
+  //   console.log('Props received:', props);
+  //   console.log('Router query:', router.query);
+  //   console.log('Router path:', router.asPath);
+  //   console.log('Selected city for API:', props.url_city);
+  // }, [props, router]);
+  
+  // City change modal state
+  const [cityChangeModal, setCityChangeModal] = useState({
+    show: false,
+    currentCity: "",
+    newCity: "",
+  });
+
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
+  const [cats, setCats] = useState([]);
+  const [mainCats, setMainCats] = useState([]);
+  const [subCats, setSubCats] = useState([]);
+  const [realestates, setRealestates] = useState([]);
+  const [departments, setDepartments] = useState([]);
+  const [title1, setTitle1] = useState("");
+  const [title2, setTitle2] = useState("");
+  const [title3, setTitle3] = useState("");
+  const [collection1, setCollection1] = useState([]);
+  const [collection2, setCollection2] = useState([]);
+  const [collection3, setCollection3] = useState([]);
+  const [theCity, setTheCity] = useState("");
+  const [theNeighborhoods, setTheNeighborhoods] = useState([]);
+
+  const [favoriteWorkers, setFavoriteWorkers] = useState([]);
+  const [historyWorkers, setHistoryWorkers] = useState([]);
+  const [clickedAction, setClickedAction] = useState(null);
+  const [showVpnDialog, setShowVpnDialog] = useState(false);
+
+  const homepageCardsFeatures = [
+    {
+      id: 1,
+      title: "خرید",
+      description: "آگهی‌های خرید ملک، خانه و آپارتمان",
+      illustration: "/img/card1.png",
+      action: "مشاهده آگهی‌ها",
+      onClick: () => selectAction("buy"),
+    },
+    {
+      id: 2,
+      title: "ثبت آگهی",
+      description: "ملک خود را برای فروش یا اجاره در آجر ثبت کنید",
+      illustration: "/img/card2.png",
+      action: "ثبت آگهی",
+      onClick: () => router.push("/panel/new"),
+    },
+    {
+      id: 3,
+      title: "اجاره",
+      description: "آگهی‌های اجاره مسکونی، تجاری و اداری",
+      illustration: "/img/card3.png",
+      action: "مشاهده آگهی‌ها",
+      onClick: () => selectAction("rent"),
+    },
+  ];
+
+  // Simplified visibility control
+  const selectAction = useCallback((type) => {
+    setClickedAction(type);
+  }, []);
+
+  const clearAction = useCallback(() => {
+    setClickedAction(null);
+  }, []);
+
+  // Simple cookie utility
+  const cookieUtils = {
+    get: (name) => {
+      if (typeof window === 'undefined') return null;
+      const value = `; ${document.cookie}`;
+      const parts = value.split(`; ${name}=`);
+      if (parts.length === 2) return parts.pop().split(';').shift();
+      return null;
+    },
+    set: (name, value, days = 365) => {
+      if (typeof window === 'undefined') return;
+      const date = new Date();
+      date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
+      const expires = `expires=${date.toUTCString()}`;
+      document.cookie = `${name}=${value};${expires};path=/;SameSite=Lax`;
+    }
+  };
+
+  // City handling logic
+  useEffect(() => {
+    const getCityFromPath = () => {
+      const path = router.asPath;
+      if (path === '/') return null;
+      const cityFromPath = decodeURIComponent(path.substring(1));
+      return cityFromPath;
+    };
+
+    const urlCity = getCityFromPath();
+    const cookieCity = cookieUtils.get('city');
+
+    // Case 1: Home page with city cookie
+    if (!urlCity && cookieCity) {
+      router.push(`/${cookieCity}`, undefined, { shallow: true });
+      return;
+    }
+
+    // Case 2: Different city than cookie city
+    if (urlCity && cookieCity && urlCity !== cookieCity) {
+      setCityChangeModal({
+        show: true,
+        currentCity: cookieCity,
+        newCity: urlCity,
+      });
+      return;
+    }
+
+    // Case 3: City page with no cookie
+    if (urlCity && !cookieCity) {
+      cookieUtils.set('city', urlCity);
+    }
+  }, [router.asPath]);
+
+  // Handle city change confirmation
+  const handleCityChangeConfirm = () => {
+    cookieUtils.set('city', cityChangeModal.newCity);
+    setCityChangeModal({ show: false, currentCity: "", newCity: "" });
+    if (typeof window !== 'undefined') {
+      window.location.reload();
+    }
+  };
+
+  // Handle city change cancellation
+  const handleCityChangeCancel = () => {
+    router.push(`/${cityChangeModal.currentCity}`, undefined, { shallow: true });
+    setCityChangeModal({ show: false, currentCity: "", newCity: "" });
+  };
+
+  // Main data fetching effect - FIXED JSON PARSE ERROR
+  useEffect(() => {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => {
+      if (loading) {
+        console.error("Loading timeout - showing error state");
+        setLoading(false);
+        setError(true);
+      }
+    }, 10000);
+
+    const selectedCity = props.url_city || "tehran";
+
+    const fetchData = async () => {
+      try {
+        // console.log(`Fetching data for city: ${selectedCity}`);
+        
+        // Try cache first
+        const cacheKey = `homeData_${selectedCity}`;
+        const cachedData = sessionStorage.getItem(cacheKey);
+        
+        if (cachedData) {
+          const parsed = JSON.parse(cachedData);
+          // Use cache if less than 5 minutes old
+          if (Date.now() - parsed.timestamp < 5 * 60 * 1000) {
+            // console.log("Using cached data");
+            setDataFromCache(parsed.data);
+            setLoading(false);
+            clearTimeout(timeoutId);
+            return;
+          }
+        }
+
+        // FIX: Use correct API endpoint and handle HTML responses
+        const apiUrl = `https://api.ajur.app/api/base?city=${selectedCity}`;
+        // console.log(`API URL: ${apiUrl}`);
+        
+        const response = await fetch(apiUrl, {
+          signal: controller.signal,
+          headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json'
+          }
+        });
+
+        // console.log(`Response status: ${response.status}`);
+        
+        // Check if response is JSON
+        const contentType = response.headers.get("content-type");
+        if (!contentType || !contentType.includes("application/json")) {
+          // Response is not JSON, probably HTML error page
+          const text = await response.text();
+          console.error("Server returned non-JSON response:", text.substring(0, 200));
+          throw new Error(`Server returned HTML instead of JSON. Status: ${response.status}`);
+        }
+
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error(`API error ${response.status}:`, errorText);
+          throw new Error(`API error: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        // console.log("API data received successfully");
+        
+        // Cache the data
+        const cacheData = {
+          timestamp: Date.now(),
+          data: data
+        };
+        sessionStorage.setItem(cacheKey, JSON.stringify(cacheData));
+        
+        setDataFromCache(data);
+        setLoading(false);
+        clearTimeout(timeoutId);
+      } catch (error) {
+        if (error.name === 'AbortError') {
+          // console.log("Request aborted");
+          return;
+        }
+        
+        console.error("API request failed:", error);
+        
+        // Try to load from cache as fallback
+        const cacheKey = `homeData_${selectedCity}`;
+        const cachedData = sessionStorage.getItem(cacheKey);
+        if (cachedData) {
+          // console.log("Using cached data as fallback");
+          try {
+            const parsed = JSON.parse(cachedData);
+            setDataFromCache(parsed.data);
+            setLoading(false);
+          } catch (cacheError) {
+            console.error("Cache parse error:", cacheError);
+            setLoading(false);
+            setError(true);
+          }
+        } else {
+          // console.log("No cache available, showing error");
+          setLoading(false);
+          setError(true);
+        }
+        
+        clearTimeout(timeoutId);
+      }
+    };
+
+    const setDataFromCache = (data) => {
+      // console.log("Setting data from cache/API:", data);
+      setCats(data.cats || []);
+      setTheCity(data.the_city || "");
+      setTheNeighborhoods(data.the_neighborhoods || []);
+      setMainCats(data.main_cats || []);
+      setSubCats(data.sub_cats || []);
+      setRealestates(data.realstates || []);
+      setDepartments(data.departments || []);
+      setTitle1(data.title1 || "");
+      setTitle2(data.title2 || "");
+      setTitle3(data.title3 || "");
+      setCollection1(data.collection1 || []);
+      setCollection2(data.collection2 || []);
+      setCollection3(data.collection3 || []);
+    };
+
+    fetchData();
+
+    return () => {
+      controller.abort();
+      clearTimeout(timeoutId);
+    };
+  }, [props.url_city]);
+
+  // Fetch favorite workers
+  // useEffect(() => {
+  //   const fetchFavoriteWorkers = async () => {
+  //     const favorited = cookieUtils.get("favorited");
+      
+  //     if (!favorited) {
+  //       setFavoriteWorkers([]);
+  //       return;
+  //     }
+    
+  //     try {
+  //       // Parse the cookie with error handling
+  //       let favoriteIds;
+  //       try {
+  //         favoriteIds = JSON.parse(favorited);
+  //       } catch (parseError) {
+  //         console.error("Error parsing favorites cookie:", parseError);
+  //         // If cookie is corrupted, clear it and return empty
+  //         cookieUtils.set("favorited", "[]");
+  //         setFavoriteWorkers([]);
+  //         return;
+  //       }
+    
+  //       // Validate that favoriteIds is an array
+  //       if (!Array.isArray(favoriteIds) || favoriteIds.length === 0) {
+  //         setFavoriteWorkers([]);
+  //         return;
+  //       }
+    
+  //       // Build the query parameter - ensure it's a proper JSON string
+  //       const workersHolder = encodeURIComponent(JSON.stringify(favoriteIds));
+  //       const apiUrl = `https://api.ajur.app/api/history-workers?workers_holder=${workersHolder}`;
+        
+  //       console.log("Fetching favorite workers from:", apiUrl);
+    
+  //       // Use AbortController for timeout
+  //       const controller = new AbortController();
+  //       const timeoutId = setTimeout(() => controller.abort(), 5000);
+    
+  //       const response = await fetch(apiUrl, {
+  //         signal: controller.signal,
+  //         headers: {
+  //           'Accept': 'application/json',
+  //           'Content-Type': 'application/json'
+  //         }
+  //       });
+    
+  //       clearTimeout(timeoutId);
+    
+  //       // Check response status
+  //       if (!response.ok) {
+  //         console.error(`API error ${response.status}: ${response.statusText}`);
+  //         setFavoriteWorkers([]);
+  //         return;
+  //       }
+    
+  //       // Check content type
+  //       const contentType = response.headers.get("content-type");
+  //       if (!contentType || !contentType.includes("application/json")) {
+  //         console.error("Invalid content type:", contentType);
+  //         setFavoriteWorkers([]);
+  //         return;
+  //       }
+    
+  //       const data = await response.json();
+        
+  //       // Validate response data is an array
+  //       if (!Array.isArray(data)) {
+  //         console.error("API response is not an array:", data);
+  //         setFavoriteWorkers([]);
+  //         return;
+  //       }
+    
+  //       console.log("Successfully loaded", data.length, "favorite workers");
+  //       setFavoriteWorkers(data);
+        
+  //     } catch (error) {
+  //       console.error("Error loading favorite workers:", error);
+        
+  //       // Differentiate between different types of errors
+  //       if (error.name === 'AbortError') {
+  //         console.error("Request timed out");
+  //       } else if (error instanceof SyntaxError) {
+  //         console.error("JSON parsing error - invalid JSON from API");
+  //       }
+        
+  //       setFavoriteWorkers([]);
+  //     }
+  //   };
+
+  //   if (!loading) {
+  //     fetchFavoriteWorkers();
+  //   }
+  // }, [loading]);
+
+  // Fetch history workers
+  // useEffect(() => {
+  //   const fetchHistoryWorkers = async () => {
+  //     const history = cookieUtils.get("history");
+      
+  //     if (!history) {
+  //       setHistoryWorkers([]);
+  //       return;
+  //     }
+    
+  //     try {
+  //       // Parse the cookie with error handling
+  //       let historyIds;
+  //       try {
+  //         historyIds = JSON.parse(history);
+  //       } catch (parseError) {
+  //         console.error("Error parsing history cookie:", parseError);
+  //         // If cookie is corrupted, clear it and return empty
+  //         cookieUtils.set("history", "[]");
+  //         setHistoryWorkers([]);
+  //         return;
+  //       }
+    
+  //       // Validate that historyIds is an array
+  //       if (!Array.isArray(historyIds) || historyIds.length === 0) {
+  //         setHistoryWorkers([]);
+  //         return;
+  //       }
+    
+  //       // Build the query parameter - ensure it's a proper JSON string
+  //       const workersHolder = encodeURIComponent(JSON.stringify(historyIds));
+  //       const apiUrl = `https://api.ajur.app/api/history-workers?workers_holder=${workersHolder}`;
+        
+  //       // console.log("Fetching history workers from:", apiUrl);
+    
+  //       // Use AbortController for timeout
+  //       const controller = new AbortController();
+  //       const timeoutId = setTimeout(() => controller.abort(), 5000);
+    
+  //       const response = await fetch(apiUrl, {
+  //         signal: controller.signal,
+  //         headers: {
+  //           'Accept': 'application/json',
+  //           'Content-Type': 'application/json'
+  //         }
+  //       });
+    
+  //       clearTimeout(timeoutId);
+    
+  //       // Check response status
+  //       if (!response.ok) {
+  //         console.error(`API error ${response.status}: ${response.statusText}`);
+  //         setHistoryWorkers([]);
+  //         return;
+  //       }
+    
+  //       // Check content type
+  //       const contentType = response.headers.get("content-type");
+  //       if (!contentType || !contentType.includes("application/json")) {
+  //         console.error("Invalid content type:", contentType);
+  //         setHistoryWorkers([]);
+  //         return;
+  //       }
+    
+  //       const data = await response.json();
+        
+  //       // Validate response data is an array
+  //       if (!Array.isArray(data)) {
+  //         console.error("API response is not an array:", data);
+  //         setHistoryWorkers([]);
+  //         return;
+  //       }
+    
+  //       // console.log("Successfully loaded", data.length, "history workers");
+  //       setHistoryWorkers(data);
+        
+  //     } catch (error) {
+  //       console.error("Error loading history workers:", error);
+        
+  //       // Differentiate between different types of errors
+  //       if (error.name === 'AbortError') {
+  //         console.error("Request timed out");
+  //       } else if (error instanceof SyntaxError) {
+  //         console.error("JSON parsing error - invalid JSON from API");
+  //       }
+        
+  //       setHistoryWorkers([]);
+  //     }
+  //   };
+
+  //   if (!loading) {
+  //     fetchHistoryWorkers();
+  //   }
+  // }, [loading]);
+
+  // VPN detection
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    
+    if (cookieUtils.get("hide_vpn_warning")) {
+      return;
+    }
+
+    const detectVpn = async () => {
+      try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 3000);
+
+        const res = await fetch("https://ipapi.co/json/", {
+          signal: controller.signal,
+        });
+        
+        clearTimeout(timeoutId);
+        
+        if (!res.ok) return;
+        
+        // Check content type
+        const contentType = res.headers.get("content-type");
+        if (!contentType?.includes("application/json")) {
+          return;
+        }
+        
+        const data = await res.json();
+
+        const org = (data.org || data.asn || "").toString().toLowerCase();
+        const vpnKeywords = [
+          "vpn", "proxy", "expressvpn", "nordvpn", "surfshark"
+        ];
+
+        for (const k of vpnKeywords) {
+          if (org.includes(k)) {
+            setShowVpnDialog(true);
+            return;
+          }
+        }
+      } catch (e) {
+        // Silent fail
+      }
+    };
+
+    detectVpn();
+  }, []);
+
+  const renderDefaultCity = useCallback(() => {
+    return "tehran";
+  }, []);
+
+  // Optimized loading spinner
+  const renderSpinner = () => (
+    <div className="spinnerImageView" style={{ 
+      minHeight: "60vh", 
+      display: "flex", 
+      flexDirection: "column",
+      alignItems: "center", 
+      justifyContent: "center",
+      backgroundColor: "white"
+    }}>
+      <div style={{ 
+        position: 'relative', 
+        width: '400px', 
+        height: '400px',
+        marginBottom: '20px'
+      }}>
+        <Image
+          src="/logo/ajour-gif.gif"
+          alt="در حال بارگذاری"
+          fill
+          sizes="400px"
+          style={{ objectFit: "contain" }}
+          priority
+        />
+      </div>
+      {/* <h2 style={{ 
+        color: '#333', 
+        marginTop: '20px',
+        fontSize: '1.5rem',
+        fontWeight: 'bold',
+      }}>
+        آجر - مشاور املاک هوشمند
+      </h2>
+      <p style={{ 
+        color: '#666', 
+        marginTop: '10px',
+        fontSize: '0.9rem'
+      }}>
+        در حال بارگذاری...
+      </p> */}
+    </div>
+  );
+
+  // Optimized error state
+  const renderError = () => (
+    <div className="flex flex-col items-center justify-center min-h-[60vh] p-8 text-center">
+      <div className="mb-6">
+        <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-red-50 mb-4">
+          <svg 
+            className="w-10 h-10"
+            viewBox="0 0 24 24"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <rect x="5" y="9" width="3" height="6" rx="0.5" fill="#B45309" />
+            <rect x="5.5" y="9.5" width="2" height="5" rx="0.3" fill="#F59E0B" />
+            <rect x="16" y="9" width="3" height="6" rx="0.5" fill="#B45309" />
+            <rect x="16.5" y="9.5" width="2" height="5" rx="0.3" fill="#F59E0B" />
+            <circle cx="6.5" cy="10.5" r="0.6" fill="#7C2D12" />
+            <circle cx="6.5" cy="12" r="0.6" fill="#7C2D12" />
+            <circle cx="6.5" cy="13.5" r="0.6" fill="#7C2D12" />
+            <circle cx="17.5" cy="10.5" r="0.6" fill="#7C2D12" />
+            <circle cx="17.5" cy="12" r="0.6" fill="#7C2D12" />
+            <circle cx="17.5" cy="13.5" r="0.6" fill="#7C2D12" />
+            <line x1="8" y1="9" x2="16" y2="9" stroke="#92400E" strokeWidth="0.8" />
+            <line x1="8" y1="15" x2="16" y2="15" stroke="#92400E" strokeWidth="0.8" />
+          </svg>
+        </div>
+        <h2 className="text-2xl font-bold text-gray-800 mb-2">
+          مشکلی در بارگذاری داده‌ها پیش آمده است
+        </h2>
+        <p className="text-gray-600 max-w-md">
+          متأسفانه در دریافت اطلاعات از سرور مشکل ایجاد شده است.
+          لطفاً اتصال اینترنت خود را بررسی کرده و دوباره تلاش کنید.
+        </p>
+       
+      </div>
+      <div className="flex flex-col sm:flex-row gap-4 mt-4">
+        <button
+          onClick={() => window.location.reload()}
+          className="px-6 py-3 bg-[#b92a31] text-white rounded-lg font-medium hover:bg-[#a0252c] transition-colors duration-200 shadow-md hover:shadow-lg flex items-center justify-center gap-2"
+        >
+          تلاش مجدد
+        </button>
+        <button
+          onClick={() => window.history.back()}
+          className="px-6 py-3 bg-gray-100 text-gray-700 rounded-lg font-medium hover:bg-gray-200 transition-colors duration-200 border border-gray-300 flex items-center justify-center gap-2"
+        >
+          بازگشت
+        </button>
+      </div>
+    </div>
+  );
+
+  // Render functions
+  const renderWorkerSlider = useCallback((workers) => {
+    if (!workers.length) return null;
+    
+    return workers.map((worker) => (
+      <div key={worker.id} style={{ minWidth: '250px', margin: '0 10px' }}>
+        <Link href={`/worker/${worker.id}?slug=${worker.slug}`}>
+          <WorkerCard worker={worker} />
+        </Link>
+      </div>
+    ));
+  }, []);
+
+  const renderHistoryWorkers = useCallback(() => {
+    if (historyWorkers.length === 0) return null;
+
+    return (
+      <div style={{ paddingBottom: 10 }}>
+        <div className={styles["title"]}>
+          <h2 onClick={() => router.push("/recents")}>آخرین بازدید های شما</h2>
+        </div>
+        <div style={{ display: 'flex', overflowX: 'auto', padding: '10px 0' }}>
+          {renderWorkerSlider(historyWorkers)}
+        </div>
+      </div>
+    );
+  }, [historyWorkers, renderWorkerSlider, router]);
+
+  const renderFavoriteWorkers = useCallback(() => {
+    if (favoriteWorkers.length === 0) return null;
+
+    return (
+      <div style={{ paddingBottom: 20 }}>
+        <div className={styles["title"]}>
+          <h2 onClick={() => router.push("/favorites")}>آخرین مورد پسند های شما</h2>
+        </div>
+        <div style={{ display: 'flex', overflowX: 'auto', padding: '10px 0' }}>
+          {renderWorkerSlider(favoriteWorkers)}
+        </div>
+      </div>
+    );
+  }, [favoriteWorkers, renderWorkerSlider, router]);
+
+  // Main content render
+  const renderContent = () => (
+    <div className="above-the-fold">
+      <main className={styles["main"]}>
+        {/* Header Title Above Cards */}
+        <div className={`max-w-7xl mx-auto mt-6 mb-1 text-center ${styles.headerTitleHover}`}>
+          <h1 className="text-3xl sm:text-4xl md:text-6xl font-extrabold leading-tight">
+            <span style={{ color: '#b92a31' }}>آجر</span>، مشاور املاک هوشمند
+          </h1>
+        </div>
+        
+        {/* Cards Section */}
+        <Cards features={homepageCardsFeatures} />
+
+        {/* Services heading */}
+        <div className="max-w-7xl mx-auto my-6 text-center">
+          <h1 className="text-3xl md:text-4xl font-bold">خدمات آجر</h1>
+        </div>
+
+        {/* Features Hub */}
+        <FeaturesHub />
+
+        {/* Best section */}
+        <div className="max-w-7xl mx-auto my-6 pt-8 text-center">
+          <h1 className="text-3xl md:text-4xl font-bold">بهترین‌های آجر</h1>
+        </div>
+
+        <BestSection />
+
+        {/* FileRequest section */}
+        <FileRequest
+          onCallClick={() => (window.location.href = "tel:+989382740488")}
+          onActionClick={() => router.push("/file-request")}
+        />
+
+        {/* Download section */}
+        <Download />
+
+        {/* Modal for subcategories */}
+        {(clickedAction === "buy" || clickedAction === "rent") && (
+          <div className="fixed inset-0 bg-white z-50 overflow-y-auto">
+            <div className="sticky top-0 mt-5 bg-white border-b border-gray-200 px-4 py-4 flex items-center justify-between shadow-sm z-10">
+              <button
+                onClick={clearAction}
+                className="p-2 hover:bg-gray-100 rounded-lg transition-colors flex items-center"
+                aria-label="بازگشت"
+              >
+                <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none">
+                  <path d="M20 12 H8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                  <path d="M9 7 L4 12 L9 17" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                </svg>
+                <span className="mr-2 text-sm font-medium">بازگشت</span>
+              </button>
+
+              <div className="text-xl font-bold text-gray-900">
+                {clickedAction === "buy" ? "دسته‌بندی‌های خرید" : "دسته‌بندی‌های اجاره"}
+              </div>
+
+              <button
+                onClick={clearAction}
+                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                aria-label="بستن"
+              >
+                <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none">
+                  <path d="M18 6L6 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                  <path d="M6 6L18 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                </svg>
+              </button>
+            </div>
+
+            <div className="p-2 md:p-4 lg:p-6">
+            <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2.5 md:gap-4 max-w-6xl mx-auto px-3 md:px-6">
+  {subCats
+    .filter((c) => clickedAction === "buy" ? c.type === "sell" : c.type === "rent")
+    .map((cat, idx) => (
+      <div key={cat.id} className="aspect-square">
+        <DealButton
+          title={cat.name}
+          src={`/cats_image/sub-cats/${cat.id}.png`}
+          onClick={() => {
+            setLoading(true);
+            const city = props.trigeredcity || renderDefaultCity();
+            router.push(
+              `/${encodeURIComponent(city)}/${encodeURIComponent(cat.eng_name)}`
+            );
+          }}
+          style={{ animationDelay: `${idx * 70}ms` }}
+        />
+      </div>
+    ))}
+</div>
+</div>
+          </div>
+        )}
+
+        {/* <div className={styles["main-row"]}>
+          {renderHistoryWorkers()}
+          {renderFavoriteWorkers()}
+        </div> */}
+      </main>
+    </div>
+  );
+
+  return (
+    <>
+      <Head>
+        <meta charSet="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0" />
+        
+        {/* Preload critical resources */}
+        <link rel="preload" href="/logo/ajour-gif.gif" as="image" />
+        <link rel="preconnect" href="https://api.ajur.app" />
+        <link rel="dns-prefetch" href="https://api.ajur.app" />
+        
+        {/* Critical CSS */}
+        <style dangerouslySetInnerHTML={{ __html: criticalCSS }} />
+        
+        {/* SEO Meta Tags */}
+        <title>آجر : مشاور املاک هوشمند</title>
+        <meta
+          name="description"
+          content="مشاور املاک هوشمند آجر مشاور املاکی به وسعت ایران با صدها مشاور مسلط به منطقه"
+        />
+        <meta
+          name="robots"
+          content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1"
+        />
+        
+        {/* Open Graph */}
+        <meta property="og:locale" content="fa_IR" />
+        <meta property="og:type" content="website" />
+        <meta property="og:title" content="آجر : مشاور املاک هوشمند" />
+        <meta
+          property="og:description"
+          content="از خرید و فروش خانه و ویلا تا مشاوره برای سرمایه گزاری در مشاور املاک هوشمند آجر"
+        />
+        <meta property="og:url" content="https://ajur.app" />
+        <meta property="og:site_name" content="آجر : مشاور املاک هوشمند" />
+        <meta property="og:image" content="https://ajur.app/logo/ajour-meta-image.jpg" />
+        <meta property="og:image:width" content="1080" />
+        <meta property="og:image:height" content="702" />
+        
+        {/* Twitter Card */}
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="آجر : مشاور املاک هوشمند" />
+        <meta name="twitter:description" content="مشاور املاک هوشمند آجر مشاور املاکی به وسعت ایران با صدها مشاور مسلط به منطقه" />
+        <meta name="twitter:image" content="https://ajur.app/logo/ajour-meta-image.jpg" />
+        
+        {/* Canonical */}
+        <link rel="canonical" href="https://ajur.app" />
+        <link rel="icon" href="/favicon.ico" />
+        
+        {/* PWA */}
+        <meta name="theme-color" content="#b92a31" />
+        <link rel="manifest" href="/manifest.json" />
+      </Head>
+
+      <div className={styles.container}>
+        {/* City Change Confirmation Modal */}
+        <CityChangeAlertDialog
+          open={cityChangeModal.show}
+          onClose={handleCityChangeCancel}
+          onConfirm={handleCityChangeConfirm}
+          currentCity={cityChangeModal.currentCity}
+          newCity={cityChangeModal.newCity}
+        />
+
+        {/* VPN warning dialog */}
+        {showVpnDialog && (
+          <div className="fixed bottom-4 left-4 right-4 md:left-auto md:right-4 md:max-w-sm bg-white rounded-lg shadow-xl border border-gray-200 p-4 z-50">
+            <div className="flex items-start">
+              <div className="flex-shrink-0">
+                <svg className="w-6 h-6 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.34 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                </svg>
+              </div>
+              <div className="mr-3">
+                <h3 className="text-sm font-medium text-gray-900">توجه</h3>
+                <p className="mt-1 text-sm text-gray-600">برای استفاده بهتر از آجر، لطفاً فیلترشکن خود را خاموش کنید</p>
+              </div>
+              <button
+                onClick={() => {
+                  cookieUtils.set("hide_vpn_warning", "1", 1);
+                  setShowVpnDialog(false);
+                }}
+                className="text-gray-400 hover:text-gray-500 focus:outline-none"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+          </div>
+        )}
+
+        {loading && renderSpinner()}
+        {error && renderError()}
+        {!loading && !error && renderContent()}
+      </div>
+    </>
+  );
+}
+
+export async function getServerSideProps(context) {
+  const { req, res, query } = context;
+  
+  // Set cache headers
+  
+  
+  // const city = query.city || null; 
+  const city = query.categories || 'tehran';
+  const decodedCity = city ? decodeURIComponent(city) : 'tehran';
+
+  console.log('----------------- City to use------------ :', decodedCity);
+
+  res.setHeader(
+    'Cache-Control',
+    'public, s-maxage=30, stale-while-revalidate=59'
+  );
+
+  // Test API connection on server side to verify it's working
+  try {
+    const testUrl = `https://api.ajur.app/api/base?city=${city || 'tehran'}`;
+    const response = await fetch(testUrl, {
+      headers: {
+        'User-Agent': req.headers['user-agent'] || '',
+        'Accept': 'application/json'
+      }
+    });
+    
+    if (!response.ok) {
+      console.error(`Server-side API test failed: ${response.status}`);
+    } else {
+      const contentType = response.headers.get("content-type");
+      if (!contentType?.includes("application/json")) {
+        console.error("Server-side API returned non-JSON response");
+      } else {
+        // console.log("Server-side API test successful");
+      }
+    }
+  } catch (error) {
+    console.error("Server-side API test error:", error.message);
+  }
+
+  return {
+    props: {
+      url_city: city
+    }
+  };
+}
+
+export default Home;
+
+
+
+
+
+
+
+
+
+
+
+/////////// before try to return ssr and seo again //////////////////
+
+
+// pages/index.jsx
+import React, { useState, useEffect, useCallback } from "react";
+import Head from "next/head";
+import Script from "next/script";
+import Image from "next/image";
+import styles from "../styles/Home.module.css";
+import dynamic from "next/dynamic";
+import Link from "next/link";
+import { useRouter } from "next/router";
+import Cookies from 'js-cookie';
+import Grid from "@mui/material/Grid";
+import Box from "@mui/material/Box";
+import Container from "@mui/material/Container";
+
+import CertificatesFooter from "../components/CertificatesFooter";
+
+
+
+
+
+// Optimized dynamic imports with better loading
+const SearchDiv = dynamic(() => import("../components/others/SearchDiv"), {
+  ssr: false,
+  loading: () => <div className="search-skeleton" />
+});
+
+const WorkerCard = dynamic(() => import("../components/cards/WorkerCard"), {
+  ssr: false,
+  loading: () => <div className="card-skeleton" />
+});
+
+const RealStateSmalCard = dynamic(() => import("../components/cards/realestate/RealStateSmalCard"), {
+  ssr: false,
+  loading: () => <div className="card-skeleton" />
+});
+
+const DepartmentSmalCard = dynamic(() => import("../components/cards/department/DepartmentSmalCard"), {
+  ssr: false,
+  loading: () => <div className="card-skeleton" />
+});
+
+const CatCard = dynamic(() => import("../components/cards/CatCard"), {
+  ssr: false,
+  loading: () => <div className="card-skeleton" />
+});
+
+const MainCatCard = dynamic(() => import("../components/cards/MainCatCard"), {
+  ssr: false,
+  loading: () => <div className="card-skeleton" />
+});
+
+const FileRequest = dynamic(() => import("../components/request/FileRequest"), {
+  ssr: false,
+  loading: () => <div className="section-skeleton" />
+});
+
+const CityChangeAlertDialog = dynamic(() => import("../components/dialogs/CityChangeAlertDialog"), {
+  ssr: false
+});
+
+const FeaturesHub = dynamic(() => import("../components/accesshub"), {
+  ssr: false,
+  loading: () => <div className="hub-skeleton" />
+});
+
+const BestSection = dynamic(() => import("../components/bestsection"), {
+  ssr: false,
+  loading: () => <div className="section-skeleton" />
+});
+
+const Cards = dynamic(() => import("../components/Cards"), {
+  ssr: false,
+  loading: () => (
+    <div className="max-w-7xl mx-auto my-8">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {[1, 2, 3].map(i => (
+          <div key={i} className="card-skeleton h-64" />
+        ))}
+      </div>
+    </div>
+  )
+});
+
+const Download = dynamic(() => import("../components/Download"), {
+  ssr: false,
+  loading: () => <div className="section-skeleton h-40" />
+});
+
+const DealButton = dynamic(() => import("../components/parts/DealButton"), {
+  ssr: false,
+  loading: () => <div className="button-skeleton h-24" />
+});
+
+// Critical CSS inline
+const criticalCSS = `
+  /* Skeleton loaders */
+  .search-skeleton,
+  .card-skeleton,
+  .section-skeleton,
+  .hub-skeleton,
+  .button-skeleton {
+    background: linear-gradient(90deg, #f5f5f5 25%, #e8e8e8 50%, #f5f5f5 75%);
+    background-size: 200% 100%;
+    animation: skeleton-loading 1.5s ease-in-out infinite;
+    border-radius: 8px;
+  }
+
+  .search-skeleton {
+    height: 56px;
+    margin: 16px 0;
+  }
+
+  .card-skeleton {
+    height: 280px;
+    margin: 8px;
+  }
+
+  .section-skeleton {
+    height: 200px;
+    margin: 24px 0;
+  }
+
+  .hub-skeleton {
+    height: 120px;
+    margin: 24px 0;
+  }
+
+  .button-skeleton {
+    height: 100px;
+    margin: 8px;
+  }
+
+  @keyframes skeleton-loading {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+  }
+
+  /* Performance optimizations */
+  .above-the-fold {
+    opacity: 0;
+    animation: fade-in 0.3s ease forwards;
+  }
+
+  @keyframes fade-in {
+    to { opacity: 1; }
+  }
+`;
+
+function Home(props) {
+  const router = useRouter();
+
+  // City state from cookies
+  const [persianCity, setPersianCity] = useState("تهران");
+  const [englishCity, setEnglishCity] = useState("tehran");
+
+  // City change modal state
+  const [cityChangeModal, setCityChangeModal] = useState({
+    show: false,
+    currentCity: "",
+    newCity: "",
+  });
+
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
+  const [cats, setCats] = useState([]);
+  const [mainCats, setMainCats] = useState([]);
+  const [subCats, setSubCats] = useState([]);
+  const [realestates, setRealestates] = useState([]);
+  const [departments, setDepartments] = useState([]);
+  const [title1, setTitle1] = useState("");
+  const [title2, setTitle2] = useState("");
+  const [title3, setTitle3] = useState("");
+  const [collection1, setCollection1] = useState([]);
+  const [collection2, setCollection2] = useState([]);
+  const [collection3, setCollection3] = useState([]);
+  const [theCity, setTheCity] = useState("");
+  const [theNeighborhoods, setTheNeighborhoods] = useState([]);
+
+  const [favoriteWorkers, setFavoriteWorkers] = useState([]);
+  const [historyWorkers, setHistoryWorkers] = useState([]);
+  const [SpecialWorkers, setSpecialWorkers] = useState([]);
+  const [UrgentWorkers, setUrgentWorkers] = useState([]);
+  const [clickedAction, setClickedAction] = useState(null);
+  const [showVpnDialog, setShowVpnDialog] = useState(false);
+
+  // Get city from cookies on mount
+  useEffect(() => {
+    const cookiePersianCity = Cookies.get('persian_city');
+    const cookieEnglishCity = Cookies.get('city');
+
+    if (cookiePersianCity) {
+      setPersianCity(cookiePersianCity);
+    }
+    if (cookieEnglishCity) {
+      setEnglishCity(cookieEnglishCity);
+    }
+  }, []);
+
+  // SEO Data - Now with dynamic Persian city
+  const seoData = {
+    title: `مشاور املاک هوشمند آجر | خرید فروش و اجاره ملک در ${persianCity}`,
+    description: `آجر، مشاور املاک هوشمند در ${persianCity}. خرید، فروش و اجاره آپارتمان، خانه ویلایی، مغازه، دفتر کار و زمین در ${persianCity} و سراسر ایران. بیش از ۱۰۰۰۰ آگهی فعال ملک با بهترین قیمت. مشاوره رایگان تخصصی.`,
+    keywords: `مشاور املاک, خرید خانه, فروش آپارتمان, اجاره ملک, آجر, ${persianCity}, املاک ${persianCity}, خرید ملک در ${persianCity}, فروش ملک در ${persianCity}`,
+    canonical: `https://ajur.app/${englishCity}`,
+    image: "https://ajur.app/logo/ajour-meta-image.jpg",
+    imageWidth: "1080",
+    imageHeight: "702",
+    siteName: "آجر - مشاور املاک هوشمند",
+    twitterHandle: "@ajur_app",
+  };
+
+  const homepageCardsFeatures = [
+    {
+      id: 1,
+      title: "خرید",
+      description: "آگهی‌های خرید ملک، خانه و آپارتمان",
+      illustration: "/img/card1.png",
+      action: "مشاهده آگهی‌ها",
+      onClick: () => {
+        selectAction("buy"); 
+       
+      }
+    },
+    {
+      id: 2,
+      title: "ثبت آگهی",
+      description: "ملک خود را برای فروش یا اجاره در آجر ثبت کنید",
+      illustration: "/img/card2.png",
+      action: "ثبت آگهی",
+
+      onClick: () => {
+         
+        setLoading(true);
+       
+        const token = Cookies.get('id_token');
+        if (token) {
+            router.push("/panel/new");
+        }else{
+          router.push("/panel/auth/login");
+          Cookies.set("destination_before_auth", "/panel/new", { expires: 14 });
+          setLoading(false);
+        }
+
+
+      }
+    },
+
+     
+    {
+      id: 3,
+      title: "اجاره",
+      description: "آگهی‌های اجاره مسکونی، تجاری و اداری",
+      illustration: "/img/card3.png",
+      action: "مشاهده آگهی‌ها",
+      onClick: () => selectAction("rent"),
+    },
+  ];
+
+  // Simplified visibility control
+  const selectAction = useCallback((type) => {
+    setClickedAction(type);
+  }, []);
+
+  const clearAction = useCallback(() => {
+    setClickedAction(null);
+  }, []);
+
+  // Simple cookie utility
+  const cookieUtils = {
+    get: (name) => {
+      if (typeof window === 'undefined') return null;
+      return Cookies.get(name) || null;
+    },
+    set: (name, value, days = 365) => {
+      if (typeof window === 'undefined') return;
+      Cookies.set(name, value, { expires: days, path: '/' });
+    }
+  };
+
+  // City handling logic
+  useEffect(() => {
+    const getCityFromPath = () => {
+      const path = router.asPath;
+      if (path === '/') return null;
+      const cityFromPath = decodeURIComponent(path.substring(1));
+      return cityFromPath;
+    };
+
+    const urlCity = getCityFromPath();
+    const cookieCity = cookieUtils.get('city');
+
+    if (!urlCity && cookieCity) {
+      router.push(`/${cookieCity}`, undefined, { shallow: true });
+      return;
+    }
+
+    if (urlCity && cookieCity && urlCity !== cookieCity) {
+      setCityChangeModal({
+        show: true,
+        currentCity: cookieCity,
+        newCity: urlCity,
+      });
+      return;
+    }
+
+    if (urlCity && !cookieCity) {
+      cookieUtils.set('city', urlCity);
+    }
+  }, [router.asPath]);
+
+  // Handle city change confirmation
+  const handleCityChangeConfirm = () => {
+    cookieUtils.set('city', cityChangeModal.newCity);
+    setCityChangeModal({ show: false, currentCity: "", newCity: "" });
+    if (typeof window !== 'undefined') {
+      window.location.reload();
+    }
+  };
+
+  // Handle city change cancellation
+  const handleCityChangeCancel = () => {
+    router.push(`/${cityChangeModal.currentCity}`, undefined, { shallow: true });
+    setCityChangeModal({ show: false, currentCity: "", newCity: "" });
+  };
+
+  // Main data fetching effect
+  useEffect(() => {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => {
+      if (loading) {
+        console.error("Loading timeout - showing error state");
+        setLoading(false);
+        setError(true);
+      }
+    }, 10000);
+
+    const selectedCity = englishCity;
+
+    const fetchData = async () => {
+      try {
+        // Check if we have data from server props
+        if (props.initialData) {
+          console.log("Using server props data");
+          setDataFromCache(props.initialData);
+          setLoading(false);
+          clearTimeout(timeoutId);
+          return;
+        }
+
+        const cacheKey = `homeData_${selectedCity}`;
+        const cachedData = sessionStorage.getItem(cacheKey);
+
+        if (cachedData) {
+          const parsed = JSON.parse(cachedData);
+          if (Date.now() - parsed.timestamp < 5 * 60 * 1000) {
+            console.log("Using cached data");
+            setDataFromCache(parsed.data);
+            setLoading(false);
+            clearTimeout(timeoutId);
+            return;
+          }
+        }
+
+        const apiUrl = `https://api.ajur.app/api/base?city=${selectedCity}`;
+        console.log(`Fetching from API: ${apiUrl}`);
+
+        const response = await fetch(apiUrl, {
+          signal: controller.signal,
+          headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json'
+          }
+        });
+
+        const contentType = response.headers.get("content-type");
+        if (!contentType || !contentType.includes("application/json")) {
+          const text = await response.text();
+          console.error("Server returned non-JSON response:", text.substring(0, 200));
+          throw new Error(`Server returned HTML instead of JSON. Status: ${response.status}`);
+        }
+
+        if (!response.ok) {
+          throw new Error(`API error: ${response.status}`);
+        }
+
+        const data = await response.json();
+        console.log("API data received:", data);
+
+        const cacheData = {
+          timestamp: Date.now(),
+          data: data
+        };
+        sessionStorage.setItem(cacheKey, JSON.stringify(cacheData));
+
+        setDataFromCache(data);
+        setLoading(false);
+        clearTimeout(timeoutId);
+      } catch (error) {
+        if (error.name === 'AbortError') {
+          return;
+        }
+
+        console.error("API request failed:", error);
+
+        const cacheKey = `homeData_${selectedCity}`;
+        const cachedData = sessionStorage.getItem(cacheKey);
+        if (cachedData) {
+          try {
+            const parsed = JSON.parse(cachedData);
+            setDataFromCache(parsed.data);
+            setLoading(false);
+          } catch (cacheError) {
+            console.error("Cache parse error:", cacheError);
+            setLoading(false);
+            setError(true);
+          }
+        } else {
+          setLoading(false);
+          setError(true);
+        }
+
+        clearTimeout(timeoutId);
+      }
+    };
+
+    const setDataFromCache = (data) => {
+      setCats(data.cats || []);
+      setTheCity(data.the_city || "");
+      setTheNeighborhoods(data.the_neighborhoods || []);
+      setMainCats(data.main_cats || []);
+      setSubCats(data.sub_cats || []);
+      setRealestates(data.realstates || []);
+      setDepartments(data.departments || []);
+      setTitle1(data.title1 || "");
+      setTitle2(data.title2 || "");
+      setTitle3(data.title3 || "");
+      setCollection1(data.collection1 || []);
+      setCollection2(data.collection2 || []);
+      setCollection3(data.collection3 || []);
+      setSpecialWorkers(data.the_city_specials || []);
+      setUrgentWorkers(data.the_city_urgents || []);
+      
+    };
+
+    fetchData();
+
+    return () => {
+      controller.abort();
+      clearTimeout(timeoutId);
+    };
+  }, [englishCity, props.initialData]);
+
+  // VPN detection
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    if (cookieUtils.get("hide_vpn_warning")) {
+      return;
+    }
+
+    const detectVpn = async () => {
+      try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 3000);
+
+        const res = await fetch("https://ipapi.co/json/", {
+          signal: controller.signal,
+        });
+
+        clearTimeout(timeoutId);
+
+        if (!res.ok) return;
+
+        const contentType = res.headers.get("content-type");
+        if (!contentType?.includes("application/json")) {
+          return;
+        }
+
+        const data = await res.json();
+
+        const org = (data.org || data.asn || "").toString().toLowerCase();
+        const vpnKeywords = [
+          "vpn", "proxy", "expressvpn", "nordvpn", "surfshark"
+        ];
+
+        for (const k of vpnKeywords) {
+          if (org.includes(k)) {
+            setShowVpnDialog(true);
+            return;
+          }
+        }
+      } catch (e) {
+        // Silent fail
+      }
+    };
+
+    detectVpn();
+  }, []);
+
+  const renderDefaultCity = useCallback(() => {
+    return englishCity;
+  }, [englishCity]);
+
+  // Optimized loading spinner
+  const renderSpinner = () => (
+    <div className="spinnerImageView" style={{
+      minHeight: "60vh",
+      display: "flex",
+      flexDirection: "column",
+      alignItems: "center",
+      justifyContent: "center",
+      backgroundColor: "white"
+    }}>
+      <div style={{
+        position: 'relative',
+        width: '400px',
+        height: '400px',
+        marginBottom: '20px'
+      }}>
+        <Image
+          src="/logo/ajour-gif.gif"
+          alt="در حال بارگذاری"
+          fill
+          sizes="400px"
+          style={{ objectFit: "contain" }}
+          priority
+        />
+      </div>
+    </div>
+  );
+
+  // Optimized error state
+  const renderError = () => (
+    <div className="flex flex-col items-center justify-center min-h-[60vh] p-8 text-center">
+      <div className="mb-6">
+        <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-red-50 mb-4">
+          <svg
+            className="w-10 h-10"
+            viewBox="0 0 24 24"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <rect x="5" y="9" width="3" height="6" rx="0.5" fill="#B45309" />
+            <rect x="5.5" y="9.5" width="2" height="5" rx="0.3" fill="#F59E0B" />
+            <rect x="16" y="9" width="3" height="6" rx="0.5" fill="#B45309" />
+            <rect x="16.5" y="9.5" width="2" height="5" rx="0.3" fill="#F59E0B" />
+            <circle cx="6.5" cy="10.5" r="0.6" fill="#7C2D12" />
+            <circle cx="6.5" cy="12" r="0.6" fill="#7C2D12" />
+            <circle cx="6.5" cy="13.5" r="0.6" fill="#7C2D12" />
+            <circle cx="17.5" cy="10.5" r="0.6" fill="#7C2D12" />
+            <circle cx="17.5" cy="12" r="0.6" fill="#7C2D12" />
+            <circle cx="17.5" cy="13.5" r="0.6" fill="#7C2D12" />
+            <line x1="8" y1="9" x2="16" y2="9" stroke="#92400E" strokeWidth="0.8" />
+            <line x1="8" y1="15" x2="16" y2="15" stroke="#92400E" strokeWidth="0.8" />
+          </svg>
+        </div>
+        <h2 className="text-2xl font-bold text-gray-800 mb-2">
+          مشکلی در بارگذاری داده‌ها پیش آمده است
+        </h2>
+        <p className="text-gray-600 max-w-md">
+          متأسفانه در دریافت اطلاعات از سرور مشکل ایجاد شده است.
+          لطفاً اتصال اینترنت خود را بررسی کرده و دوباره تلاش کنید.
+        </p>
+
+      </div>
+      <div className="flex flex-col sm:flex-row gap-4 mt-4">
+        <button
+          onClick={() => window.location.reload()}
+          className="px-6 py-3 bg-[#b92a31] text-white rounded-lg font-medium hover:bg-[#a0252c] transition-colors duration-200 shadow-md hover:shadow-lg flex items-center justify-center gap-2"
+        >
+          تلاش مجدد
+        </button>
+        <button
+          onClick={() => window.history.back()}
+          className="px-6 py-3 bg-gray-100 text-gray-700 rounded-lg font-medium hover:bg-gray-200 transition-colors duration-200 border border-gray-300 flex items-center justify-center gap-2"
+        >
+          بازگشت
+        </button>
+      </div>
+    </div>
+  );
+
+  // Render functions
+  const renderWorkerSlider = useCallback((workers) => {
+    if (!workers.length) return null;
+
+    return workers.map((worker) => (
+      <div key={worker.id} style={{ minWidth: '250px', margin: '0 10px' }}>
+        <Link href={`/worker/${worker.id}?slug=${worker.slug}`}>
+          <WorkerCard worker={worker} />
+        </Link>
+      </div>
+    ));
+  }, []);
+
+
+  const renderSpecialSlider = useCallback((workers) => {
+    if (!workers.length) return null;
+
+    return workers.map((worker) => (
+
+      // <div key={worker.id} style={{ minWidth: '250px', margin: '0 10px' }}>
+      //   <Link href={`/worker/${worker.id}?slug=${worker.slug}`}>
+      //     <WorkerCard worker={worker} />
+      //   </Link>
+      // </div>
+
+        <Grid item xs={12} md={4} key={worker.id}>
+        <a href={`/worker/${worker.id}?slug=${worker.slug}`}>
+          <WorkerCard worker={worker} />
+        </a>
+        </Grid>
+    ));
+  }, []);
+
+  const renderUrgentSlider = useCallback((workers) => {
+    if (!workers.length) return null;
+
+    return workers.map((worker) => (
+      <div key={worker.id} style={{ minWidth: '250px', margin: '0 10px' }}>
+        <Link href={`/worker/${worker.id}?slug=${worker.slug}`}>
+          <WorkerCard worker={worker} />
+        </Link>
+      </div>
+    ));
+  }, []);
+
+  
+
+
+  
+
+  const renderHistoryWorkers = useCallback(() => {
+    if (historyWorkers.length === 0) return null;
+
+    return (
+      <div style={{ paddingBottom: 10 }}>
+        <div className={styles["title"]}>
+          <h2 onClick={() => router.push("/recents")}>آخرین بازدید های شما</h2>
+        </div>
+        <div style={{ display: 'flex', overflowX: 'auto', padding: '10px 0' }}>
+          {renderWorkerSlider(historyWorkers)}
+        </div>
+      </div>
+    );
+  }, [historyWorkers, renderWorkerSlider, router]);
+
+  const renderFavoriteWorkers = useCallback(() => {
+    if (favoriteWorkers.length === 0) return null;
+
+    return (
+      <div style={{ paddingBottom: 20 }}>
+        <div className={styles["title"]}>
+          <h2 onClick={() => router.push("/favorites")}>آخرین مورد پسند های شما</h2>
+        </div>
+        <div style={{ display: 'flex', overflowX: 'auto', padding: '10px 0' }}>
+          {renderWorkerSlider(favoriteWorkers)}
+        </div>
+      </div>
+    );
+  }, [favoriteWorkers, renderWorkerSlider, router]);
+
+
+  // const renderSpecialWorkers = useCallback(() => {
+  //   if (SpecialWorkers.length === 0) return null;
+
+  //   return (
+  //     <div style={{ paddingBottom: 20 }}>
+  //       <div className={styles["title"]}>
+  //   <h2 >  املاک آگهی شده در {persianCity}</h2>
+  //       </div>
+  //       {/* <div style={{ display: 'flex', overflowX: 'auto', padding: '10px 0' }}>
+  //         {renderSpecialSlider(SpecialWorkers)}
+  //       </div> */}
+
+  //       <Box sx={{ flexGrow: 1, py: 3 }}>
+  //       {renderSpecialSlider(SpecialWorkers)}
+  //       </Box>
+  //     </div>
+  //   );
+  // }, [SpecialWorkers, renderSpecialSlider, router]);
+
+  const renderSpecialWorkers = useCallback(() => {
+    if (SpecialWorkers.length === 0) return null;
+  
+    return (
+      <Container maxWidth="xl" sx={{ py: 3 }}> {/* Use Container as parent */}
+        <div className={styles["title"]}>
+          <h2>  فروش ویژه در  {persianCity}</h2>
+        </div>
+  
+        {/* The grid container MUST be here */}
+        <Grid container spacing={2}>
+          {SpecialWorkers.map((worker) => (
+            <Grid item xs={12} md={4} key={worker.id}>
+              <a href={`/worker/${worker.id}?slug=${worker.slug}`}>
+                <WorkerCard worker={worker} />
+              </a>
+            </Grid>
+          ))}
+        </Grid>
+      </Container>
+    );
+  }, [SpecialWorkers, persianCity, router]);
+  
+
+
+  // const renderUrgentWorkers = useCallback(() => {
+  //   if (UrgentWorkers.length === 0) return null;
+
+  //   return (
+  //     <div style={{ paddingBottom: 20 }}>
+  //       <div className={styles["title"]}>
+  //   <h2 >     فروش فوری در  {persianCity}</h2>
+  //       </div>
+  //       <div style={{ display: 'flex', overflowX: 'auto', padding: '10px 0' }}>
+  //         {renderUrgentSlider(UrgentWorkers)}
+  //       </div>
+  //     </div>
+  //   );
+  // }, [UrgentWorkers, renderUrgentSlider, router]);
+
+
+  const renderUrgentWorkers = useCallback(() => {
+    if (UrgentWorkers.length === 0) return null;
+  
+    return (
+      <Container maxWidth="xl" sx={{ py: 3 }}>
+        <div className={styles["title"]}>
+          <h2>فروش فوری در {persianCity}</h2>
+        </div>
+  
+        <Grid container spacing={2}>
+          {UrgentWorkers.map((worker) => (
+
+            
+<Grid item xs={12} md={4} key={worker.id}>
+<a href={`/worker/${worker.id}?slug=${worker.slug}`}>
+  <WorkerCard worker={worker} />
+</a>
+</Grid>
+          ))}
+        </Grid>
+      </Container>
+    );
+  }, [UrgentWorkers, persianCity]);
+  
+
+  
+
+  // Generate FAQ Schema for homepage
+  const faqSchema = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "آجر چیست؟",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": `آجر یک مشاور املاک هوشمند است که به شما در خرید، فروش و اجاره ملک در ${persianCity} و سراسر ایران کمک می‌کند. با بیش از ۱۰۰۰۰ آگهی فعال، می‌توانید بهترین ملک را با مناسب‌ترین قیمت پیدا کنید.`
+        }
+      },
+      {
+        "@type": "Question",
+        "name": `چگونه می‌توانم در ${persianCity} آگهی ثبت کنم؟`,
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "برای ثبت آگهی در آجر، کافی است روی دکمه 'ثبت آگهی' کلیک کرده و اطلاعات ملک خود را وارد کنید. آگهی شما پس از بررسی توسط کارشناسان، در سایت نمایش داده می‌شود."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "آیا آجر رایگان است؟",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "بله، مشاهده آگهی‌ها در آجر کاملاً رایگان است. همچنین ثبت آگهی برای کاربران عادی رایگان بوده و فقط برای مشاوران املاک حرفه‌ای دارای طرح‌های ویژه است."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": `بهترین محله‌های ${persianCity} برای خرید ملک کجاست؟`,
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": `در ${persianCity} محله‌های مختلفی برای خرید ملک وجود دارد. با استفاده از آجر می‌توانید آگهی‌های تمام محله‌ها را مشاهده و مقایسه کنید.`
+        }
+      }
+    ]
+  };
+
+  // Website Schema
+  const websiteSchema = {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    "name": seoData.siteName,
+    "url": seoData.canonical,
+    "potentialAction": {
+      "@type": "SearchAction",
+      "target": {
+        "@type": "EntryPoint",
+        "urlTemplate": `https://ajur.app/search?q={search_term_string}&city=${englishCity}`
+      },
+      "query-input": "required name=search_term_string"
+    }
+  };
+
+  // Organization Schema
+  const organizationSchema = {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    "name": "آجر",
+    "url": "https://ajur.app",
+    "logo": "https://ajur.app/logo/ajur.png",
+    "sameAs": [
+      "https://twitter.com/ajur_app",
+      "https://www.instagram.com/ajur.app",
+      "https://www.linkedin.com/company/ajur"
+    ],
+    "contactPoint": {
+      "@type": "ContactPoint",
+      "telephone": "+98-938-274-0488",
+      "contactType": "customer service",
+      "availableLanguage": ["Persian", "English"],
+      "areaServed": "IR"
+    },
+    "address": {
+      "@type": "PostalAddress",
+      "addressCountry": "IR"
+    }
+  };
+
+  // LocalBusiness Schema for better local SEO
+  const localBusinessSchema = {
+    "@context": "https://schema.org",
+    "@type": "RealEstateAgent",
+    "name": `آجر - مشاور املاک ${persianCity}`,
+    "image": seoData.image,
+    "@id": `https://ajur.app/${englishCity}`,
+    "url": seoData.canonical,
+    "telephone": "+98-938-274-0488",
+    "priceRange": "$$",
+    "address": {
+      "@type": "PostalAddress",
+      "addressLocality": persianCity,
+      "addressCountry": "IR"
+    },
+    "areaServed": {
+      "@type": "City",
+      "name": persianCity
+    },
+    "openingHoursSpecification": [
+      {
+        "@type": "OpeningHoursSpecification",
+        "dayOfWeek": [
+          "Monday",
+          "Tuesday",
+          "Wednesday",
+          "Thursday",
+          "Friday",
+          "Saturday"
+        ],
+        "opens": "09:00",
+        "closes": "21:00"
+      }
+    ],
+    "sameAs": [
+      "https://twitter.com/ajur_app",
+      "https://www.instagram.com/ajur.app"
+    ]
+  };
+
+  // Main content render - UPDATED WITH CONSISTENT SECTION SPACING
+  const renderContent = () => (
+    <div className="above-the-fold">
+      <main className={styles["main"]}>
+        {/* Header Title - Consistent spacing */}
+        <div className={`max-w-7xl mx-auto text-center ${styles.sectionSpacing}`}>
+          <h1 className="text-3xl sm:text-4xl md:text-6xl font-extrabold leading-tight">
+            <span style={{ color: '#b92a31' }}>آجر</span>، مشاور املاک هوشمند در {persianCity}
+          </h1>
+        </div>
+
+        {/* Cards Section - Consistent spacing */}
+        <div className={styles.sectionSpacing}>
+          <Cards features={homepageCardsFeatures} />
+        </div>
+
+        {renderSpecialWorkers()}
+
+        {renderUrgentWorkers()}
+
+        {/* Services heading - Consistent spacing */}
+        <div className="w-full flex justify-center items-center my-6">
+          <div className="max-w-7xl mx-auto text-center">
+            <h2 className="text-3xl md:text-4xl font-bold">
+              خدمات آجر در {persianCity}
+            </h2>
+          </div>
+        </div>
+
+        {/* Features Hub - Consistent spacing */}
+        <div className={styles.sectionSpacing}>
+          <FeaturesHub />
+        </div>
+
+        {/* Best section heading - Consistent spacing */}
+
+
+
+        <div className="w-full flex justify-center items-center my-6">
+          <div className="max-w-7xl mx-auto text-center">
+            <h2 className="text-3xl md:text-4xl font-bold">
+              بهترین‌های آجر در {persianCity}
+            </h2>
+          </div>
+        </div>
+
+        {/* Best Section - Consistent spacing */}
+        <div className={styles.sectionSpacing}>
+          <BestSection />
+        </div>
+
+        {/* FileRequest section - Consistent spacing */}
+        <div className={styles.sectionSpacing}>
+          <FileRequest
+            onCallClick={() => (window.location.href = "tel:+989382740488")}
+            onActionClick={() => router.push("/file-request")}
+          />
+        </div>
+
+        {/* Download section - Consistent spacing */}
+        <div className={styles.sectionSpacing}>
+          <Download />
+          <CertificatesFooter />
+        </div>
+
+        {/* Modal for subcategories */}
+        {(clickedAction === "buy" || clickedAction === "rent") && (
+          <div className="fixed inset-0 bg-white z-50 overflow-y-auto">
+            <div className="sticky top-0 mt-5 bg-white border-b border-gray-200 px-4 py-4 flex items-center justify-between shadow-sm z-10">
+              <button
+                onClick={clearAction}
+                className="p-2 hover:bg-gray-100 rounded-lg transition-colors flex items-center"
+                aria-label="بازگشت"
+              >
+                <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none">
+                  <path d="M20 12 H8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                  <path d="M9 7 L4 12 L9 17" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                </svg>
+                <span className="mr-2 text-sm font-medium">بازگشت</span>
+              </button>
+
+              <div className="text-xl font-bold text-gray-900">
+                {clickedAction === "buy" ? "دسته‌بندی‌های خرید" : "دسته‌بندی‌های اجاره"}
+              </div>
+
+              <button
+                onClick={clearAction}
+                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                aria-label="بستن"
+              >
+                <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none">
+                  <path d="M18 6L6 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                  <path d="M6 6L18 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                </svg>
+              </button>
+            </div>
+
+            <div className="p-2 md:p-4 lg:p-6">
+              <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2.5 md:gap-4 max-w-6xl mx-auto px-3 md:px-6">
+                {subCats
+                  .filter((c) => clickedAction === "buy" ? c.type === "sell" : c.type === "rent")
+                  .map((cat, idx) => (
+                    <div key={cat.id} className="aspect-square">
+                      <DealButton
+                        title={cat.name}
+                        src={`/cats_image/sub-cats/${cat.id}.png`}
+                        onClick={() => {
+                          setLoading(true);
+                          router.push(
+                            `/${englishCity}/${encodeURIComponent(cat.eng_name)}`
+                          );
+                        }}
+                        style={{ animationDelay: `${idx * 70}ms` }}
+                      />
+                    </div>
+                  ))}
+              </div>
+            </div>
+          </div>
+        )}
+      </main>
+    </div>
+  );
+
+  return (
+    <>
+      <Head>
+        <meta charSet="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0" />
+        <meta httpEquiv="Content-Language" content="fa" />
+        <meta name="language" content="fa" />
+
+        {/* Preload critical resources */}
+        <link rel="preload" href="/logo/ajour-gif.gif" as="image" />
+        <link rel="preconnect" href="https://api.ajur.app" />
+        <link rel="dns-prefetch" href="https://api.ajur.app" />
+
+        {/* Critical CSS */}
+        <style dangerouslySetInnerHTML={{ __html: criticalCSS }} />
+
+        {/* ENHANCED SEO Meta Tags */}
+        <title>{seoData.title}</title>
+        <meta name="description" content={seoData.description} />
+        <meta name="keywords" content={seoData.keywords} />
+        <meta name="author" content="آجر" />
+        <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1" />
+        <meta name="googlebot" content="index, follow, max-image-preview:large, max-snippet:-1" />
+
+        {/* Canonical */}
+        <link rel="canonical" href={seoData.canonical} />
+
+        {/* Open Graph */}
+        <meta property="og:locale" content="fa_IR" />
+        <meta property="og:type" content="website" />
+        <meta property="og:title" content={seoData.title} />
+        <meta property="og:description" content={seoData.description} />
+        <meta property="og:url" content={seoData.canonical} />
+        <meta property="og:site_name" content={seoData.siteName} />
+        <meta property="og:image" content={seoData.image} />
+        <meta property="og:image:width" content={seoData.imageWidth} />
+        <meta property="og:image:height" content={seoData.imageHeight} />
+        <meta property="og:image:alt" content={`آجر - مشاور املاک ${persianCity}`} />
+
+        {/* Twitter Card */}
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:site" content={seoData.twitterHandle} />
+        <meta name="twitter:creator" content={seoData.twitterHandle} />
+        <meta name="twitter:title" content={seoData.title} />
+        <meta name="twitter:description" content={seoData.description} />
+        <meta name="twitter:image" content={seoData.image} />
+
+        {/* Geo tags for local SEO */}
+        <meta name="geo.region" content="IR" />
+        <meta name="geo.placename" content={persianCity} />
+
+        {/* Favicon */}
+        <link rel="icon" href="/favicon.ico" />
+        <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+        <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
+        <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
+        <link rel="manifest" href="/site.webmanifest" />
+
+        {/* PWA */}
+        <meta name="theme-color" content="#b92a31" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+
+        {/* Verification */}
+        <meta name="ir-site-verification-token" content="ajur-verification" />
+      </Head>
+
+      {/* Structured Data - JSON-LD */}
+      <Script
+        id="faq-schema"
+        type="application/ld+json"
+        strategy="beforeInteractive"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
+      />
+
+      <Script
+        id="website-schema"
+        type="application/ld+json"
+        strategy="beforeInteractive"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteSchema) }}
+      />
+
+      <Script
+        id="organization-schema"
+        type="application/ld+json"
+        strategy="beforeInteractive"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationSchema) }}
+      />
+
+      <Script
+        id="local-business-schema"
+        type="application/ld+json"
+        strategy="beforeInteractive"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(localBusinessSchema) }}
+      />
+
+      <div className={styles.container}>
+        {/* City Change Confirmation Modal */}
+        <CityChangeAlertDialog
+          open={cityChangeModal.show}
+          onClose={handleCityChangeCancel}
+          onConfirm={handleCityChangeConfirm}
+          currentCity={cityChangeModal.currentCity}
+          newCity={cityChangeModal.newCity}
+        />
+
+        {/* VPN warning dialog */}
+        {showVpnDialog && (
+          <div className="fixed bottom-4 left-4 right-4 md:left-auto md:right-4 md:max-w-sm bg-white rounded-lg shadow-xl border border-gray-200 p-4 z-50">
+            <div className="flex items-start">
+              <div className="flex-shrink-0">
+                <svg className="w-6 h-6 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.34 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                </svg>
+              </div>
+              <div className="mr-3">
+                <h3 className="text-sm font-medium text-gray-900">توجه</h3>
+                <p className="mt-1 text-sm text-gray-600">برای استفاده بهتر از آجر، لطفاً فیلترشکن خود را خاموش کنید</p>
+              </div>
+              <button
+                onClick={() => {
+                  cookieUtils.set("hide_vpn_warning", "1", 1);
+                  setShowVpnDialog(false);
+                }}
+                className="text-gray-400 hover:text-gray-500 focus:outline-none"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+          </div>
+        )}
+
+        {loading && renderSpinner()}
+        {error && renderError()}
+        {!loading && !error && renderContent()}
+      </div>
+    </>
+  );
+}
+
+export async function getServerSideProps(context) {
+  const { req, res, query } = context;
+
+  const city = query.categories || 'tehran';
+  const decodedCity = city ? decodeURIComponent(city) : 'tehran';
+
+  console.log('----------------- Homepage SSR - City:', decodedCity);
+
+  // Cache for 5 minutes on CDN
+  res.setHeader(
+    'Cache-Control',
+    'public, s-maxage=300, stale-while-revalidate=600'
+  );
+
+  try {
+    // Fetch data on the server
+    const apiUrl = `https://api.ajur.app/api/base?city=${decodedCity}`;
+    console.log('Fetching from:', apiUrl);
+
+    const response = await fetch(apiUrl, {
+      headers: {
+        'Accept': 'application/json',
+        'User-Agent': req.headers['user-agent'] || 'Ajur-SSR'
+      }
+    });
+
+    if (!response.ok) {
+      console.error(`API error: ${response.status}`);
+      return {
+        props: {
+          url_city: decodedCity,
+          initialData: null,
+          error: true
+        }
+      };
+    }
+
+    const contentType = response.headers.get("content-type");
+    if (!contentType?.includes("application/json")) {
+      console.error("API returned non-JSON response");
+      return {
+        props: {
+          url_city: decodedCity,
+          initialData: null,
+          error: true
+        }
+      };
+    }
+
+    const data = await response.json();
+    console.log('API data received successfully');
+
+    return {
+      props: {
+        url_city: decodedCity,
+        initialData: data || null
+      }
+    };
+  } catch (error) {
+    console.error("Server-side API error:", error);
+    return {
+      props: {
+        url_city: decodedCity,
+        initialData: null,
+        error: true
+      }
+    };
+  }
+}
+
+export default Home;
+
+
+
+
+
+
+
+
+
+
+
+//////////////////////////////////////////////////////////////////
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+////////// before try to add neighborhoods link /////////////
+
+
+// pages/index.jsx
+import React, { useState, useEffect, useCallback } from "react";
+import Head from "next/head";
+import Script from "next/script";
+import Image from "next/image";
+import styles from "../styles/Home.module.css";
+import dynamic from "next/dynamic";
+import Link from "next/link";
+import { useRouter } from "next/router";
+import Cookies from "js-cookie";
+import Grid from "@mui/material/Grid";
+import Box from "@mui/material/Box";
+import Container from "@mui/material/Container";
+
+import CertificatesFooter from "../components/CertificatesFooter";
+
+// Optimized dynamic imports with better loading
+const SearchDiv = dynamic(() => import("../components/others/SearchDiv"), {
+  ssr: false,
+  loading: () => <div className="search-skeleton" />,
+});
+
+const WorkerCard = dynamic(() => import("../components/cards/WorkerCard"), {
+  ssr: false,
+  loading: () => <div className="card-skeleton" />,
+});
+
+const RealStateSmalCard = dynamic(
+  () => import("../components/cards/realestate/RealStateSmalCard"),
+  {
+    ssr: false,
+    loading: () => <div className="card-skeleton" />,
+  }
+);
+
+const DepartmentSmalCard = dynamic(
+  () => import("../components/cards/department/DepartmentSmalCard"),
+  {
+    ssr: false,
+    loading: () => <div className="card-skeleton" />,
+  }
+);
+
+const CatCard = dynamic(() => import("../components/cards/CatCard"), {
+  ssr: false,
+  loading: () => <div className="card-skeleton" />,
+});
+
+const MainCatCard = dynamic(() => import("../components/cards/MainCatCard"), {
+  ssr: false,
+  loading: () => <div className="card-skeleton" />,
+});
+
+const FileRequest = dynamic(() => import("../components/request/FileRequest"), {
+  ssr: false,
+  loading: () => <div className="section-skeleton" />,
+});
+
+const CityChangeAlertDialog = dynamic(
+  () => import("../components/dialogs/CityChangeAlertDialog"),
+  {
+    ssr: false,
+  }
+);
+
+const FeaturesHub = dynamic(() => import("../components/accesshub"), {
+  ssr: false,
+  loading: () => <div className="hub-skeleton" />,
+});
+
+const BestSection = dynamic(() => import("../components/bestsection"), {
+  ssr: false,
+  loading: () => <div className="section-skeleton" />,
+});
+
+const Cards = dynamic(() => import("../components/Cards"), {
+  ssr: false,
+  loading: () => (
+    <div className="max-w-7xl mx-auto my-8">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {[1, 2, 3].map((i) => (
+          <div key={i} className="card-skeleton h-64" />
+        ))}
+      </div>
+    </div>
+  ),
+});
+
+const Download = dynamic(() => import("../components/Download"), {
+  ssr: false,
+  loading: () => <div className="section-skeleton h-40" />,
+});
+
+const DealButton = dynamic(() => import("../components/parts/DealButton"), {
+  ssr: false,
+  loading: () => <div className="button-skeleton h-24" />,
+});
+
+// Critical CSS inline
+const criticalCSS = `
+  /* Skeleton loaders */
+  .search-skeleton,
+  .card-skeleton,
+  .section-skeleton,
+  .hub-skeleton,
+  .button-skeleton {
+    background: linear-gradient(90deg, #f5f5f5 25%, #e8e8e8 50%, #f5f5f5 75%);
+    background-size: 200% 100%;
+    animation: skeleton-loading 1.5s ease-in-out infinite;
+    border-radius: 8px;
+  }
+
+  .search-skeleton {
+    height: 56px;
+    margin: 16px 0;
+  }
+
+  .card-skeleton {
+    height: 280px;
+    margin: 8px;
+  }
+
+  .section-skeleton {
+    height: 200px;
+    margin: 24px 0;
+  }
+
+  .hub-skeleton {
+    height: 120px;
+    margin: 24px 0;
+  }
+
+  .button-skeleton {
+    height: 100px;
+    margin: 8px;
+  }
+
+  @keyframes skeleton-loading {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+  }
+
+  /* Performance optimizations */
+  .above-the-fold {
+    opacity: 0;
+    animation: fade-in 0.3s ease forwards;
+  }
+
+  @keyframes fade-in {
+    to { opacity: 1; }
+  }
+`;
+
+// Minimal helper: ONLY for SSR SEO props (does not touch cookie logic)
+function getPersianCityFromEnglish(city) {
+  const map = {
+    tehran: "تهران",
+    masal: "ماسال",
+  };
+  return map[(city || "").toLowerCase()] || city || "تهران";
+}
+
+function Home(props) {
+  const router = useRouter();
+
+  // City state from cookies (DO NOT change cookie logic)
+  const [persianCity, setPersianCity] = useState("تهران");
+  const [englishCity, setEnglishCity] = useState("tehran");
+
+  // City change modal state
+  const [cityChangeModal, setCityChangeModal] = useState({
+    show: false,
+    currentCity: "",
+    newCity: "",
+  });
+
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
+  const [cats, setCats] = useState([]);
+  const [mainCats, setMainCats] = useState([]);
+  const [subCats, setSubCats] = useState([]);
+  const [realestates, setRealestates] = useState([]);
+  const [departments, setDepartments] = useState([]);
+  const [title1, setTitle1] = useState("");
+  const [title2, setTitle2] = useState("");
+  const [title3, setTitle3] = useState("");
+  const [collection1, setCollection1] = useState([]);
+  const [collection2, setCollection2] = useState([]);
+  const [collection3, setCollection3] = useState([]);
+  const [theCity, setTheCity] = useState("");
+  const [theNeighborhoods, setTheNeighborhoods] = useState([]);
+
+  const [favoriteWorkers, setFavoriteWorkers] = useState([]);
+  const [historyWorkers, setHistoryWorkers] = useState([]);
+  const [SpecialWorkers, setSpecialWorkers] = useState([]);
+  const [UrgentWorkers, setUrgentWorkers] = useState([]);
+  const [clickedAction, setClickedAction] = useState(null);
+  const [showVpnDialog, setShowVpnDialog] = useState(false);
+
+  // Get city from cookies on mount (unchanged)
+  useEffect(() => {
+    const cookiePersianCity = Cookies.get("persian_city");
+    const cookieEnglishCity = Cookies.get("city");
+
+    if (cookiePersianCity) {
+      setPersianCity(cookiePersianCity);
+    }
+    if (cookieEnglishCity) {
+      setEnglishCity(cookieEnglishCity);
+    }
+  }, []);
+
+  // ✅ SEO-safe city values for bots:
+  // Use SSR props first so "View Source" has correct city meta even without cookies.
+  const seoEnglishCity = props?.url_city || englishCity || "tehran";
+  const seoPersianCity = props?.url_persian_city || persianCity || "تهران";
+
+  // SEO Data - improved: canonical always based on SSR url_city if present
+  const seoData = {
+    title: `مشاور املاک هوشمند آجر | خرید فروش و اجاره ملک در ${seoPersianCity}`,
+    description: `آجر، مشاور املاک هوشمند در ${seoPersianCity}. خرید، فروش و اجاره آپارتمان، خانه ویلایی، مغازه، دفتر کار و زمین در ${seoPersianCity} و سراسر ایران. بیش از ۱۰۰۰۰ آگهی فعال ملک با بهترین قیمت. مشاوره رایگان تخصصی.`,
+    keywords: `مشاور املاک, خرید خانه, فروش آپارتمان, اجاره ملک, آجر, ${seoPersianCity}, املاک ${seoPersianCity}, خرید ملک در ${seoPersianCity}, فروش ملک در ${seoPersianCity}`,
+    canonical: `https://ajur.app/${seoEnglishCity}`,
+    image: "https://ajur.app/logo/ajour-meta-image.jpg",
+    imageWidth: "1080",
+    imageHeight: "702",
+    siteName: "آجر - مشاور املاک هوشمند",
+    twitterHandle: "@ajur_app",
+  };
+
+  const homepageCardsFeatures = [
+    {
+      id: 1,
+      title: "خرید",
+      description: "آگهی‌های خرید ملک، خانه و آپارتمان",
+      illustration: "/img/card1.png",
+      action: "مشاهده آگهی‌ها",
+      onClick: () => {
+        selectAction("buy");
+      },
+    },
+    {
+      id: 2,
+      title: "ثبت آگهی",
+      description: "ملک خود را برای فروش یا اجاره در آجر ثبت کنید",
+      illustration: "/img/card2.png",
+      action: "ثبت آگهی",
+
+      onClick: () => {
+        setLoading(true);
+
+        const token = Cookies.get("id_token");
+        if (token) {
+          router.push("/panel/new");
+        } else {
+          router.push("/panel/auth/login");
+          Cookies.set("destination_before_auth", "/panel/new", { expires: 14 });
+          setLoading(false);
+        }
+      },
+    },
+
+    {
+      id: 3,
+      title: "اجاره",
+      description: "آگهی‌های اجاره مسکونی، تجاری و اداری",
+      illustration: "/img/card3.png",
+      action: "مشاهده آگهی‌ها",
+      onClick: () => selectAction("rent"),
+    },
+  ];
+
+  // Simplified visibility control
+  const selectAction = useCallback((type) => {
+    setClickedAction(type);
+  }, []);
+
+  const clearAction = useCallback(() => {
+    setClickedAction(null);
+  }, []);
+
+  // Simple cookie utility (unchanged)
+  const cookieUtils = {
+    get: (name) => {
+      if (typeof window === "undefined") return null;
+      return Cookies.get(name) || null;
+    },
+    set: (name, value, days = 365) => {
+      if (typeof window === "undefined") return;
+      Cookies.set(name, value, { expires: days, path: "/" });
+    },
+  };
+
+  // City handling logic (unchanged)
+  useEffect(() => {
+    const getCityFromPath = () => {
+      const path = router.asPath;
+      if (path === "/") return null;
+      const cityFromPath = decodeURIComponent(path.substring(1));
+      return cityFromPath;
+    };
+
+    const urlCity = getCityFromPath();
+    const cookieCity = cookieUtils.get("city");
+
+    if (!urlCity && cookieCity) {
+      router.push(`/${cookieCity}`, undefined, { shallow: true });
+      return;
+    }
+
+    if (urlCity && cookieCity && urlCity !== cookieCity) {
+      setCityChangeModal({
+        show: true,
+        currentCity: cookieCity,
+        newCity: urlCity,
+      });
+      return;
+    }
+
+    if (urlCity && !cookieCity) {
+      cookieUtils.set("city", urlCity);
+    }
+  }, [router.asPath]);
+
+  // Handle city change confirmation (unchanged)
+  const handleCityChangeConfirm = () => {
+    cookieUtils.set("city", cityChangeModal.newCity);
+    setCityChangeModal({ show: false, currentCity: "", newCity: "" });
+    if (typeof window !== "undefined") {
+      window.location.reload();
+    }
+  };
+
+  // Handle city change cancellation (unchanged)
+  const handleCityChangeCancel = () => {
+    router.push(`/${cityChangeModal.currentCity}`, undefined, { shallow: true });
+    setCityChangeModal({ show: false, currentCity: "", newCity: "" });
+  };
+
+  // Main data fetching effect (unchanged)
+  useEffect(() => {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => {
+      if (loading) {
+        console.error("Loading timeout - showing error state");
+        setLoading(false);
+        setError(true);
+      }
+    }, 10000);
+
+    const selectedCity = englishCity;
+
+    const fetchData = async () => {
+      try {
+        // Check if we have data from server props
+        if (props.initialData) {
+          console.log("Using server props data");
+          setDataFromCache(props.initialData);
+          setLoading(false);
+          clearTimeout(timeoutId);
+          return;
+        }
+
+        const cacheKey = `homeData_${selectedCity}`;
+        const cachedData = sessionStorage.getItem(cacheKey);
+
+        if (cachedData) {
+          const parsed = JSON.parse(cachedData);
+          if (Date.now() - parsed.timestamp < 5 * 60 * 1000) {
+            console.log("Using cached data");
+            setDataFromCache(parsed.data);
+            setLoading(false);
+            clearTimeout(timeoutId);
+            return;
+          }
+        }
+
+        const apiUrl = `https://api.ajur.app/api/base?city=${selectedCity}`;
+        console.log(`Fetching from API: ${apiUrl}`);
+
+        const response = await fetch(apiUrl, {
+          signal: controller.signal,
+          headers: {
+            Accept: "application/json",
+            "Content-Type": "application/json",
+          },
+        });
+
+        const contentType = response.headers.get("content-type");
+        if (!contentType || !contentType.includes("application/json")) {
+          const text = await response.text();
+          console.error(
+            "Server returned non-JSON response:",
+            text.substring(0, 200)
+          );
+          throw new Error(
+            `Server returned HTML instead of JSON. Status: ${response.status}`
+          );
+        }
+
+        if (!response.ok) {
+          throw new Error(`API error: ${response.status}`);
+        }
+
+        const data = await response.json();
+        console.log("API data received:", data);
+
+        const cacheData = {
+          timestamp: Date.now(),
+          data: data,
+        };
+        sessionStorage.setItem(cacheKey, JSON.stringify(cacheData));
+
+        setDataFromCache(data);
+        setLoading(false);
+        clearTimeout(timeoutId);
+      } catch (error) {
+        if (error.name === "AbortError") {
+          return;
+        }
+
+        console.error("API request failed:", error);
+
+        const cacheKey = `homeData_${selectedCity}`;
+        const cachedData = sessionStorage.getItem(cacheKey);
+        if (cachedData) {
+          try {
+            const parsed = JSON.parse(cachedData);
+            setDataFromCache(parsed.data);
+            setLoading(false);
+          } catch (cacheError) {
+            console.error("Cache parse error:", cacheError);
+            setLoading(false);
+            setError(true);
+          }
+        } else {
+          setLoading(false);
+          setError(true);
+        }
+
+        clearTimeout(timeoutId);
+      }
+    };
+
+    const setDataFromCache = (data) => {
+      setCats(data.cats || []);
+      setTheCity(data.the_city || "");
+      setTheNeighborhoods(data.the_neighborhoods || []);
+      setMainCats(data.main_cats || []);
+      setSubCats(data.sub_cats || []);
+      setRealestates(data.realstates || []);
+      setDepartments(data.departments || []);
+      setTitle1(data.title1 || "");
+      setTitle2(data.title2 || "");
+      setTitle3(data.title3 || "");
+      setCollection1(data.collection1 || []);
+      setCollection2(data.collection2 || []);
+      setCollection3(data.collection3 || []);
+      setSpecialWorkers(data.the_city_specials || []);
+      setUrgentWorkers(data.the_city_urgents || []);
+    };
+
+    fetchData();
+
+    return () => {
+      controller.abort();
+      clearTimeout(timeoutId);
+    };
+  }, [englishCity, props.initialData]);
+
+  // VPN detection (unchanged)
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    if (cookieUtils.get("hide_vpn_warning")) {
+      return;
+    }
+
+    const detectVpn = async () => {
+      try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 3000);
+
+        const res = await fetch("https://ipapi.co/json/", {
+          signal: controller.signal,
+        });
+
+        clearTimeout(timeoutId);
+
+        if (!res.ok) return;
+
+        const contentType = res.headers.get("content-type");
+        if (!contentType?.includes("application/json")) {
+          return;
+        }
+
+        const data = await res.json();
+
+        const org = (data.org || data.asn || "").toString().toLowerCase();
+        const vpnKeywords = [
+          "vpn",
+          "proxy",
+          "expressvpn",
+          "nordvpn",
+          "surfshark",
+        ];
+
+        for (const k of vpnKeywords) {
+          if (org.includes(k)) {
+            setShowVpnDialog(true);
+            return;
+          }
+        }
+      } catch (e) {
+        // Silent fail
+      }
+    };
+
+    detectVpn();
+  }, []);
+
+  const renderDefaultCity = useCallback(() => {
+    return englishCity;
+  }, [englishCity]);
+
+  // Optimized loading spinner
+  const renderSpinner = () => (
+    <div
+      className="spinnerImageView"
+      style={{
+        minHeight: "60vh",
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
+        backgroundColor: "white",
+      }}
+    >
+      <div
+        style={{
+          position: "relative",
+          width: "400px",
+          height: "400px",
+          marginBottom: "20px",
+        }}
+      >
+        <Image
+          src="/logo/ajour-gif.gif"
+          alt="در حال بارگذاری"
+          fill
+          sizes="400px"
+          style={{ objectFit: "contain" }}
+          priority
+        />
+      </div>
+    </div>
+  );
+
+  // Optimized error state
+  const renderError = () => (
+    <div className="flex flex-col items-center justify-center min-h-[60vh] p-8 text-center">
+      <div className="mb-6">
+        <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-red-50 mb-4">
+          <svg
+            className="w-10 h-10"
+            viewBox="0 0 24 24"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <rect x="5" y="9" width="3" height="6" rx="0.5" fill="#B45309" />
+            <rect
+              x="5.5"
+              y="9.5"
+              width="2"
+              height="5"
+              rx="0.3"
+              fill="#F59E0B"
+            />
+            <rect x="16" y="9" width="3" height="6" rx="0.5" fill="#B45309" />
+            <rect
+              x="16.5"
+              y="9.5"
+              width="2"
+              height="5"
+              rx="0.3"
+              fill="#F59E0B"
+            />
+            <circle cx="6.5" cy="10.5" r="0.6" fill="#7C2D12" />
+            <circle cx="6.5" cy="12" r="0.6" fill="#7C2D12" />
+            <circle cx="6.5" cy="13.5" r="0.6" fill="#7C2D12" />
+            <circle cx="17.5" cy="10.5" r="0.6" fill="#7C2D12" />
+            <circle cx="17.5" cy="12" r="0.6" fill="#7C2D12" />
+            <circle cx="17.5" cy="13.5" r="0.6" fill="#7C2D12" />
+            <line
+              x1="8"
+              y1="9"
+              x2="16"
+              y2="9"
+              stroke="#92400E"
+              strokeWidth="0.8"
+            />
+            <line
+              x1="8"
+              y1="15"
+              x2="16"
+              y2="15"
+              stroke="#92400E"
+              strokeWidth="0.8"
+            />
+          </svg>
+        </div>
+        <h2 className="text-2xl font-bold text-gray-800 mb-2">
+          مشکلی در بارگذاری داده‌ها پیش آمده است
+        </h2>
+        <p className="text-gray-600 max-w-md">
+          متأسفانه در دریافت اطلاعات از سرور مشکل ایجاد شده است. لطفاً اتصال
+          اینترنت خود را بررسی کرده و دوباره تلاش کنید.
+        </p>
+      </div>
+      <div className="flex flex-col sm:flex-row gap-4 mt-4">
+        <button
+          onClick={() => window.location.reload()}
+          className="px-6 py-3 bg-[#b92a31] text-white rounded-lg font-medium hover:bg-[#a0252c] transition-colors duration-200 shadow-md hover:shadow-lg flex items-center justify-center gap-2"
+        >
+          تلاش مجدد
+        </button>
+        <button
+          onClick={() => window.history.back()}
+          className="px-6 py-3 bg-gray-100 text-gray-700 rounded-lg font-medium hover:bg-gray-200 transition-colors duration-200 border border-gray-300 flex items-center justify-center gap-2"
+        >
+          بازگشت
+        </button>
+      </div>
+    </div>
+  );
+
+  // Render functions
+  const renderWorkerSlider = useCallback((workers) => {
+    if (!workers.length) return null;
+
+    return workers.map((worker) => (
+      <div key={worker.id} style={{ minWidth: "250px", margin: "0 10px" }}>
+        <Link href={`/worker/${worker.id}?slug=${worker.slug}`}>
+          <WorkerCard worker={worker} />
+        </Link>
+      </div>
+    ));
+  }, []);
+
+  const renderSpecialSlider = useCallback((workers) => {
+    if (!workers.length) return null;
+
+    return workers.map((worker) => (
+      <Grid item xs={12} md={4} key={worker.id}>
+        <a href={`/worker/${worker.id}?slug=${worker.slug}`}>
+          <WorkerCard worker={worker} />
+        </a>
+      </Grid>
+    ));
+  }, []);
+
+  const renderUrgentSlider = useCallback((workers) => {
+    if (!workers.length) return null;
+
+    return workers.map((worker) => (
+      <div key={worker.id} style={{ minWidth: "250px", margin: "0 10px" }}>
+        <Link href={`/worker/${worker.id}?slug=${worker.slug}`}>
+          <WorkerCard worker={worker} />
+        </Link>
+      </div>
+    ));
+  }, []);
+
+  const renderHistoryWorkers = useCallback(() => {
+    if (historyWorkers.length === 0) return null;
+
+    return (
+      <div style={{ paddingBottom: 10 }}>
+        <div className={styles["title"]}>
+          <h2 onClick={() => router.push("/recents")}>آخرین بازدید های شما</h2>
+        </div>
+        <div style={{ display: "flex", overflowX: "auto", padding: "10px 0" }}>
+          {renderWorkerSlider(historyWorkers)}
+        </div>
+      </div>
+    );
+  }, [historyWorkers, renderWorkerSlider, router]);
+
+  const renderFavoriteWorkers = useCallback(() => {
+    if (favoriteWorkers.length === 0) return null;
+
+    return (
+      <div style={{ paddingBottom: 20 }}>
+        <div className={styles["title"]}>
+          <h2 onClick={() => router.push("/favorites")}>
+            آخرین مورد پسند های شما
+          </h2>
+        </div>
+        <div style={{ display: "flex", overflowX: "auto", padding: "10px 0" }}>
+          {renderWorkerSlider(favoriteWorkers)}
+        </div>
+      </div>
+    );
+  }, [favoriteWorkers, renderWorkerSlider, router]);
+
+  const renderSpecialWorkers = useCallback(() => {
+    if (SpecialWorkers.length === 0) return null;
+
+    return (
+      <Container maxWidth="xl" sx={{ py: 3 }}>
+        <div className={styles["title"]}>
+          <h2>فروش ویژه در {persianCity}</h2>
+        </div>
+
+        <Grid container spacing={2}>
+          {SpecialWorkers.map((worker) => (
+            <Grid item xs={12} md={4} key={worker.id}>
+              <a href={`/worker/${worker.id}?slug=${worker.slug}`}>
+                <WorkerCard worker={worker} />
+              </a>
+            </Grid>
+          ))}
+        </Grid>
+      </Container>
+    );
+  }, [SpecialWorkers, persianCity, router]);
+
+  const renderUrgentWorkers = useCallback(() => {
+    if (UrgentWorkers.length === 0) return null;
+
+    return (
+      <Container maxWidth="xl" sx={{ py: 3 }}>
+        <div className={styles["title"]}>
+          <h2>فروش فوری در {persianCity}</h2>
+        </div>
+
+        <Grid container spacing={2}>
+          {UrgentWorkers.map((worker) => (
+            <Grid item xs={12} md={4} key={worker.id}>
+              <a href={`/worker/${worker.id}?slug=${worker.slug}`}>
+                <WorkerCard worker={worker} />
+              </a>
+            </Grid>
+          ))}
+        </Grid>
+      </Container>
+    );
+  }, [UrgentWorkers, persianCity]);
+
+  // ----------------------
+  // ✅ Structured Data (Schema) - improved
+  // ----------------------
+
+  // FAQ Schema (kept, but use SEO-safe city for bots)
+  const faqSchema = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: [
+      {
+        "@type": "Question",
+        name: "آجر چیست؟",
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: `آجر یک مشاور املاک هوشمند است که به شما در خرید، فروش و اجاره ملک در ${seoPersianCity} و سراسر ایران کمک می‌کند. با بیش از ۱۰۰۰۰ آگهی فعال، می‌توانید بهترین ملک را با مناسب‌ترین قیمت پیدا کنید.`,
+        },
+      },
+      {
+        "@type": "Question",
+        name: `چگونه می‌توانم در ${seoPersianCity} آگهی ثبت کنم؟`,
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: "برای ثبت آگهی در آجر، کافی است روی دکمه 'ثبت آگهی' کلیک کرده و اطلاعات ملک خود را وارد کنید. آگهی شما پس از بررسی توسط کارشناسان، در سایت نمایش داده می‌شود.",
+        },
+      },
+      {
+        "@type": "Question",
+        name: "آیا آجر رایگان است؟",
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: "بله، مشاهده آگهی‌ها در آجر کاملاً رایگان است. همچنین ثبت آگهی برای کاربران عادی رایگان بوده و فقط برای مشاوران املاک حرفه‌ای دارای طرح‌های ویژه است.",
+        },
+      },
+      {
+        "@type": "Question",
+        name: `بهترین محله‌های ${seoPersianCity} برای خرید ملک کجاست؟`,
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: `در ${seoPersianCity} محله‌های مختلفی برای خرید ملک وجود دارد. با استفاده از آجر می‌توانید آگهی‌های تمام محله‌ها را مشاهده و مقایسه کنید.`,
+        },
+      },
+    ],
+  };
+
+  // Website Schema
+  const websiteSchema = {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    "@id": `${seoData.canonical}#website`,
+    name: seoData.siteName,
+    url: seoData.canonical,
+    potentialAction: {
+      "@type": "SearchAction",
+      target: {
+        "@type": "EntryPoint",
+        urlTemplate: `https://ajur.app/search?q={search_term_string}&city=${seoEnglishCity}`,
+      },
+      "query-input": "required name=search_term_string",
+    },
+  };
+
+  // Organization Schema
+  const organizationSchema = {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    name: "آجر",
+    url: "https://ajur.app",
+    logo: "https://ajur.app/logo/ajur.png",
+    sameAs: [
+      "https://twitter.com/ajur_app",
+      "https://www.instagram.com/ajur.app",
+      "https://www.linkedin.com/company/ajur",
+    ],
+    contactPoint: {
+      "@type": "ContactPoint",
+      telephone: "+98-938-274-0488",
+      contactType: "customer service",
+      availableLanguage: ["Persian", "English"],
+      areaServed: "IR",
+    },
+    address: {
+      "@type": "PostalAddress",
+      addressCountry: "IR",
+    },
+  };
+
+  // LocalBusiness Schema
+  const localBusinessSchema = {
+    "@context": "https://schema.org",
+    "@type": "RealEstateAgent",
+    name: `آجر - مشاور املاک ${seoPersianCity}`,
+    image: seoData.image,
+    "@id": `${seoData.canonical}#realestateagent`,
+    url: seoData.canonical,
+    telephone: "+98-938-274-0488",
+    priceRange: "$$",
+    address: {
+      "@type": "PostalAddress",
+      addressLocality: seoPersianCity,
+      addressCountry: "IR",
+    },
+    areaServed: {
+      "@type": "City",
+      name: seoPersianCity,
+    },
+    openingHoursSpecification: [
+      {
+        "@type": "OpeningHoursSpecification",
+        dayOfWeek: [
+          "Monday",
+          "Tuesday",
+          "Wednesday",
+          "Thursday",
+          "Friday",
+          "Saturday",
+        ],
+        opens: "09:00",
+        closes: "21:00",
+      },
+    ],
+    sameAs: ["https://twitter.com/ajur_app", "https://www.instagram.com/ajur.app"],
+  };
+
+  // ✅ Added: WebPage Schema (helps Google understand this URL as a page for that city)
+  const webPageSchema = {
+    "@context": "https://schema.org",
+    "@type": "WebPage",
+    "@id": `${seoData.canonical}#webpage`,
+    url: seoData.canonical,
+    name: seoData.title,
+    description: seoData.description,
+    inLanguage: "fa-IR",
+    isPartOf: { "@id": `${seoData.canonical}#website` },
+    about: {
+      "@type": "Place",
+      name: seoPersianCity,
+    },
+  };
+
+  // ✅ Added: Breadcrumb schema
+  const breadcrumbSchema = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: "آجر", item: "https://ajur.app" },
+      {
+        "@type": "ListItem",
+        position: 2,
+        name: `املاک ${seoPersianCity}`,
+        item: seoData.canonical,
+      },
+    ],
+  };
+
+  // Main content render
+  const renderContent = () => (
+    <div className="above-the-fold">
+      <main className={styles["main"]}>
+        <div className={`max-w-7xl mx-auto text-center ${styles.sectionSpacing}`}>
+          <h1 className="text-3xl sm:text-4xl md:text-6xl font-extrabold leading-tight">
+            <span style={{ color: "#b92a31" }}>آجر</span>، مشاور املاک هوشمند در{" "}
+            {persianCity}
+          </h1>
+        </div>
+
+        <div className={styles.sectionSpacing}>
+          <Cards features={homepageCardsFeatures} />
+        </div>
+
+        {renderSpecialWorkers()}
+        {renderUrgentWorkers()}
+
+        <div className="w-full flex justify-center items-center my-6">
+          <div className="max-w-7xl mx-auto text-center">
+            <h2 className="text-3xl md:text-4xl font-bold">
+              خدمات آجر در {persianCity}
+            </h2>
+          </div>
+        </div>
+
+        <div className={styles.sectionSpacing}>
+          <FeaturesHub />
+        </div>
+
+        <div className="w-full flex justify-center items-center my-6">
+          <div className="max-w-7xl mx-auto text-center">
+            <h2 className="text-3xl md:text-4xl font-bold">
+              بهترین‌های آجر در {persianCity}
+            </h2>
+          </div>
+        </div>
+
+        <div className={styles.sectionSpacing}>
+          <BestSection englishCity={englishCity} />
+        </div>
+
+        <div className={styles.sectionSpacing}>
+          <FileRequest
+            onCallClick={() => (window.location.href = "tel:+989382740488")}
+            onActionClick={() => router.push("/file-request")}
+          />
+        </div>
+
+        <div className={styles.sectionSpacing}>
+          <Download />
+          <CertificatesFooter />
+        </div>
+
+        {(clickedAction === "buy" || clickedAction === "rent") && (
+          <div className="fixed inset-0 bg-white z-50 overflow-y-auto">
+            <div className="sticky top-0 mt-5 bg-white border-b border-gray-200 px-4 py-4 flex items-center justify-between shadow-sm z-10">
+              <button
+                onClick={clearAction}
+                className="p-2 hover:bg-gray-100 rounded-lg transition-colors flex items-center"
+                aria-label="بازگشت"
+              >
+                <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none">
+                  <path
+                    d="M20 12 H8"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                  />
+                  <path
+                    d="M9 7 L4 12 L9 17"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                  />
+                </svg>
+                <span className="mr-2 text-sm font-medium">بازگشت</span>
+              </button>
+
+              <div className="text-xl font-bold text-gray-900">
+                {clickedAction === "buy"
+                  ? "دسته‌بندی‌های خرید"
+                  : "دسته‌بندی‌های اجاره"}
+              </div>
+
+              <button
+                onClick={clearAction}
+                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                aria-label="بستن"
+              >
+                <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none">
+                  <path
+                    d="M18 6L6 18"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                  />
+                  <path
+                    d="M6 6L18 18"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                  />
+                </svg>
+              </button>
+            </div>
+
+            <div className="p-2 md:p-4 lg:p-6">
+              <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2.5 md:gap-4 max-w-6xl mx-auto px-3 md:px-6">
+                {subCats
+                  .filter((c) =>
+                    clickedAction === "buy" ? c.type === "sell" : c.type === "rent"
+                  )
+                  .map((cat, idx) => (
+                    <div key={cat.id} className="aspect-square">
+                      <DealButton
+                        title={cat.name}
+                        src={`/cats_image/sub-cats/${cat.id}.png`}
+                        onClick={() => {
+                          setLoading(true);
+                          router.push(
+                            `/${englishCity}/${encodeURIComponent(cat.eng_name)}`
+                          );
+                        }}
+                        style={{ animationDelay: `${idx * 70}ms` }}
+                      />
+                    </div>
+                  ))}
+              </div>
+            </div>
+          </div>
+        )}
+      </main>
+    </div>
+  );
+
+  return (
+    <>
+      <Head>
+        <meta charSet="UTF-8" />
+        <meta
+          name="viewport"
+          content="width=device-width, initial-scale=1.0, maximum-scale=5.0"
+        />
+        <meta httpEquiv="Content-Language" content="fa" />
+        <meta name="language" content="fa" />
+
+        {/* Preload critical resources */}
+        <link rel="preload" href="/logo/ajour-gif.gif" as="image" />
+        <link rel="preconnect" href="https://api.ajur.app" />
+        <link rel="dns-prefetch" href="https://api.ajur.app" />
+
+        {/* Critical CSS */}
+        <style dangerouslySetInnerHTML={{ __html: criticalCSS }} />
+
+        {/* SEO Meta Tags */}
+        <title>{seoData.title}</title>
+        <meta name="description" content={seoData.description} />
+        <meta name="keywords" content={seoData.keywords} />
+        <meta name="author" content="آجر" />
+        <meta
+          name="robots"
+          content="index, follow, max-image-preview:large, max-snippet:-1"
+        />
+        <meta
+          name="googlebot"
+          content="index, follow, max-image-preview:large, max-snippet:-1"
+        />
+
+        {/* Canonical */}
+        <link rel="canonical" href={seoData.canonical} />
+
+        {/* Open Graph */}
+        <meta property="og:locale" content="fa_IR" />
+        <meta property="og:type" content="website" />
+        <meta property="og:title" content={seoData.title} />
+        <meta property="og:description" content={seoData.description} />
+        <meta property="og:url" content={seoData.canonical} />
+        <meta property="og:site_name" content={seoData.siteName} />
+        <meta property="og:image" content={seoData.image} />
+        <meta property="og:image:width" content={seoData.imageWidth} />
+        <meta property="og:image:height" content={seoData.imageHeight} />
+        <meta
+          property="og:image:alt"
+          content={`آجر - مشاور املاک ${seoPersianCity}`}
+        />
+
+        {/* Twitter Card */}
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:site" content={seoData.twitterHandle} />
+        <meta name="twitter:creator" content={seoData.twitterHandle} />
+        <meta name="twitter:title" content={seoData.title} />
+        <meta name="twitter:description" content={seoData.description} />
+        <meta name="twitter:image" content={seoData.image} />
+
+        {/* Geo tags */}
+        <meta name="geo.region" content="IR" />
+        <meta name="geo.placename" content={seoPersianCity} />
+
+        {/* Favicon */}
+        <link rel="icon" href="/favicon.ico" />
+        <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+        <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
+        <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
+        <link rel="manifest" href="/site.webmanifest" />
+
+        {/* PWA */}
+        <meta name="theme-color" content="#b92a31" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+
+        {/* Verification */}
+        <meta name="ir-site-verification-token" content="ajur-verification" />
+      </Head>
+
+      {/* Structured Data - JSON-LD */}
+      <Script
+        id="faq-schema"
+        type="application/ld+json"
+        strategy="beforeInteractive"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
+      />
+
+      <Script
+        id="website-schema"
+        type="application/ld+json"
+        strategy="beforeInteractive"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteSchema) }}
+      />
+
+      <Script
+        id="webpage-schema"
+        type="application/ld+json"
+        strategy="beforeInteractive"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(webPageSchema) }}
+      />
+
+      <Script
+        id="breadcrumb-schema"
+        type="application/ld+json"
+        strategy="beforeInteractive"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
+      />
+
+      <Script
+        id="organization-schema"
+        type="application/ld+json"
+        strategy="beforeInteractive"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationSchema) }}
+      />
+
+      <Script
+        id="local-business-schema"
+        type="application/ld+json"
+        strategy="beforeInteractive"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(localBusinessSchema) }}
+      />
+
+      <div className={styles.container}>
+        <CityChangeAlertDialog
+          open={cityChangeModal.show}
+          onClose={handleCityChangeCancel}
+          onConfirm={handleCityChangeConfirm}
+          currentCity={cityChangeModal.currentCity}
+          newCity={cityChangeModal.newCity}
+        />
+
+        {showVpnDialog && (
+          <div className="fixed bottom-4 left-4 right-4 md:left-auto md:right-4 md:max-w-sm bg-white rounded-lg shadow-xl border border-gray-200 p-4 z-50">
+            <div className="flex items-start">
+              <div className="flex-shrink-0">
+                <svg
+                  className="w-6 h-6 text-orange-500"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.34 16.5c-.77.833.192 2.5 1.732 2.5z"
+                  />
+                </svg>
+              </div>
+              <div className="mr-3">
+                <h3 className="text-sm font-medium text-gray-900">توجه</h3>
+                <p className="mt-1 text-sm text-gray-600">
+                  برای استفاده بهتر از آجر، لطفاً فیلترشکن خود را خاموش کنید
+                </p>
+              </div>
+              <button
+                onClick={() => {
+                  cookieUtils.set("hide_vpn_warning", "1", 1);
+                  setShowVpnDialog(false);
+                }}
+                className="text-gray-400 hover:text-gray-500 focus:outline-none"
+              >
+                <svg
+                  className="w-5 h-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+              </button>
+            </div>
+          </div>
+        )}
+
+        {loading && renderSpinner()}
+        {error && renderError()}
+        {!loading && !error && renderContent()}
+      </div>
+    </>
+  );
+}
+
+export async function getServerSideProps(context) {
+  const { req, res, query } = context;
+
+  const city = query.categories || "tehran";
+  const decodedCity = city ? decodeURIComponent(city) : "tehran";
+
+  console.log("----------------- Homepage SSR - City:", decodedCity);
+
+  // Cache for 5 minutes on CDN
+  res.setHeader("Cache-Control", "public, s-maxage=300, stale-while-revalidate=600");
+
+  const url_persian_city = getPersianCityFromEnglish(decodedCity);
+
+  try {
+    // Fetch data on the server
+    const apiUrl = `https://api.ajur.app/api/base?city=${decodedCity}`;
+    console.log("Fetching from:", apiUrl);
+
+    const response = await fetch(apiUrl, {
+      headers: {
+        Accept: "application/json",
+        "User-Agent": req.headers["user-agent"] || "Ajur-SSR",
+      },
+    });
+
+    if (!response.ok) {
+      console.error(`API error: ${response.status}`);
+      return {
+        props: {
+          url_city: decodedCity,
+          url_persian_city,
+          initialData: null,
+          error: true,
+        },
+      };
+    }
+
+    const contentType = response.headers.get("content-type");
+    if (!contentType?.includes("application/json")) {
+      console.error("API returned non-JSON response");
+      return {
+        props: {
+          url_city: decodedCity,
+          url_persian_city,
+          initialData: null,
+          error: true,
+        },
+      };
+    }
+
+    const data = await response.json();
+    console.log("API data received successfully");
+
+    return {
+      props: {
+        url_city: decodedCity,
+        url_persian_city,
+        initialData: data || null,
+      },
+    };
+  } catch (error) {
+    console.error("Server-side API error:", error);
+    return {
+      props: {
+        url_city: decodedCity,
+        url_persian_city,
+        initialData: null,
+        error: true,
+      },
+    };
+  }
+}
+
+export default Home;
+
+
+
+
+
+
+
+before add neghborhoods in swipper /////////////////
+// pages/index.jsx
+import React, { useState, useEffect, useCallback } from "react";
+import Head from "next/head";
+import Script from "next/script";
+import Image from "next/image";
+import styles from "../styles/Home.module.css";
+import dynamic from "next/dynamic";
+import Link from "next/link";
+import { useRouter } from "next/router";
+import Cookies from "js-cookie";
+import Grid from "@mui/material/Grid";
+import Box from "@mui/material/Box";
+import Container from "@mui/material/Container";
+
+import CertificatesFooter from "../components/CertificatesFooter";
+
+// Optimized dynamic imports with better loading
+const SearchDiv = dynamic(() => import("../components/others/SearchDiv"), {
+  ssr: false,
+  loading: () => <div className="search-skeleton" />,
+});
+
+const WorkerCard = dynamic(() => import("../components/cards/WorkerCard"), {
+  ssr: false,
+  loading: () => <div className="card-skeleton" />,
+});
+
+const RealStateSmalCard = dynamic(
+  () => import("../components/cards/realestate/RealStateSmalCard"),
+  {
+    ssr: false,
+    loading: () => <div className="card-skeleton" />,
+  }
+);
+
+const DepartmentSmalCard = dynamic(
+  () => import("../components/cards/department/DepartmentSmalCard"),
+  {
+    ssr: false,
+    loading: () => <div className="card-skeleton" />,
+  }
+);
+
+const CatCard = dynamic(() => import("../components/cards/CatCard"), {
+  ssr: false,
+  loading: () => <div className="card-skeleton" />,
+});
+
+const MainCatCard = dynamic(() => import("../components/cards/MainCatCard"), {
+  ssr: false,
+  loading: () => <div className="card-skeleton" />,
+});
+
+const FileRequest = dynamic(() => import("../components/request/FileRequest"), {
+  ssr: false,
+  loading: () => <div className="section-skeleton" />,
+});
+
+const CityChangeAlertDialog = dynamic(
+  () => import("../components/dialogs/CityChangeAlertDialog"),
+  {
+    ssr: false,
+  }
+);
+
+const FeaturesHub = dynamic(() => import("../components/accesshub"), {
+  ssr: false,
+  loading: () => <div className="hub-skeleton" />,
+});
+
+const BestSection = dynamic(() => import("../components/bestsection"), {
+  ssr: false,
+  loading: () => <div className="section-skeleton" />,
+});
+
+const Cards = dynamic(() => import("../components/Cards"), {
+  ssr: false,
+  loading: () => (
+    <div className="max-w-7xl mx-auto my-8">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {[1, 2, 3].map((i) => (
+          <div key={i} className="card-skeleton h-64" />
+        ))}
+      </div>
+    </div>
+  ),
+});
+
+const Download = dynamic(() => import("../components/Download"), {
+  ssr: false,
+  loading: () => <div className="section-skeleton h-40" />,
+});
+
+const DealButton = dynamic(() => import("../components/parts/DealButton"), {
+  ssr: false,
+  loading: () => <div className="button-skeleton h-24" />,
+});
+
+// Critical CSS inline
+const criticalCSS = `
+  /* Skeleton loaders */
+  .search-skeleton,
+  .card-skeleton,
+  .section-skeleton,
+  .hub-skeleton,
+  .button-skeleton {
+    background: linear-gradient(90deg, #f5f5f5 25%, #e8e8e8 50%, #f5f5f5 75%);
+    background-size: 200% 100%;
+    animation: skeleton-loading 1.5s ease-in-out infinite;
+    border-radius: 8px;
+  }
+
+  .search-skeleton {
+    height: 56px;
+    margin: 16px 0;
+  }
+
+  .card-skeleton {
+    height: 280px;
+    margin: 8px;
+  }
+
+  .section-skeleton {
+    height: 200px;
+    margin: 24px 0;
+  }
+
+  .hub-skeleton {
+    height: 120px;
+    margin: 24px 0;
+  }
+
+  .button-skeleton {
+    height: 100px;
+    margin: 8px;
+  }
+
+  @keyframes skeleton-loading {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+  }
+
+  /* Performance optimizations */
+  .above-the-fold {
+    opacity: 0;
+    animation: fade-in 0.3s ease forwards;
+  }
+
+  @keyframes fade-in {
+    to { opacity: 1; }
+  }
+`;
+
+// Complete city mapping - English to Persian
+const cityNameMap = {
+  tehran: "تهران",
+  parand: "پرند",
+  "robat-karim": "رباط کریم",
+  rasht: "رشت",
+  masal: "ماسال",
+  isfahan: "اصفهان",
+  shiraz: "شیراز",
+  tabriz: "تبریز",
+  mashhad: "مشهد",
+  karaj: "کرج",
+  ahvaz: "اهواز",
+  kermanshah: "کرمانشاه",
+  qom: "قم",
+  yazd: "یزد",
+  kish: "کیش",
+  qeshm: "قشم",
+  // Add more cities as needed
+};
+
+// Helper function for Persian city names
+function getPersianCityFromEnglish(city) {
+  return cityNameMap[(city || "").toLowerCase()] || city || "تهران";
+}
+
+// Helper function to get English city name from Persian (for reverse mapping if needed)
+function getEnglishCityFromPersian(persianCity) {
+  const reverseMap = Object.fromEntries(
+    Object.entries(cityNameMap).map(([eng, per]) => [per, eng])
+  );
+  return reverseMap[persianCity] || persianCity || "tehran";
+}
+
+function Home(props) {
+  const router = useRouter();
+
+  // City state from cookies and URL
+  const [persianCity, setPersianCity] = useState("تهران");
+  const [englishCity, setEnglishCity] = useState("tehran");
+  const [isInitialized, setIsInitialized] = useState(false);
+  const [isNavigating, setIsNavigating] = useState(false);
+
+  // City change modal state
+  const [cityChangeModal, setCityChangeModal] = useState({
+    show: false,
+    currentCity: "",
+    newCity: "",
+  });
+
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
+  const [cats, setCats] = useState([]);
+  const [mainCats, setMainCats] = useState([]);
+  const [subCats, setSubCats] = useState([]);
+  const [realestates, setRealestates] = useState([]);
+  const [departments, setDepartments] = useState([]);
+  const [title1, setTitle1] = useState("");
+  const [title2, setTitle2] = useState("");
+  const [title3, setTitle3] = useState("");
+  const [collection1, setCollection1] = useState([]);
+  const [collection2, setCollection2] = useState([]);
+  const [collection3, setCollection3] = useState([]);
+  const [theCity, setTheCity] = useState("");
+  const [theNeighborhoods, setTheNeighborhoods] = useState([]);
+
+  const [cityCategoryNeighborhoods, setCityCategoryNeighborhoods] = useState([]);
+
+  const [favoriteWorkers, setFavoriteWorkers] = useState([]);
+  const [historyWorkers, setHistoryWorkers] = useState([]);
+  const [SpecialWorkers, setSpecialWorkers] = useState([]);
+  const [UrgentWorkers, setUrgentWorkers] = useState([]);
+  const [clickedAction, setClickedAction] = useState(null);
+  const [showVpnDialog, setShowVpnDialog] = useState(false);
+
+  // Utility function to get city from path
+  const getCityFromPath = useCallback(() => {
+    const path = router.asPath.split('?')[0]; // Remove query params
+    if (path === "/" || path === "") return null;
+    // Remove leading slash and decode
+    const cityFromPath = decodeURIComponent(path.substring(1));
+    return cityFromPath || null;
+  }, [router.asPath]);
+
+  // Initialize city from URL and cookies
+  useEffect(() => {
+    const urlCity = getCityFromPath();
+    const cookieCity = Cookies.get("city");
+    const cookiePersianCity = Cookies.get("persian_city");
+
+    console.log("Initialization - URL City:", urlCity);
+    console.log("Initialization - Cookie City:", cookieCity);
+
+    // Case 1: No URL city (root path)
+    if (!urlCity) {
+      if (cookieCity) {
+        // Use cookie city
+        const persianName = cookiePersianCity || getPersianCityFromEnglish(cookieCity);
+        setEnglishCity(cookieCity);
+        setPersianCity(persianName);
+        // Redirect to city URL if needed
+        if (router.asPath === "/") {
+          router.push(`/${cookieCity}`, undefined, { shallow: true });
+        }
+      }
+      // If no cookie, keep default (tehran)
+      setIsInitialized(true);
+      return;
+    }
+
+    // Case 2: URL has a city
+    // Update state with URL city
+    const persianName = getPersianCityFromEnglish(urlCity);
+    setEnglishCity(urlCity);
+    setPersianCity(persianName);
+
+    // Update cookie if different
+    if (cookieCity !== urlCity) {
+      Cookies.set("city", urlCity, { expires: 365, path: "/" });
+      Cookies.set("persian_city", persianName, { expires: 365, path: "/" });
+      console.log("Updated cookies with URL city:", urlCity);
+    }
+
+    setIsInitialized(true);
+  }, [router.asPath, getCityFromPath]);
+
+  // Handle city change detection (when URL changes but we're already on a city page)
+  useEffect(() => {
+    if (!isInitialized) return;
+
+    const urlCity = getCityFromPath();
+    if (!urlCity) return;
+
+    const cookieCity = Cookies.get("city");
+
+    // If URL city is different from current state, update state
+    if (urlCity !== englishCity) {
+      console.log("URL city changed to:", urlCity);
+      const persianName = getPersianCityFromEnglish(urlCity);
+      setEnglishCity(urlCity);
+      setPersianCity(persianName);
+      
+      // Update cookies
+      Cookies.set("city", urlCity, { expires: 365, path: "/" });
+      Cookies.set("persian_city", persianName, { expires: 365, path: "/" });
+      
+      // Show modal if cookie exists and is different
+      if (cookieCity && cookieCity !== urlCity) {
+        setCityChangeModal({
+          show: true,
+          currentCity: cookieCity,
+          newCity: urlCity,
+        });
+      }
+    }
+  }, [router.asPath, englishCity, isInitialized, getCityFromPath]);
+
+  // Handle city change confirmation
+  const handleCityChangeConfirm = useCallback(() => {
+    const newCity = cityChangeModal.newCity;
+    const persianName = getPersianCityFromEnglish(newCity);
+    
+    Cookies.set("city", newCity, { expires: 365, path: "/" });
+    Cookies.set("persian_city", persianName, { expires: 365, path: "/" });
+    
+    setEnglishCity(newCity);
+    setPersianCity(persianName);
+    setCityChangeModal({ show: false, currentCity: "", newCity: "" });
+    
+    // Reload to fetch new data
+    if (typeof window !== "undefined") {
+      window.location.reload();
+    }
+  }, [cityChangeModal]);
+
+  // Handle city change cancellation
+  const handleCityChangeCancel = useCallback(() => {
+    const currentCity = cityChangeModal.currentCity;
+    router.push(`/${currentCity}`, undefined, { shallow: true });
+    setCityChangeModal({ show: false, currentCity: "", newCity: "" });
+  }, [cityChangeModal, router]);
+
+  // ✅ SEO-safe city values for bots - ALWAYS use Persian name for display
+  const seoEnglishCity = props?.url_city || englishCity || "tehran";
+  const seoPersianCity = props?.url_persian_city || persianCity || "تهران";
+
+  // SEO Data - Use Persian city name in title and description
+  const seoData = {
+    title: `مشاور املاک هوشمند آجر | خرید فروش و اجاره ملک در ${seoPersianCity}`,
+    description: `آجر، مشاور املاک هوشمند در ${seoPersianCity}. خرید، فروش و اجاره آپارتمان، خانه ویلایی، مغازه، دفتر کار و زمین در ${seoPersianCity} و سراسر ایران. بیش از ۱۰۰۰۰ آگهی فعال ملک با بهترین قیمت. مشاوره رایگان تخصصی.`,
+    keywords: `مشاور املاک, خرید خانه, فروش آپارتمان, اجاره ملک, آجر, ${seoPersianCity}, املاک ${seoPersianCity}, خرید ملک در ${seoPersianCity}, فروش ملک در ${seoPersianCity}`,
+    canonical: `https://ajur.app/${seoEnglishCity}`,
+    image: "https://ajur.app/logo/ajour-meta-image.jpg",
+    imageWidth: "1080",
+    imageHeight: "702",
+    siteName: "آجر - مشاور املاک هوشمند",
+    twitterHandle: "@ajur_app",
+  };
+
+  const homepageCardsFeatures = [
+    {
+      id: 1,
+      title: "خرید",
+      description: "آگهی‌های خرید ملک، خانه و آپارتمان",
+      illustration: "/img/card1.png",
+      action: "مشاهده آگهی‌ها",
+      onClick: () => {
+        selectAction("buy");
+      },
+    },
+    {
+      id: 2,
+      title: "ثبت آگهی",
+      description: "ملک خود را برای فروش یا اجاره در آجر ثبت کنید",
+      illustration: "/img/card2.png",
+      action: "ثبت آگهی",
+
+      onClick: () => {
+        setLoading(true);
+
+        const token = Cookies.get("id_token");
+        if (token) {
+          router.push("/panel/new");
+        } else {
+          router.push("/panel/auth/login");
+          Cookies.set("destination_before_auth", "/panel/new", { expires: 14 });
+          setLoading(false);
+        }
+      },
+    },
+
+    {
+      id: 3,
+      title: "اجاره",
+      description: "آگهی‌های اجاره مسکونی، تجاری و اداری",
+      illustration: "/img/card3.png",
+      action: "مشاهده آگهی‌ها",
+      onClick: () => selectAction("rent"),
+    },
+  ];
+
+  // Simplified visibility control
+  const selectAction = useCallback((type) => {
+    setClickedAction(type);
+  }, []);
+
+  const clearAction = useCallback(() => {
+    setClickedAction(null);
+  }, []);
+
+  // Simple cookie utility (unchanged)
+  const cookieUtils = {
+    get: (name) => {
+      if (typeof window === "undefined") return null;
+      return Cookies.get(name) || null;
+    },
+    set: (name, value, days = 365) => {
+      if (typeof window === "undefined") return;
+      Cookies.set(name, value, { expires: days, path: "/" });
+    },
+  };
+
+  // Main data fetching effect
+  useEffect(() => {
+    if (!isInitialized) return;
+    
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => {
+      if (loading) {
+        console.error("Loading timeout - showing error state");
+        setLoading(false);
+        setError(true);
+      }
+    }, 10000);
+
+    const selectedCity = englishCity;
+
+    const fetchData = async () => {
+      try {
+        // Check if we have data from server props
+        if (props.initialData && props.initialData !== null) {
+          console.log("Using server props data for city:", selectedCity);
+          setDataFromCache(props.initialData);
+          setLoading(false);
+          clearTimeout(timeoutId);
+          return;
+        }
+
+        const cacheKey = `homeData_${selectedCity}`;
+        const cachedData = sessionStorage.getItem(cacheKey);
+
+        if (cachedData) {
+          const parsed = JSON.parse(cachedData);
+          if (Date.now() - parsed.timestamp < 5 * 60 * 1000) {
+            console.log("Using cached data");
+            setDataFromCache(parsed.data);
+            setLoading(false);
+            clearTimeout(timeoutId);
+            return;
+          }
+        }
+
+        const apiUrl = `https://api.ajur.app/api/base?city=${selectedCity}`;
+        console.log(`Fetching from API: ${apiUrl}`);
+
+        const response = await fetch(apiUrl, {
+          signal: controller.signal,
+          headers: {
+            Accept: "application/json",
+            "Content-Type": "application/json",
+          },
+        });
+
+        const contentType = response.headers.get("content-type");
+        if (!contentType || !contentType.includes("application/json")) {
+          const text = await response.text();
+          console.error(
+            "Server returned non-JSON response:",
+            text.substring(0, 200)
+          );
+          throw new Error(
+            `Server returned HTML instead of JSON. Status: ${response.status}`
+          );
+        }
+
+        if (!response.ok) {
+          throw new Error(`API error: ${response.status}`);
+        }
+
+        const data = await response.json();
+        console.log("API data received:", data);
+
+        const cacheData = {
+          timestamp: Date.now(),
+          data: data,
+        };
+        sessionStorage.setItem(cacheKey, JSON.stringify(cacheData));
+
+        setDataFromCache(data);
+        setLoading(false);
+        clearTimeout(timeoutId);
+      } catch (error) {
+        if (error.name === "AbortError") {
+          return;
+        }
+
+        console.error("API request failed:", error);
+
+        const cacheKey = `homeData_${selectedCity}`;
+        const cachedData = sessionStorage.getItem(cacheKey);
+        if (cachedData) {
+          try {
+            const parsed = JSON.parse(cachedData);
+            setDataFromCache(parsed.data);
+            setLoading(false);
+          } catch (cacheError) {
+            console.error("Cache parse error:", cacheError);
+            setLoading(false);
+            setError(true);
+          }
+        } else {
+          setLoading(false);
+          setError(true);
+        }
+
+        clearTimeout(timeoutId);
+      }
+    };
+
+    const setDataFromCache = (data) => {
+      setCats(data.cats || []);
+      setTheCity(data.the_city || "");
+      setTheNeighborhoods(data.the_neighborhoods || []);
+      setMainCats(data.main_cats || []);
+      setSubCats(data.sub_cats || []);
+      setRealestates(data.realstates || []);
+      setDepartments(data.departments || []);
+      setTitle1(data.title1 || "");
+      setTitle2(data.title2 || "");
+      setTitle3(data.title3 || "");
+      setCollection1(data.collection1 || []);
+      setCollection2(data.collection2 || []);
+      setCollection3(data.collection3 || []);
+      setSpecialWorkers(data.the_city_specials || []);
+      setUrgentWorkers(data.the_city_urgents || []);
+      setCityCategoryNeighborhoods(data.the_city_category_neighborhoods || []);
+    };
+
+    fetchData();
+
+    return () => {
+      controller.abort();
+      clearTimeout(timeoutId);
+    };
+  }, [englishCity, props.initialData, isInitialized, loading]);
+
+  // VPN detection (unchanged)
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    if (cookieUtils.get("hide_vpn_warning")) {
+      return;
+    }
+
+    const detectVpn = async () => {
+      try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 3000);
+
+        const res = await fetch("https://ipapi.co/json/", {
+          signal: controller.signal,
+        });
+
+        clearTimeout(timeoutId);
+
+        if (!res.ok) return;
+
+        const contentType = res.headers.get("content-type");
+        if (!contentType?.includes("application/json")) {
+          return;
+        }
+
+        const data = await res.json();
+
+        const org = (data.org || data.asn || "").toString().toLowerCase();
+        const vpnKeywords = [
+          "vpn",
+          "proxy",
+          "expressvpn",
+          "nordvpn",
+          "surfshark",
+        ];
+
+        for (const k of vpnKeywords) {
+          if (org.includes(k)) {
+            setShowVpnDialog(true);
+            return;
+          }
+        }
+      } catch (e) {
+        // Silent fail
+      }
+    };
+
+    detectVpn();
+  }, []);
+
+  const renderDefaultCity = useCallback(() => {
+    return englishCity;
+  }, [englishCity]);
+
+  // Optimized loading spinner
+  const renderSpinner = () => (
+    <div
+      className="spinnerImageView"
+      style={{
+        minHeight: "60vh",
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
+        backgroundColor: "white",
+      }}
+    >
+      <div
+        style={{
+          position: "relative",
+          width: "400px",
+          height: "400px",
+          marginBottom: "20px",
+        }}
+      >
+        <Image
+          src="/logo/ajour-gif.gif"
+          alt="در حال بارگذاری"
+          fill
+          sizes="400px"
+          style={{ objectFit: "contain" }}
+          priority
+        />
+      </div>
+    </div>
+  );
+
+  // Optimized error state
+  const renderError = () => (
+    <div className="flex flex-col items-center justify-center min-h-[60vh] p-8 text-center">
+      <div className="mb-6">
+        <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-red-50 mb-4">
+          <svg
+            className="w-10 h-10"
+            viewBox="0 0 24 24"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <rect x="5" y="9" width="3" height="6" rx="0.5" fill="#B45309" />
+            <rect
+              x="5.5"
+              y="9.5"
+              width="2"
+              height="5"
+              rx="0.3"
+              fill="#F59E0B"
+            />
+            <rect x="16" y="9" width="3" height="6" rx="0.5" fill="#B45309" />
+            <rect
+              x="16.5"
+              y="9.5"
+              width="2"
+              height="5"
+              rx="0.3"
+              fill="#F59E0B"
+            />
+            <circle cx="6.5" cy="10.5" r="0.6" fill="#7C2D12" />
+            <circle cx="6.5" cy="12" r="0.6" fill="#7C2D12" />
+            <circle cx="6.5" cy="13.5" r="0.6" fill="#7C2D12" />
+            <circle cx="17.5" cy="10.5" r="0.6" fill="#7C2D12" />
+            <circle cx="17.5" cy="12" r="0.6" fill="#7C2D12" />
+            <circle cx="17.5" cy="13.5" r="0.6" fill="#7C2D12" />
+            <line
+              x1="8"
+              y1="9"
+              x2="16"
+              y2="9"
+              stroke="#92400E"
+              strokeWidth="0.8"
+            />
+            <line
+              x1="8"
+              y1="15"
+              x2="16"
+              y2="15"
+              stroke="#92400E"
+              strokeWidth="0.8"
+            />
+          </svg>
+        </div>
+        <h2 className="text-2xl font-bold text-gray-800 mb-2">
+          مشکلی در بارگذاری داده‌ها پیش آمده است
+        </h2>
+        <p className="text-gray-600 max-w-md">
+          متأسفانه در دریافت اطلاعات از سرور مشکل ایجاد شده است. لطفاً اتصال
+          اینترنت خود را بررسی کرده و دوباره تلاش کنید.
+        </p>
+      </div>
+      <div className="flex flex-col sm:flex-row gap-4 mt-4">
+        <button
+          onClick={() => window.location.reload()}
+          className="px-6 py-3 bg-[#b92a31] text-white rounded-lg font-medium hover:bg-[#a0252c] transition-colors duration-200 shadow-md hover:shadow-lg flex items-center justify-center gap-2"
+        >
+          تلاش مجدد
+        </button>
+        <button
+          onClick={() => window.history.back()}
+          className="px-6 py-3 bg-gray-100 text-gray-700 rounded-lg font-medium hover:bg-gray-200 transition-colors duration-200 border border-gray-300 flex items-center justify-center gap-2"
+        >
+          بازگشت
+        </button>
+      </div>
+    </div>
+  );
+
+  // Render functions
+  const renderWorkerSlider = useCallback((workers) => {
+    if (!workers.length) return null;
+
+    return workers.map((worker) => (
+      <div key={worker.id} style={{ minWidth: "250px", margin: "0 10px" }}>
+        <Link href={`/worker/${worker.id}?slug=${worker.slug}`}>
+          <WorkerCard worker={worker} />
+        </Link>
+      </div>
+    ));
+  }, []);
+
+  const renderSpecialSlider = useCallback((workers) => {
+    if (!workers.length) return null;
+
+    return workers.map((worker) => (
+      <Grid item xs={12} md={4} key={worker.id}>
+        <a href={`/worker/${worker.id}?slug=${worker.slug}`}>
+          <WorkerCard worker={worker} />
+        </a>
+      </Grid>
+    ));
+  }, []);
+
+  const renderUrgentSlider = useCallback((workers) => {
+    if (!workers.length) return null;
+
+    return workers.map((worker) => (
+      <div key={worker.id} style={{ minWidth: "250px", margin: "0 10px" }}>
+        <Link href={`/worker/${worker.id}?slug=${worker.slug}`}>
+          <WorkerCard worker={worker} />
+        </Link>
+      </div>
+    ));
+  }, []);
+
+  const renderHistoryWorkers = useCallback(() => {
+    if (historyWorkers.length === 0) return null;
+
+    return (
+      <div style={{ paddingBottom: 10 }}>
+        <div className={styles["title"]}>
+          <h2 onClick={() => router.push("/recents")}>آخرین بازدید های شما</h2>
+        </div>
+        <div style={{ display: "flex", overflowX: "auto", padding: "10px 0" }}>
+          {renderWorkerSlider(historyWorkers)}
+        </div>
+      </div>
+    );
+  }, [historyWorkers, renderWorkerSlider, router]);
+
+  const renderFavoriteWorkers = useCallback(() => {
+    if (favoriteWorkers.length === 0) return null;
+
+    return (
+      <div style={{ paddingBottom: 20 }}>
+        <div className={styles["title"]}>
+          <h2 onClick={() => router.push("/favorites")}>
+            آخرین مورد پسند های شما
+          </h2>
+        </div>
+        <div style={{ display: "flex", overflowX: "auto", padding: "10px 0" }}>
+          {renderWorkerSlider(favoriteWorkers)}
+        </div>
+      </div>
+    );
+  }, [favoriteWorkers, renderWorkerSlider, router]);
+
+  const renderSpecialWorkers = useCallback(() => {
+    if (SpecialWorkers.length === 0) return null;
+
+    return (
+      <Container maxWidth="xl" sx={{ py: 3 }}>
+        <div className={styles["title"]}>
+          <h2>فروش ویژه در {persianCity}</h2>
+        </div>
+
+        <Grid container spacing={2}>
+          {SpecialWorkers.map((worker) => (
+            <Grid item xs={12} md={4} key={worker.id}>
+              <a href={`/worker/${worker.id}?slug=${worker.slug}`}>
+                <WorkerCard worker={worker} />
+              </a>
+            </Grid>
+          ))}
+        </Grid>
+      </Container>
+    );
+  }, [SpecialWorkers, persianCity, router]);
+
+  const renderUrgentWorkers = useCallback(() => {
+    if (UrgentWorkers.length === 0) return null;
+
+    return (
+      <Container maxWidth="xl" sx={{ py: 3 }}>
+        <div className={styles["title"]}>
+          <h2>فروش فوری در {persianCity}</h2>
+        </div>
+
+        <Grid container spacing={2}>
+          {UrgentWorkers.map((worker) => (
+            <Grid item xs={12} md={4} key={worker.id}>
+              <a href={`/worker/${worker.id}?slug=${worker.slug}`}>
+                <WorkerCard worker={worker} />
+              </a>
+            </Grid>
+          ))}
+        </Grid>
+      </Container>
+    );
+  }, [UrgentWorkers, persianCity]);
+
+  // ----------------------
+  // ✅ Structured Data (Schema) - improved with proper Persian city names
+  // ----------------------
+
+  // FAQ Schema
+  const faqSchema = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: [
+      {
+        "@type": "Question",
+        name: "آجر چیست؟",
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: `آجر یک مشاور املاک هوشمند است که به شما در خرید، فروش و اجاره ملک در ${seoPersianCity} و سراسر ایران کمک می‌کند. با بیش از ۱۰۰۰۰ آگهی فعال، می‌توانید بهترین ملک را با مناسب‌ترین قیمت پیدا کنید.`,
+        },
+      },
+      {
+        "@type": "Question",
+        name: `چگونه می‌توانم در ${seoPersianCity} آگهی ثبت کنم؟`,
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: "برای ثبت آگهی در آجر، کافی است روی دکمه 'ثبت آگهی' کلیک کرده و اطلاعات ملک خود را وارد کنید. آگهی شما پس از بررسی توسط کارشناسان، در سایت نمایش داده می‌شود.",
+        },
+      },
+      {
+        "@type": "Question",
+        name: "آیا آجر رایگان است؟",
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: "بله، مشاهده آگهی‌ها در آجر کاملاً رایگان است. همچنین ثبت آگهی برای کاربران عادی رایگان بوده و فقط برای مشاوران املاک حرفه‌ای دارای طرح‌های ویژه است.",
+        },
+      },
+      {
+        "@type": "Question",
+        name: `بهترین محله‌های ${seoPersianCity} برای خرید ملک کجاست؟`,
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: `در ${seoPersianCity} محله‌های مختلفی برای خرید ملک وجود دارد. با استفاده از آجر می‌توانید آگهی‌های تمام محله‌ها را مشاهده و مقایسه کنید.`,
+        },
+      },
+    ],
+  };
+
+  // Website Schema
+  const websiteSchema = {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    "@id": `https://ajur.app/#website`,
+    name: seoData.siteName,
+    url: "https://ajur.app",
+    potentialAction: {
+      "@type": "SearchAction",
+      target: {
+        "@type": "EntryPoint",
+        urlTemplate: `https://ajur.app/search?q={search_term_string}&city=${seoEnglishCity}`,
+      },
+      "query-input": "required name=search_term_string",
+    },
+  };
+
+  // Organization Schema
+  const organizationSchema = {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    name: "آجر",
+    url: "https://ajur.app",
+    logo: "https://ajur.app/logo/ajur.png",
+    sameAs: [
+      "https://twitter.com/ajur_app",
+      "https://www.instagram.com/ajur.app",
+      "https://www.linkedin.com/company/ajur",
+    ],
+    contactPoint: {
+      "@type": "ContactPoint",
+      telephone: "+98-938-274-0488",
+      contactType: "customer service",
+      availableLanguage: ["Persian", "English"],
+      areaServed: "IR",
+    },
+    address: {
+      "@type": "PostalAddress",
+      addressCountry: "IR",
+    },
+  };
+
+  // LocalBusiness Schema - Use Persian city name
+  const localBusinessSchema = {
+    "@context": "https://schema.org",
+    "@type": "RealEstateAgent",
+    name: `آجر - مشاور املاک ${seoPersianCity}`,
+    image: seoData.image,
+    "@id": `${seoData.canonical}#realestateagent`,
+    url: seoData.canonical,
+    telephone: "+98-938-274-0488",
+    priceRange: "$$",
+    address: {
+      "@type": "PostalAddress",
+      addressLocality: seoPersianCity,
+      addressCountry: "IR",
+    },
+    areaServed: {
+      "@type": "City",
+      name: seoPersianCity,
+    },
+    openingHoursSpecification: [
+      {
+        "@type": "OpeningHoursSpecification",
+        dayOfWeek: [
+          "Monday",
+          "Tuesday",
+          "Wednesday",
+          "Thursday",
+          "Friday",
+          "Saturday",
+        ],
+        opens: "09:00",
+        closes: "21:00",
+      },
+    ],
+    sameAs: ["https://twitter.com/ajur_app", "https://www.instagram.com/ajur.app"],
+  };
+
+  // WebPage Schema
+  const webPageSchema = {
+    "@context": "https://schema.org",
+    "@type": "WebPage",
+    "@id": `${seoData.canonical}#webpage`,
+    url: seoData.canonical,
+    name: seoData.title,
+    description: seoData.description,
+    inLanguage: "fa-IR",
+    isPartOf: { "@id": `https://ajur.app/#website` },
+    about: {
+      "@type": "Place",
+      name: seoPersianCity,
+    },
+  };
+
+  // Breadcrumb schema
+  const breadcrumbSchema = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: "آجر", item: "https://ajur.app" },
+      {
+        "@type": "ListItem",
+        position: 2,
+        name: `املاک ${seoPersianCity}`,
+        item: seoData.canonical,
+      },
+    ],
+  };
+
+  const renderCityNeighborhoodSections = useCallback(() => {
+    if (!cityCategoryNeighborhoods || cityCategoryNeighborhoods.length === 0)
+      return null;
+  
+    // group by category
+    const grouped = {};
+  
+    cityCategoryNeighborhoods.forEach((item) => {
+      if (!grouped[item.cat_slug]) {
+        grouped[item.cat_slug] = {
+          name: item.cat_name,
+          items: [],
+        };
+      }
+  
+      grouped[item.cat_slug].items.push(item);
+    });
+  
+    return (
+      <Container maxWidth="xl" sx={{ py: 4 }}>
+        {Object.entries(grouped).map(([catSlug, catData]) => (
+          <div key={catSlug} style={{ marginBottom: "40px" }}>
+            <div className={styles["title"]}>
+            <h2>
+  <Link href={`/${englishCity}/${catSlug}`}>
+    {catData.name} در محله‌های {persianCity}
+  </Link>
+</h2>
+            </div>
+  
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 mt-4">
+              {catData.items.slice(0, 12).map((item) => (
+                <Link
+                  key={`${item.cat_slug}-${item.neighborhood_slug}`}
+                  href={`/${item.city_slug}/${item.cat_slug}/${item.neighborhood_slug}`}
+                  className="block border rounded-lg p-3 text-center hover:bg-gray-50 transition"
+                >
+                  {item.cat_name} در {item.neighborhood_name} {item.city_name}
+                </Link>
+              ))}
+            </div>
+          </div>
+        ))}
+      </Container>
+    );
+  }, [cityCategoryNeighborhoods, persianCity, englishCity]);
+  
+
+  // Main content render
+  const renderContent = () => (
+    <div className="above-the-fold">
+      <main className={styles["main"]}>
+        <div className={`max-w-7xl mx-auto text-center ${styles.sectionSpacing}`}>
+          <h1 className="text-3xl sm:text-4xl md:text-6xl font-extrabold leading-tight">
+            <span style={{ color: "#b92a31" }}>آجر</span>، مشاور املاک هوشمند در{" "}
+            {persianCity}
+          </h1>
+        </div>
+
+        <div className={styles.sectionSpacing}>
+          <Cards features={homepageCardsFeatures} />
+        </div>
+
+        {renderSpecialWorkers()}
+        {renderUrgentWorkers()}
+
+        {renderCityNeighborhoodSections()}
+
+        <div className="w-full flex justify-center items-center my-6">
+          <div className="max-w-7xl mx-auto text-center">
+            <h2 className="text-3xl md:text-4xl font-bold">
+              خدمات آجر در {persianCity}
+            </h2>
+          </div>
+        </div>
+
+        <div className={styles.sectionSpacing}>
+          <FeaturesHub />
+        </div>
+
+        <div className="w-full flex justify-center items-center my-6">
+          <div className="max-w-7xl mx-auto text-center">
+            <h2 className="text-3xl md:text-4xl font-bold">
+              بهترین‌های آجر در {persianCity}
+            </h2>
+          </div>
+        </div>
+
+        <div className={styles.sectionSpacing}>
+          <BestSection englishCity={englishCity} />
+        </div>
+
+        <div className={styles.sectionSpacing}>
+          <FileRequest
+            onCallClick={() => (window.location.href = "tel:+989382740488")}
+            onActionClick={() => router.push("/file-request")}
+          />
+        </div>
+
+        <div className={styles.sectionSpacing}>
+          <Download />
+          <CertificatesFooter />
+        </div>
+
+        {(clickedAction === "buy" || clickedAction === "rent") && (
+          <div className="fixed inset-0 bg-white z-50 overflow-y-auto">
+            <div className="sticky top-0 mt-5 bg-white border-b border-gray-200 px-4 py-4 flex items-center justify-between shadow-sm z-10">
+              <button
+                onClick={clearAction}
+                className="p-2 hover:bg-gray-100 rounded-lg transition-colors flex items-center"
+                aria-label="بازگشت"
+              >
+                <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none">
+                  <path
+                    d="M20 12 H8"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                  />
+                  <path
+                    d="M9 7 L4 12 L9 17"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                  />
+                </svg>
+                <span className="mr-2 text-sm font-medium">بازگشت</span>
+              </button>
+
+              <div className="text-xl font-bold text-gray-900">
+                {clickedAction === "buy"
+                  ? "دسته‌بندی‌های خرید"
+                  : "دسته‌بندی‌های اجاره"}
+              </div>
+
+              <button
+                onClick={clearAction}
+                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                aria-label="بستن"
+              >
+                <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none">
+                  <path
+                    d="M18 6L6 18"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                  />
+                  <path
+                    d="M6 6L18 18"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                  />
+                </svg>
+              </button>
+            </div>
+
+            <div className="p-2 md:p-4 lg:p-6">
+              <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2.5 md:gap-4 max-w-6xl mx-auto px-3 md:px-6">
+                {subCats
+                  .filter((c) =>
+                    clickedAction === "buy" ? c.type === "sell" : c.type === "rent"
+                  )
+                  .map((cat, idx) => (
+                    <div key={cat.id} className="aspect-square">
+                      <DealButton
+  title={cat.name}
+  src={`/cats_image/sub-cats/${cat.id}.png`}
+  onClick={() => {
+    setIsNavigating(true);
+    router.push(`/${englishCity}/${encodeURIComponent(cat.eng_name)}`);
+  }}
+  style={{ animationDelay: `${idx * 70}ms` }}
+/>
+
+                    </div>
+                  ))}
+              </div>
+            </div>
+          </div>
+        )}
+      </main>
+    </div>
+  );
+
+  // Only render when initialized
+  if (!isInitialized) {
+    return renderSpinner();
+  }
+
+  return (
+    <>
+      <Head>
+        <meta charSet="UTF-8" />
+        <meta
+          name="viewport"
+          content="width=device-width, initial-scale=1.0, maximum-scale=5.0"
+        />
+        <meta httpEquiv="Content-Language" content="fa" />
+        <meta name="language" content="fa" />
+
+        {/* Preload critical resources */}
+        <link rel="preload" href="/logo/ajour-gif.gif" as="image" />
+        <link rel="preconnect" href="https://api.ajur.app" />
+        <link rel="dns-prefetch" href="https://api.ajur.app" />
+
+        {/* Critical CSS */}
+        <style dangerouslySetInnerHTML={{ __html: criticalCSS }} />
+
+        {/* SEO Meta Tags */}
+        <title>{seoData.title}</title>
+        <meta name="description" content={seoData.description} />
+        <meta name="keywords" content={seoData.keywords} />
+        <meta name="author" content="آجر" />
+        <meta
+          name="robots"
+          content="index, follow, max-image-preview:large, max-snippet:-1"
+        />
+        <meta
+          name="googlebot"
+          content="index, follow, max-image-preview:large, max-snippet:-1"
+        />
+
+        {/* Canonical URL - This is critical for SEO */}
+        <link rel="canonical" href={seoData.canonical} />
+
+        {/* Alternate language versions */}
+        <link rel="alternate" href={`https://ajur.app/${seoEnglishCity}`} hrefLang="fa-IR" />
+        <link rel="alternate" href={`https://ajur.app/${seoEnglishCity}`} hrefLang="x-default" />
+
+        {/* Open Graph */}
+        <meta property="og:locale" content="fa_IR" />
+        <meta property="og:type" content="website" />
+        <meta property="og:title" content={seoData.title} />
+        <meta property="og:description" content={seoData.description} />
+        <meta property="og:url" content={seoData.canonical} />
+        <meta property="og:site_name" content={seoData.siteName} />
+        <meta property="og:image" content={seoData.image} />
+        <meta property="og:image:width" content={seoData.imageWidth} />
+        <meta property="og:image:height" content={seoData.imageHeight} />
+        <meta
+          property="og:image:alt"
+          content={`آجر - مشاور املاک ${seoPersianCity}`}
+        />
+
+        {/* Twitter Card */}
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:site" content={seoData.twitterHandle} />
+        <meta name="twitter:creator" content={seoData.twitterHandle} />
+        <meta name="twitter:title" content={seoData.title} />
+        <meta name="twitter:description" content={seoData.description} />
+        <meta name="twitter:image" content={seoData.image} />
+
+        {/* Geo tags */}
+        <meta name="geo.region" content="IR" />
+        <meta name="geo.placename" content={seoPersianCity} />
+
+        {/* Favicon */}
+        <link rel="icon" href="/favicon.ico" />
+        <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+        <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
+        <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
+        <link rel="manifest" href="/site.webmanifest" />
+
+        {/* PWA */}
+        <meta name="theme-color" content="#b92a31" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+
+        {/* Verification */}
+        <meta name="ir-site-verification-token" content="ajur-verification" />
+      </Head>
+
+      {/* Structured Data - JSON-LD */}
+      <Script
+        id="faq-schema"
+        type="application/ld+json"
+        strategy="beforeInteractive"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
+      />
+
+      <Script
+        id="website-schema"
+        type="application/ld+json"
+        strategy="beforeInteractive"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteSchema) }}
+      />
+
+      <Script
+        id="webpage-schema"
+        type="application/ld+json"
+        strategy="beforeInteractive"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(webPageSchema) }}
+      />
+
+      <Script
+        id="breadcrumb-schema"
+        type="application/ld+json"
+        strategy="beforeInteractive"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
+      />
+
+      <Script
+        id="organization-schema"
+        type="application/ld+json"
+        strategy="beforeInteractive"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationSchema) }}
+      />
+
+      <Script
+        id="local-business-schema"
+        type="application/ld+json"
+        strategy="beforeInteractive"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(localBusinessSchema) }}
+      />
+
+      <div className={styles.container}>
+        <CityChangeAlertDialog
+          open={cityChangeModal.show}
+          onClose={handleCityChangeCancel}
+          onConfirm={handleCityChangeConfirm}
+          currentCity={cityChangeModal.currentCity}
+          newCity={cityChangeModal.newCity}
+        />
+
+        {showVpnDialog && (
+          <div className="fixed bottom-4 left-4 right-4 md:left-auto md:right-4 md:max-w-sm bg-white rounded-lg shadow-xl border border-gray-200 p-4 z-50">
+            <div className="flex items-start">
+              <div className="flex-shrink-0">
+                <svg
+                  className="w-6 h-6 text-orange-500"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.34 16.5c-.77.833.192 2.5 1.732 2.5z"
+                  />
+                </svg>
+              </div>
+              <div className="mr-3">
+                <h3 className="text-sm font-medium text-gray-900">توجه</h3>
+                <p className="mt-1 text-sm text-gray-600">
+                  برای استفاده بهتر از آجر، لطفاً فیلترشکن خود را خاموش کنید
+                </p>
+              </div>
+              <button
+                onClick={() => {
+                  cookieUtils.set("hide_vpn_warning", "1", 1);
+                  setShowVpnDialog(false);
+                }}
+                className="text-gray-400 hover:text-gray-500 focus:outline-none"
+              >
+                <svg
+                  className="w-5 h-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+              </button>
+            </div>
+          </div>
+        )}
+
+{(loading || isNavigating) && renderSpinner()}
+{error && !loading && !isNavigating && renderError()}
+{!loading && !error && !isNavigating && renderContent()}
+        {/* {loading && renderSpinner()}
+        {error && renderError()}
+        {!loading && !error && renderContent()} */}
+      </div>
+    </>
+  );
+}
+
+export async function getServerSideProps(context) {
+  const { req, res } = context;
+
+  // Get city from URL - using the actual URL path
+  let city = "tehran";
+  const path = req.url || "";
+  const pathParts = path.split('?')[0].split('/');
+  
+  // Check if the path has a city segment (not empty and not the root)
+  if (pathParts.length > 1 && pathParts[1] !== "") {
+    city = decodeURIComponent(pathParts[1]);
+  }
+
+  console.log("----------------- Homepage SSR - City from URL:", city);
+  console.log("----------------- Full URL:", req.url);
+
+  // Cache for 5 minutes on CDN
+  res.setHeader("Cache-Control", "public, s-maxage=300, stale-while-revalidate=600");
+
+  const url_persian_city = getPersianCityFromEnglish(city);
+
+  try {
+    // Fetch data on the server
+    const apiUrl = `https://api.ajur.app/api/base?city=${city}`;
+    console.log("Fetching from:", apiUrl);
+
+    const response = await fetch(apiUrl, {
+      headers: {
+        Accept: "application/json",
+        "User-Agent": req.headers["user-agent"] || "Ajur-SSR",
+      },
+    });
+
+    if (!response.ok) {
+      console.error(`API error: ${response.status}`);
+      return {
+        props: {
+          url_city: city,
+          url_persian_city,
+          initialData: null,
+          error: true,
+        },
+      };
+    }
+
+    const contentType = response.headers.get("content-type");
+    if (!contentType?.includes("application/json")) {
+      console.error("API returned non-JSON response");
+      return {
+        props: {
+          url_city: city,
+          url_persian_city,
+          initialData: null,
+          error: true,
+        },
+      };
+    }
+
+    const data = await response.json();
+    console.log("API data received successfully");
+
+    return {
+      props: {
+        url_city: city,
+        url_persian_city,
+        initialData: data || null,
+      },
+    };
+  } catch (error) {
+    console.error("Server-side API error:", error);
+    return {
+      props: {
+        url_city: city,
+        url_persian_city,
+        initialData: null,
+        error: true,
+      },
+    };
+  }
+}
+
+export default Home;
+

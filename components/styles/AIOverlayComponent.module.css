@@ -1,0 +1,767 @@
+.container {
+  position: relative;
+  width: 100%;
+  height: 100vh;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+/* Fixed backdrop to not block navigation */
+.backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.6);
+  z-index: 40;
+  transition: all 0.5s ease-out;
+  pointer-events: none; /* This prevents blocking navigation */
+}
+
+.navigationWrapper {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 50;
+}
+
+.navigationContainer {
+  position: relative;
+}
+
+.navigationBackground {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  backdrop-filter: blur(48px);
+  border-radius: 9999px;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  transition: all 0.7s ease-out;
+  background: rgba(255, 255, 255, 0.25);
+}
+
+.navigationBackgroundActive {
+  background: rgba(255, 255, 255, 0.4);
+  transform: scale(1.1);
+  box-shadow: 0 35px 60px -12px rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+}
+
+.navigationContent {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 12px 24px;
+  transition: all 0.7s ease-out;
+}
+
+.navigationContentActive {
+  transform: scale(1.1);
+}
+
+.navButton {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  color: #b91c1c;
+  position: relative;
+  z-index: 10;
+  font-weight: 500;
+}
+
+.navButton:hover {
+  background: rgba(255, 255, 255, 0.3);
+  color: #991b1b;
+  transform: scale(1.1);
+}
+
+.navIcon {
+  width: 20px;
+  height: 20px;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.1));
+}
+
+.aiButtonWrapper {
+  position: relative;
+}
+
+.aiButton {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 50%, #991b1b 100%);
+  border: 2px solid rgba(255, 255, 255, 0.6);
+  cursor: pointer;
+  transition: all 0.5s ease-out;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+}
+
+.aiButton:hover {
+  background: linear-gradient(135deg, #b91c1c 0%, #991b1b 50%, #7f1d1d 100%);
+  transform: scale(1.1);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+}
+
+.aiButtonActive {
+  transform: scale(1.25);
+  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5);
+}
+
+.aiButtonClosing {
+  animation: pulse 0.3s ease-in-out;
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    transform: scale(1.25);
+  }
+  50% {
+    transform: scale(1.35);
+  }
+}
+
+.aiButtonBackground1 {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, #ef4444, #dc2626, #b91c1c);
+  border-radius: 50%;
+  animation: pulse 2s infinite;
+}
+
+.aiButtonBackground2 {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(90deg, #dc2626, #ef4444, #b91c1c, #dc2626);
+  border-radius: 50%;
+  opacity: 0.7;
+  animation: spin 3s linear infinite;
+}
+
+.aiButtonBackground3 {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.4), rgba(239, 68, 68, 0.3), rgba(220, 38, 38, 0.2));
+  border-radius: 50%;
+  backdrop-filter: blur(2px);
+}
+
+.aiButtonBackground4 {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, rgba(185, 28, 28, 0.3), rgba(153, 27, 27, 0.2));
+  border-radius: 50%;
+}
+
+.aiButtonBackground5 {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.2), transparent);
+  border-radius: 50%;
+}
+
+.aiButtonBackground6 {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  border-radius: 50%;
+  box-shadow: inset 0 2px 4px rgba(255, 255, 255, 0.3), inset 0 -2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.aiButtonBorder {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.aiButtonIcon {
+  width: 24px;
+  height: 24px;
+  transition: transform 0.5s ease;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+  position: relative;
+  z-index: 10;
+  color: white;
+}
+
+.aiButtonIconActive {
+  transform: rotate(180deg);
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.notificationBadge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  width: 24px;
+  height: 24px;
+  background: linear-gradient(135deg, #dc2626, #be185d);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid white;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  animation: pulse 2s infinite;
+}
+
+.notificationText {
+  color: white;
+  font-size: 12px;
+  font-weight: bold;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.1));
+}
+
+.chevronUp {
+  position: absolute;
+  top: -12px;
+  left: 50%;
+  transform: translateX(-50%);
+  animation: bounce 1s infinite;
+}
+
+.chevronIcon {
+  width: 16px;
+  height: 16px;
+  color: #dc2626;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+}
+
+@keyframes bounce {
+  0%,
+  20%,
+  53%,
+  80%,
+  100% {
+    transform: translateX(-50%) translateY(0);
+  }
+  40%,
+  43% {
+    transform: translateX(-50%) translateY(-8px);
+  }
+  70% {
+    transform: translateX(-50%) translateY(-4px);
+  }
+  90% {
+    transform: translateX(-50%) translateY(-2px);
+  }
+}
+
+/* Made overlay responsive - larger on desktop, same size on mobile */
+.overlay {
+  position: absolute;
+  bottom: 100%;
+  margin-bottom: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 320px;
+  height: 70vh;
+  background: linear-gradient(135deg, rgba(239, 246, 255, 0.4), rgba(243, 232, 255, 0.35), rgba(253, 242, 248, 0.4));
+  backdrop-filter: blur(48px);
+  border-radius: 24px;
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  overflow: hidden;
+  transition: all 0.5s ease-out;
+}
+
+/* Desktop responsive styles */
+@media (min-width: 768px) {
+  .overlay {
+    width: 400px;
+    height: 75vh;
+  }
+}
+
+@media (min-width: 1024px) {
+  .overlay {
+    width: 480px;
+    height: 80vh;
+  }
+}
+
+.overlayOpen {
+  animation: slideInFromBottom 0.5s ease-out;
+}
+
+.overlayClosing {
+  animation: slideOutToBottom 0.3s ease-in;
+}
+
+@keyframes slideInFromBottom {
+  from {
+    transform: translateX(-50%) translateY(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(-50%) translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slideOutToBottom {
+  from {
+    transform: translateX(-50%) translateY(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateX(-50%) translateY(100%);
+    opacity: 0;
+  }
+}
+
+.dragHandle {
+  display: flex;
+  justify-content: center;
+  padding: 16px 0;
+  cursor: grab;
+}
+
+.dragHandle:active {
+  cursor: grabbing;
+}
+
+.dragBar {
+  width: 32px;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.8);
+  border-radius: 2px;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.dragHandle:hover .dragBar {
+  background: rgba(255, 255, 255, 0.9);
+  width: 48px;
+}
+
+.overlayContent {
+  padding: 0 16px 16px;
+  height: calc(100% - 64px);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.overlayScrollArea {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  overflow-y: auto;
+  padding-bottom: 24px;
+}
+
+.notificationCard {
+  background: rgba(255, 255, 255, 0.5);
+  backdrop-filter: blur(48px);
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  padding: 12px;
+  cursor: pointer;
+  transition: all 0.3s ease-out;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+}
+
+.notificationCard:hover {
+  background: rgba(255, 255, 255, 0.6);
+}
+
+.notificationSummary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 14px;
+}
+
+.notificationHeader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.bellIcon {
+  width: 16px;
+  height: 16px;
+  color: #4b5563;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.1));
+}
+
+.notificationTitle {
+  color: #1f2937;
+  font-weight: bold;
+  filter: drop-shadow(0 1px 2px rgba(244, 63, 94, 0.3));
+}
+
+.notificationCount {
+  background: linear-gradient(90deg, #4b5563, #374151);
+  color: white;
+  font-size: 12px;
+  padding: 2px 8px;
+  border-radius: 12px;
+  min-width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.notificationPreview {
+  color: #374151;
+  max-width: 128px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-weight: 600;
+  filter: drop-shadow(0 1px 2px rgba(244, 63, 94, 0.3));
+}
+
+.notificationExpanded {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.notificationExpandedHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.chevronRotated {
+  transform: rotate(180deg);
+}
+
+.notificationItem {
+  background: rgba(255, 255, 255, 0.45);
+  border-radius: 8px;
+  padding: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.notificationItem:hover {
+  background: rgba(255, 255, 255, 0.55);
+}
+
+.notificationItemHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.notificationItemTitle {
+  color: #1f2937;
+  font-size: 14px;
+  font-weight: bold;
+  filter: drop-shadow(0 1px 2px rgba(244, 63, 94, 0.3));
+}
+
+.notificationTime {
+  color: #4b5563;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.notificationDetails {
+  color: #374151;
+  font-size: 14px;
+  font-weight: 500;
+  margin: 0;
+  filter: drop-shadow(0 1px 2px rgba(244, 63, 94, 0.2));
+}
+
+.featuresGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.featureCard {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(20, 184, 166, 0.08));
+  backdrop-filter: blur(48px);
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  padding: 16px;
+  cursor: pointer;
+  transition: all 0.3s ease-out;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+}
+
+.featureCard:hover {
+  background: rgba(255, 255, 255, 0.5);
+  transform: scale(1.05);
+}
+
+.featureCard:nth-child(2) {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(99, 102, 241, 0.08));
+}
+
+.featureCard:nth-child(3) {
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.1), rgba(249, 115, 22, 0.08));
+}
+
+.featureCard:nth-child(4) {
+  background: linear-gradient(135deg, rgba(236, 72, 153, 0.1), rgba(219, 39, 119, 0.08));
+}
+
+.featureIconGreen {
+  width: 32px;
+  height: 32px;
+  background: linear-gradient(135deg, #059669, #047857);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 12px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.featureIconOrange {
+  width: 32px;
+  height: 32px;
+  background: linear-gradient(135deg, #ea580c, #c2410c);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 12px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.featureIconPurple {
+  width: 32px;
+  height: 32px;
+  background: linear-gradient(135deg, #9333ea, #7c3aed);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 12px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.featureIconCyan {
+  width: 32px;
+  height: 32px;
+  background: linear-gradient(135deg, #0891b2, #0e7490);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 12px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.featureIcon {
+  width: 20px;
+  height: 20px;
+  color: white;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.1));
+}
+
+.featureTitle {
+  color: #1f2937;
+  font-weight: bold;
+  font-size: 14px;
+  margin-bottom: 4px;
+  filter: drop-shadow(0 1px 2px rgba(244, 63, 94, 0.3));
+}
+
+.featureSubtitle {
+  color: #4b5563;
+  font-size: 12px;
+  font-weight: 500;
+  filter: drop-shadow(0 1px 2px rgba(244, 63, 94, 0.2));
+}
+
+.aiChatCard {
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.1), rgba(99, 102, 241, 0.08), rgba(147, 51, 234, 0.08));
+  backdrop-filter: blur(48px);
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  padding: 16px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+}
+
+.aiChatHeader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.aiChatIcon {
+  width: 24px;
+  height: 24px;
+  background: linear-gradient(135deg, #8b5cf6, #7c3aed, #6366f1);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.aiChatIconSparkles {
+  width: 16px;
+  height: 16px;
+  color: white;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.1));
+}
+
+.aiChatTitle {
+  color: #1f2937;
+  font-size: 14px;
+  font-weight: bold;
+  filter: drop-shadow(0 1px 2px rgba(244, 63, 94, 0.3));
+}
+
+.aiChatGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.aiChatButton {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(255, 255, 255, 0.5), rgba(20, 184, 166, 0.08));
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  border-radius: 8px;
+  padding: 12px;
+  text-align: right;
+  cursor: pointer;
+  transition: all 0.3s ease-out;
+  backdrop-filter: blur(24px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+}
+
+.aiChatButton:hover {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.15), rgba(255, 255, 255, 0.7), rgba(20, 184, 166, 0.12));
+  transform: scale(1.05);
+}
+
+.aiChatButton:nth-child(2) {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(255, 255, 255, 0.5), rgba(99, 102, 241, 0.08));
+}
+
+.aiChatButton:nth-child(2):hover {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.15), rgba(255, 255, 255, 0.7), rgba(99, 102, 241, 0.12));
+}
+
+.aiChatButton:nth-child(3) {
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.1), rgba(255, 255, 255, 0.5), rgba(249, 115, 22, 0.08));
+}
+
+.aiChatButton:nth-child(3):hover {
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.15), rgba(255, 255, 255, 0.7), rgba(249, 115, 22, 0.12));
+}
+
+.aiChatButton:nth-child(4) {
+  background: linear-gradient(135deg, rgba(236, 72, 153, 0.1), rgba(219, 39, 119, 0.08));
+}
+
+.aiChatButton:nth-child(4):hover {
+  background: linear-gradient(135deg, rgba(236, 72, 153, 0.15), rgba(219, 39, 119, 0.12));
+}
+
+.aiChatButtonTitle {
+  color: #1f2937;
+  font-size: 12px;
+  font-weight: bold;
+  margin-bottom: 4px;
+  filter: drop-shadow(0 1px 2px rgba(244, 63, 94, 0.3));
+}
+
+.aiChatButtonSubtitle {
+  color: #4b5563;
+  font-size: 12px;
+  font-weight: 500;
+  filter: drop-shadow(0 1px 2px rgba(244, 63, 94, 0.2));
+}
+
+.actionButtons {
+  display: flex;
+  gap: 12px;
+  padding-top: 8px;
+  margin-top: auto;
+  flex-shrink: 0;
+}
+
+.actionButton {
+  flex: 1;
+  background: linear-gradient(135deg, rgba(148, 163, 184, 0.7), rgba(255, 255, 255, 0.5));
+  backdrop-filter: blur(48px);
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  color: #1f2937;
+  border-radius: 8px;
+  padding: 12px;
+  font-size: 14px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s ease-out;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+}
+
+.actionButton:hover {
+  background: linear-gradient(135deg, rgba(148, 163, 184, 0.8), rgba(255, 255, 255, 0.6));
+  transform: scale(1.05);
+}
+
+.actionButtonIcon {
+  width: 16px;
+  height: 16px;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.1));
+}
+
+.actionButtonText {
+  filter: drop-shadow(0 1px 2px rgba(244, 63, 94, 0.3));
+}

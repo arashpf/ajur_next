@@ -1,0 +1,248 @@
+import React, { useMemo } from "react";
+import Link from "next/link";
+
+const iconComponents = {
+  estate: () => (
+    <>
+      <path d="M3 11l9-7 9 7v8a1 1 0 0 1-1 1h-4v-6H8v6H4a1 1 0 0 1-1-1v-8z" />
+      <path d="M9 21v-6h6v6" />
+    </>
+  ),
+  agent: () => (
+    <>
+      <circle cx="12" cy="7" r="3" fill="none" />
+      <path d="M5 21v-2a6 6 0 0 1 6-6h2a6 6 0 0 1 6 6v2" />
+    </>
+  ),
+  department: () => (
+    <>
+      <path d="M3 21h18V8l-9-5-9 5v13z" />
+      <path d="M9 10v4" />
+      <path d="M15 10v4" />
+      <path d="M9 16v2" />
+      <path d="M15 16v2" />
+    </>
+  ),
+  clock: () => (
+    <>
+      <circle cx="12" cy="12" r="8" />
+      <path d="M12 8v5l3 2" />
+    </>
+  ),
+};
+
+const Card = React.memo(({ card, index }) => {
+  const Icon = iconComponents[card.icon];
+  const animationDelay = useMemo(() => `${index * 150}ms`, [index]);
+
+  const cardContent = (
+    <div
+      className={`group relative overflow-hidden ${
+        card.disabled ? "cursor-default" : "cursor-pointer"
+      } h-full w-full max-w-sm animate-fade-in-up`}
+      style={{ animationDelay }}
+      aria-disabled={card.disabled ? "true" : undefined}
+    >
+      <div
+        className={`relative h-full overflow-hidden rounded-3xl p-[2px] transition-all duration-300 ${
+          !card.disabled ? "hover:scale-[1.02] hover:-translate-y-1" : ""
+        }`}
+      >
+        <div
+          className={`relative h-full w-full rounded-[22px] p-8 flex flex-col justify-between ${
+            card.disabled
+              ? "bg-gray-50 text-black border border-gray-200"
+              : "bg-white border border-gray-100 shadow-lg hover:shadow-xl"
+          }`}
+        >
+          {!card.disabled && (
+            <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-gradient-to-br from-white/30 to-transparent" />
+          )}
+
+          <div className="relative">
+            {card.disabled && (
+              <div className="absolute top-3 left-3 bg-gray-100 text-gray-500 px-2 py-1 rounded-full text-[11px] font-semibold">
+                {card.soonLabel}
+              </div>
+            )}
+
+            <div
+              className={`w-16 h-16 bg-white rounded-xl flex items-center justify-center mb-6 shadow-sm border border-gray-100 ${
+                !card.disabled
+                  ? "group-hover:scale-105 transition-transform duration-200"
+                  : ""
+              }`}
+            >
+              <svg
+                className={`w-8 h-8 ${
+                  card.disabled ? "text-gray-400" : "text-[#D93025]"
+                }`}
+                strokeWidth={2}
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                aria-hidden="true"
+                focusable="false"
+              >
+                <Icon />
+              </svg>
+            </div>
+
+            <h3
+              className={`text-xl font-bold mb-3 text-balance ${
+                card.disabled ? "text-gray-800" : "text-gray-900"
+              }`}
+            >
+              {card.title}
+            </h3>
+            <p
+              className={`font-medium text-sm leading-relaxed text-balance ${
+                card.disabled ? "text-gray-600" : "text-gray-700"
+              }`}
+            >
+              {card.description}
+            </p>
+          </div>
+
+          {!card.disabled && (
+            <div className="mt-6">
+              <div className="flex items-center gap-2 text-gray-700 group-hover:text-[#D93025] transition-colors font-semibold">
+                <span className="text-sm">مشاهده بیشتر</span>
+                <svg
+                  className="w-4 h-4"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth={2.5}
+                  viewBox="0 0 24 24"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M19 12H5M12 19l-7-7 7-7" />
+                </svg>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+
+  if (card.disabled || !card.link) {
+    return cardContent;
+  }
+
+  return (
+    <Link href={card.link} className="block">
+      {cardContent}
+    </Link>
+  );
+});
+
+Card.displayName = "Card";
+
+export default function BestSection({ englishCity }) {
+  const cards = useMemo(
+    () => [
+      {
+        id: 1,
+        title: "بهترین املاک",
+        description: "برترین آژانس های املاک شهر شما.",
+        icon: "estate",
+        link: "",
+      },
+      {
+        id: 2,
+        title: "بهترین مشاوران",
+        description: "مشاوران برتر و باتجربه آجر",
+        icon: "agent",
+        link: englishCity ? `/agents/${englishCity}` : "/agents",
+      },
+      {
+        id: 3,
+        title: "بهترین دپارتمان‌ها",
+        description: "دسترسی به بهترین دپارتمان‌های املاک",
+        icon: "department",
+        link: "",
+      },
+      {
+        id: 4,
+        title: "برترین سازنده ها",
+        description: "برترین سازنده های حوزه املاک",
+        icon: "clock",
+        disabled: true,
+        soonLabel: "به زودی !",
+      },
+      {
+        id: 5,
+        title: "بهترین مشاغل",
+        description: "بهترین کسب‌وکارهای مرتبط با املاک",
+        icon: "clock",
+        disabled: true,
+        soonLabel: "به زودی !",
+      },
+      {
+        id: 6,
+        title: "برترین کارشناسان",
+        description: "مشاوران و کارشناسان خبره",
+        icon: "clock",
+        disabled: true,
+        soonLabel: "به زودی !",
+      },
+    ],
+    [englishCity]
+  );
+
+  return (
+    <section
+      dir="rtl"
+      style={{
+        background: "linear-gradient(180deg, #a92b31  0%, #ffffff 100%)",
+        borderRadius: 14,
+      }}
+      className="pb-16 pt-8 px-4 bg-transparent"
+    >
+      <div className="max-w-7xl mx-auto">
+        <div className="flex justify-center">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 justify-items-center">
+            {cards.map((card, index) => (
+              <Card key={card.id} card={card} index={index} />
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <style jsx>{`
+        @keyframes fade-in-up {
+          from {
+            opacity: 0;
+            transform: translateY(40px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+
+        .animate-fade-in-up {
+          animation: fade-in-up 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+          opacity: 0;
+        }
+
+        .group {
+          will-change: transform;
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+          .animate-fade-in-up,
+          .group-hover\\:scale-105,
+          .hover\\:scale-\\[1\\.02\\] {
+            animation: none;
+            transition: none;
+          }
+        }
+      `}</style>
+    </section>
+  );
+}

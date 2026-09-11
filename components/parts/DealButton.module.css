@@ -1,0 +1,191 @@
+.card {
+  position: relative;
+  display: block;
+  border: 0;
+  padding: 1px; /* Reduced from 6px */
+  background: transparent;
+  cursor: pointer;
+  width: 100%;
+  text-align: left;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Main square tile */
+.content {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px; /* Reduced from 8px */
+  padding: 10px 4px; /* Reduced from 14px 10px */
+  border-radius: 10px; /* Slightly smaller */
+  background: linear-gradient(180deg, #ffffff, #fbfbfb);
+  box-shadow: 0 6px 16px rgba(0,0,0,0.06); /* Reduced shadow */
+  transition: transform 240ms cubic-bezier(.2,.9,.2,1), box-shadow 240ms ease, filter 240ms ease;
+  overflow: hidden;
+  aspect-ratio: 1 / 1;
+  min-height: 100px; /* Reduced from 140px */
+  margin: 0 auto;
+  width: calc(100% - 8px); /* Reduced from calc(100% - 12px) */
+}
+
+@media (min-width: 768px) {
+  .content {
+    min-height: 160px;
+    padding: 16px;
+    gap: 10px;
+    width: 100%;
+    border-radius: 12px;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.06);
+  }
+}
+
+/* Image area */
+.media {
+  width: 46.8%;
+  height: 46.8%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 6px auto 0; /* Reduced from 8px */
+}
+
+@media (min-width: 768px) {
+  .media {
+    width: 58%;
+    height: 58%;
+    margin: 4px auto 0;
+  }
+}
+
+.image {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  max-height: 70px; /* Reduced from 75px */
+  border-radius: 6px; /* Slightly smaller */
+  transition: transform 240ms ease, box-shadow 240ms ease;
+  box-shadow: 0 3px 10px rgba(0,0,0,0.06); /* Reduced */
+}
+
+@media (min-width: 768px) {
+  .image {
+    max-height: 110px;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+  }
+}
+
+.card:hover .image {
+  transform: translateY(-4px) scale(1.02);
+}
+
+/* Text area */
+.text {
+  text-align: center;
+  padding: 6px 4px 2px; /* Reduced padding */
+  width: 100%;
+  margin-top: auto;
+}
+
+.title {
+  margin: 0;
+  font-size: 0.8rem; /* Reduced from 0.85rem */
+  line-height: 1.15; /* Tighter */
+  color: #111827;
+  font-weight: 700;
+  padding: 0 2px; /* Reduced padding */
+}
+
+@media (min-width: 768px) {
+  .title {
+    font-size: 1rem;
+    line-height: 1.2;
+    padding: 0;
+  }
+}
+
+.subtitle {
+  margin: 3px 0 0; /* Reduced margin */
+  color: #6b7280;
+  font-size: 0.7rem; /* Smaller */
+  padding: 0 2px; /* Reduced */
+}
+
+@media (min-width: 768px) {
+  .subtitle {
+    font-size: 0.8rem;
+    margin: 4px 0 0;
+    padding: 0;
+  }
+}
+
+/* Glow effect */
+.glow {
+  position: absolute;
+  z-index: 1;
+  width: 50%; /* Smaller */
+  height: 40%; /* Smaller */
+  right: -5%; /* Adjusted */
+  bottom: -7%; /* Adjusted */
+  pointer-events: none;
+  border-radius: 12px;
+  filter: blur(14px); /* Reduced */
+  opacity: 0.1; /* Reduced */
+  background: radial-gradient(60% 60% at 30% 30%, rgba(220,20,60,0.22), rgba(255,70,90,0.06) 50%, transparent 60%);
+  transform: translateZ(0);
+  transition: opacity 240ms ease, transform 240ms ease;
+}
+
+@media (min-width: 768px) {
+  .glow {
+    width: 55%;
+    height: 45%;
+    right: -6%;
+    bottom: -8%;
+    filter: blur(16px);
+    opacity: 0.12;
+  }
+}
+
+/* Hover effects */
+.card:hover .content,
+.card:focus .content {
+  transform: translateY(-4px); /* Reduced lift for mobile */
+  box-shadow: 0 12px 24px rgba(0,0,0,0.12), 0 4px 12px rgba(220,20,60,0.04);
+}
+
+@media (min-width: 768px) {
+  .card:hover .content,
+  .card:focus .content {
+    transform: translateY(-8px);
+    box-shadow: 0 16px 32px rgba(0,0,0,0.12), 0 6px 18px rgba(220,20,60,0.04);
+  }
+}
+
+.card:active .content {
+  transform: translateY(-2px) scale(0.996);
+  box-shadow: 0 6px 14px rgba(0,0,0,0.08);
+  transition-duration: 120ms;
+}
+
+.card:hover .glow,
+.card:focus .glow {
+  opacity: 0.15; /* Reduced */
+  transform: scale(1.02);
+}
+
+@media (min-width: 768px) {
+  .card:hover .glow,
+  .card:focus .glow {
+    opacity: 0.18;
+  }
+}
+
+/* Accessibility */
+.card:focus-visible .content {
+  outline: 2px solid rgba(99,102,241,0.10);
+  outline-offset: 2px;
+}

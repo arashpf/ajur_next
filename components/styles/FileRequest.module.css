@@ -1,0 +1,21 @@
+.wrapper {
+    /* background-color: #BC85AC; */
+}
+
+
+
+@media (max-width: 600px) {
+
+    .entroImg {
+        width: 100%;
+        padding: 50px;
+    }
+}
+
+@media (min-width: 600px) {
+
+    .entroImg {
+        max-width: 300px;
+        padding: 20px;
+    }
+}

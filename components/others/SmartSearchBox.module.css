@@ -1,0 +1,179 @@
+.searchboxContainer {
+  position: relative;
+  width: 100%;
+  padding: 16px;
+  max-width: 1400px;
+  border-radius: 50px;
+  background: rgba(255, 255, 255, 0.07);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  z-index: 1;
+  overflow: hidden;
+}
+
+
+.navar-brand-center {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 8px 0;
+}
+
+
+.searchboxContainer::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 50px;
+  padding: 3px; /* controls thickness of border */
+  background: linear-gradient(270deg, rgb(121, 16, 16), #ac460b, #a18400 );
+  background-size: 600% 600%;
+  animation: animatedBorder 8s linear infinite;
+
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask-composite: exclude;
+  -webkit-mask-composite: xor;
+}
+
+@keyframes animatedBorder {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+
+.searchboxInput {
+  width: 100%;
+  padding: 14px 18px;
+  font-size: 1.05em;
+  font-weight: 500;
+  color: #fff;
+  background: rgba(255, 255, 255, 0.05);
+  border: none;
+  border-radius: 40px;
+  outline: none;
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  box-shadow: inset 0 1px 4px rgba(255, 255, 255, 0.1);
+  transition: background 0.3s ease;
+}
+
+.searchboxInput::placeholder {
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.searchboxInput:focus {
+  background: rgba(255, 255, 255, 0.1);
+  box-shadow: 0 0 6px rgba(255, 255, 255, 0.2);
+}
+
+.loader {
+  margin-top: 10px;
+  text-align: center;
+}
+
+.suggestionList {
+  margin-top: 10px;
+  padding: 8px 12px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+  list-style: none;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
+}
+
+.suggestionItem {
+  padding: 6px 8px;
+  cursor: pointer;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  color: #eee;
+  transition: background 0.2s ease;
+}
+
+.suggestionItem:hover {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.chipContainer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.chip {
+  background: rgba(255, 255, 255, 0.2);
+  padding: 5px 10px;
+  border-radius: 18px;
+  font-size: 0.9em;
+  color: #fff;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+
+.debugBox {
+  margin-top: 24px;
+  font-size: 0.9em;
+  color: #fff;
+  padding: 12px;
+  background: rgba(0, 0, 0, 0.4);
+  border-radius: 10px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.05);
+}
+.resultsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
+  margin-top: 24px;
+}
+
+.resultCard {
+  background: #fff;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  text-align: center;
+}
+
+.resultCard img {
+  width: 100%;
+  height: 180px;
+  object-fit: cover;
+}
+
+.resultCard h3 {
+  margin: 12px 0 8px;
+  font-size: 1.1em;
+}
+
+.resultCard p {
+  margin: 4px 0;
+  font-size: 0.9em;
+}
+
+.suggestionList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+  padding: 0;
+  list-style: none;
+}
+
+.suggestionItem {
+  background-color: #eeeeee;
+  color: #222; /* ✅ Add this line */
+  padding: 6px 12px;
+  border-radius: 20px;
+  cursor: pointer;
+  font-size: 0.9em;
+  white-space: nowrap;
+  list-style: none;
+  transition: background-color 0.2s ease;
+}
+
+
+.suggestionItem:hover {
+  background-color: #ddd;
+}

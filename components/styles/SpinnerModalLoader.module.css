@@ -1,0 +1,36 @@
+.spinner-modal-wrapper {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 20000;
+  width: 100%;
+  box-sizing: border-box;
+  /* optional semi-transparent backdrop can be toggled if desired */
+  /* background: rgba(0,0,0,0.36); */
+}
+
+.spinner-modal-single {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.spinner-box {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 160px;
+  height: 160px;
+}
+
+@media (max-width: 480px) {
+  .spinner-box {
+    width: 112px;
+    height: 112px;
+  }
+}
+  

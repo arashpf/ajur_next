@@ -1,0 +1,78 @@
+.appBanner {
+  position: fixed;
+  top: 10%;
+  left: 10px;
+  right: 10px;
+  background: linear-gradient(to right, #bc323a, #9c1f26); /* Updated Gradient */
+  color: white;
+  padding: 15px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
+  animation: slideUp 0.5s ease-in-out;
+  z-index: 10000;
+  direction: rtl; /* RTL Support */
+  font-family: "Tahoma", sans-serif;
+
+}
+
+.bannerContent {
+  flex-grow: 1;
+  text-align: right;
+  padding-right: 10px;
+}
+
+.bannerContent h3 {
+  font-size: 16px;
+  margin: 0;
+}
+
+.bannerContent p {
+  font-size: 12px;
+  margin: 5px 0 0;
+  opacity: 0.8;
+}
+
+.downloadBtn {
+  background: white;
+  color: #bc323a;
+  padding: 8px 14px;
+  border-radius: 8px;
+  text-decoration: none;
+  font-weight: bold;
+  transition: background 0.3s;
+  white-space: nowrap; /* Prevents breaking of "نصب میکنم" */
+  margin-left: 10px; /* Adds spacing between close button and install button */
+}
+
+.downloadBtn:hover {
+  background: #f1f1f1;
+}
+
+.closeBtn {
+  background: transparent;
+  border: none;
+  color: white;
+  font-size: 20px;
+  cursor: pointer;
+  transition: color 0.3s;
+  margin-right: 10px; /* Added spacing between close button and install button */
+}
+
+.closeBtn:hover {
+  color: #ffcccb;
+}
+
+/* Slide-up animation */
+@keyframes slideUp {
+  from {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}

@@ -1,0 +1,134 @@
+@font-face {
+  font-family: 'iransans';
+  font-weight: 500;
+  src: local('components/fonts'), url(../fonts/iran-sans.ttf) format('ttf');
+}
+
+.title h2 {
+  color: #444;
+}
+
+.title {
+  padding: 20px;
+  margin: 20px;
+}
+
+.main-row {
+  background-color: #F9f9f9;
+  height: auto;
+  padding: 50px 40px;
+
+}
+
+.spinnerView {
+  display: flex;
+  justify-content: center;
+  position: absolute;
+  top: calc(50% - 2em);
+  left: calc(50% - 2em);
+.spinner-image {
+  /* Responsive sizing: keeps intrinsic GIF ratio while scaling with viewport */
+  width: clamp(180px, 30vw, 720px);
+  max-width: 98vw;
+  height: auto;
+  margin: auto;
+  display: block;
+  object-fit: contain;
+}
+  position: relative;
+  padding: 0;
+  margin: 0;
+  font-family: "iransans", sans-serif;
+  font-weight: 300;
+  font-size: 24px;
+  color: #f9f9f9;
+  -webkit-transition: all 0.4s ease 0s;
+  -o-transition: all 0.4s ease 0s;
+  transition: all 0.4s ease 0s;
+
+}
+
+h2 span {
+  display: block;
+  font-size: 0.5em;
+  line-height: 1.3;
+}
+
+h2 em {
+  font-style: normal;
+  font-weight: 600;
+}
+
+
+.eight h2 {
+  text-align: center;
+
+  text-transform: uppercase;
+  font-size: 26px;
+  letter-spacing: 1px;
+
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  grid-template-rows: 16px 0;
+  grid-gap: 22px;
+}
+
+.eight h2:after,
+.eight h2:before {
+  content: " ";
+  display: block;
+  border-bottom: 2px solid #ccc;
+  background-color: #f8f8f8;
+}
+
+
+.twelve h2 {
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  width: 160px;
+  text-align: center;
+  margin: auto;
+  white-space: nowrap;
+  padding-bottom: 13px;
+}
+
+.twelve h2:before {
+  background-color: #666;
+  content: '';
+  display: block;
+  height: 3px;
+  width: 75px;
+  margin-bottom: 5px;
+}
+
+.twelve h2:after {
+  background-color: #666;
+  content: '';
+  display: block;
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  height: 3px;
+  width: 75px;
+  margin-bottom: 0.25em;
+}
+
+.spinnerImageView {
+
+  display: flex;
+  height: 100vh;
+  /* Or whatever */
+
+}
+
+.spinner-image {
+  /* Responsive sizing: keeps intrinsic GIF ratio while scaling with viewport */
+  width: clamp(120px, 24vw, 480px);
+  max-width: 95vw;
+  height: auto;
+  margin: auto;
+  display: block;
+  object-fit: contain;
+}

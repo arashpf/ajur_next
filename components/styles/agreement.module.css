@@ -1,0 +1,60 @@
+/* agreement.module.css */
+
+.wrapper {
+    text-align: right;
+    padding-bottom: 150px; /* Added for button space */
+}
+
+@media (min-width: 600px) {
+    .wrapper {
+        padding: 50px;
+        padding-bottom: 150px; /* Ensure enough space for button */
+    }
+}
+
+@media (max-width: 600px) {
+    .wrapper {
+        padding: 20px;
+        padding-bottom: 120px; /* Increased for mobile */
+    }
+}
+
+/* Sticky button container */
+.stickyButtonContainer {
+    position: sticky;
+    bottom: 20px;
+    margin-top: 30px;
+    z-index: 100;
+    background: white;
+    padding: 20px;
+    border-top: 1px solid #e0e0e0;
+    box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.08);
+}
+
+/* For mobile screens */
+@media (max-width: 600px) {
+    .stickyButtonContainer {
+        position: fixed;
+        bottom: 55px; /* Increased from 0 to push it above footer */
+        left: 0;
+        right: 0;
+        margin-top: 0;
+        padding: 15px;
+        border-radius: 0;
+        border-top: 1px solid #e0e0e0;
+        box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.1);
+        z-index: 9999; /* Very high z-index */
+    }
+}
+
+/* Optional: Add a gradient fade effect */
+.stickyButtonContainer::before {
+    content: '';
+    position: absolute;
+    top: -30px;
+    left: 0;
+    right: 0;
+    height: 30px;
+    background: linear-gradient(to top, rgba(255,255,255,1), rgba(255,255,255,0));
+    pointer-events: none;
+}

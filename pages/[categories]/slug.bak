@@ -1,0 +1,2934 @@
+import React, {
+  useState,
+  useEffect,
+  useMemo,
+  useCallback,
+  useRef,
+} from "react";
+import PropTypes from "prop-types";
+import { useRouter } from "next/router";
+import Head from "next/head";
+import Script from "next/script";
+import Styles from "../../styles/CategoriesWorkersIndex.module.css";
+import Grid from "@mui/material/Grid";
+import Box from "@mui/material/Box";
+import WorkerCard from "../../components/cards/WorkerCard";
+import Link from "next/link";
+import WorkerFilter from "../../components/WorkerFilter";
+import { useMediaQuery, useTheme } from "@mui/material";
+import Breadcrumbs from "@mui/material/Breadcrumbs";
+import HomeIcon from "@mui/icons-material/Home";
+import LocationOnIcon from "@mui/icons-material/LocationOn";
+import CategoryIcon from "@mui/icons-material/Category";
+import Button from "@mui/material/Button";
+import CircularProgress from "@mui/material/CircularProgress";
+import Alert from "@mui/material/Alert";
+import Skeleton from "@mui/material/Skeleton";
+import axios from "axios";
+import dynamic from "next/dynamic";
+import { getPersianCityName } from "../../components/util/cityNames";
+
+const FileRequest = dynamic(() => import("../../components/request/FileRequest"), {
+  ssr: false,
+  loading: () => <div className="section-skeleton" />,
+});
+
+const MemoizedWorkerCard = React.memo(WorkerCard, (prevProps, nextProps) => {
+  return prevProps.worker.id === nextProps.worker.id;
+});
+
+const CardSkeleton = () => (
+  <Grid item xs={12} sm={6} md={4}>
+    <Skeleton
+      variant="rectangular"
+      height={200}
+      sx={{ borderRadius: 2, mb: 1 }}
+    />
+    <Skeleton variant="text" sx={{ fontSize: "1rem" }} />
+    <Skeleton variant="text" sx={{ fontSize: "1rem", width: "60%" }} />
+  </Grid>
+);
+
+function normalizePriceToIRR(price) {
+  if (!price) return null;
+  const n = String(price).replace(/[^0-9]/g, "");
+  return n ? n : null;
+}
+
+function getSingleParam(value) {
+  if (Array.isArray(value)) return value[0] || "";
+  return value || "";
+}
+
+function getSlugArray(slug) {
+  if (Array.isArray(slug)) return slug;
+  if (slug) return [slug];
+  return [];
+}
+
+function isMultiNeighborhoodValue(value) {
+  return String(value || "").includes(",");
+}
+
+function cleanRouterQuery(query = {}) {
+  const cleaned = { ...query };
+  delete cleaned.categories;
+  delete cleaned.slug;
+  return cleaned;
+}
+
+function findNeighborhoodBySlugOrId(neighborhoods, value) {
+  if (!value || !Array.isArray(neighborhoods)) return null;
+  const stringValue = String(value);
+
+  if (stringValue.includes(",")) return null;
+
+  return (
+    neighborhoods.find((item) => {
+      return (
+        String(item?.id) === stringValue ||
+        String(item?.eng_name || "") === stringValue ||
+        String(item?.slug || "") === stringValue ||
+        String(item?.value || "") === stringValue ||
+        String(item?.name || "") === stringValue ||
+        String(item?.title || "") === stringValue
+      );
+    }) || null
+  );
+}
+
+function getNeighborhoodDisplayName(neighborhoods, value) {
+  const found = findNeighborhoodBySlugOrId(neighborhoods, value);
+  return found?.name || found?.title || "";
+}
+
+function buildWorkersApiUrl({
+  catname,
+  city,
+  page = 1,
+  per_page = 10,
+  query = {},
+  finalNeighborhoodId = "",
+}) {
+  let apiUrl = `https://api.ajur.app/api/server-filtered-workers?catname=${encodeURIComponent(
+    catname
+  )}&city=${encodeURIComponent(city)}&page=${page}&per_page=${per_page}`;
+
+  if (query.categoryId) {
+    apiUrl += `&category_id=${encodeURIComponent(getSingleParam(query.categoryId))}`;
+  }
+
+  if (query.features) {
+    apiUrl += `&features=${encodeURIComponent(getSingleParam(query.features))}`;
+  }
+
+  if (finalNeighborhoodId) {
+    apiUrl += `&neighborhoods=${encodeURIComponent(finalNeighborhoodId)}`;
+  }
+
+  Object.keys(query).forEach((key) => {
+    if (key.includes("_min") || key.includes("_max")) {
+      apiUrl += `&${key}=${encodeURIComponent(getSingleParam(query[key]))}`;
+    }
+  });
+
+  if (query.sortBy && query.sortBy !== "newest") {
+    const sortMap = {
+      newest: "created_at_desc",
+      oldest: "created_at_asc",
+      most_viewed: "total_view_desc",
+    };
+
+    const [field, order] = sortMap[query.sortBy]?.split("_") || [
+      "created_at",
+      "desc",
+    ];
+
+    apiUrl += `&sort_by=${field}&sort_order=${order}`;
+  }
+
+  return apiUrl;
+}
+
+function stripTrailingSlash(url) {
+  return String(url || "").replace(/\/+$/, "");
+}
+
+function safePathSegment(v) {
+  return encodeURIComponent(String(v || "").trim());
+}
+
+function buildCanonical({
+  city,
+  category,
+  neighborhoodSlug,
+  hasMultipleNeighborhoods,
+  hasQueryNeighborhood,
+}) {
+  const validCity = city || "tehran";
+  const validCategory = category || "";
+
+  if (!validCategory) return `https://ajur.app/${safePathSegment(validCity)}`;
+
+  if (neighborhoodSlug && !hasMultipleNeighborhoods && !hasQueryNeighborhood) {
+    return `https://ajur.app/${safePathSegment(validCity)}/${safePathSegment(
+      validCategory
+    )}/${safePathSegment(neighborhoodSlug)}`;
+  }
+
+  return `https://ajur.app/${safePathSegment(validCity)}/${safePathSegment(validCategory)}`;
+}
+
+function buildWebPageJsonLd({ canonicalUrl, seoTitle, seoDescription }) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "WebPage",
+    "@id": `${stripTrailingSlash(canonicalUrl)}#webpage`,
+    url: canonicalUrl,
+    name: seoTitle,
+    description: seoDescription,
+    inLanguage: "fa-IR",
+    isPartOf: {
+      "@type": "WebSite",
+      "@id": "https://ajur.app/#website",
+      url: "https://ajur.app/",
+      name: "آجر - مشاور املاک هوشمند",
+    },
+  };
+}
+
+function buildOrganizationJsonLd() {
+  return {
+    "@context": "https://schema.org",
+    "@type": "RealEstateAgent",
+    "@id": "https://ajur.app/#realestateagent",
+    name: "آجر",
+    url: "https://ajur.app/",
+    logo: {
+      "@type": "ImageObject",
+      url: "https://api.ajur.app/logo/og-default.jpg",
+    },
+    sameAs: [],
+  };
+}
+
+const SingleCategory = ({
+  initialWorkers = [],
+  initialSpecialWorkers = [],
+  initialPagination = {
+    current_page: 1,
+    per_page: 10,
+    total_count: 0,
+    total_pages: 1,
+  },
+  initialDetails = {},
+  initialMainCats = [],
+  initialNeighborhoods = [],
+  initialSeoNeighborhoods = [],
+  initialError = false,
+  initialErrorMessage = "",
+  cityFromServer,
+  nameFromServer,
+  neighborhoodFromServer,
+}) => {
+  const router = useRouter();
+  const routerSlugArray = getSlugArray(router.query?.slug);
+
+  const city = useMemo(() => {
+    const routeCity = router.isReady
+      ? getSingleParam(router.query?.categories)
+      : "";
+    return routeCity || cityFromServer || "tehran";
+  }, [router.isReady, router.query?.categories, cityFromServer]);
+
+  const slugName = useMemo(() => {
+    const routeSlug = router.isReady ? routerSlugArray[0] : "";
+    return routeSlug || nameFromServer || "";
+  }, [router.isReady, routerSlugArray, nameFromServer]);
+
+  const routeNeighborhoodSlug = useMemo(() => {
+    const fromRoute = router.isReady ? routerSlugArray[1] || "" : "";
+    return fromRoute || (!router.isReady ? neighborhoodFromServer || "" : "");
+  }, [router.isReady, routerSlugArray, neighborhoodFromServer]);
+
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("md"));
+
+  const firstClientFetchSkippedRef = useRef(false);
+  const hasRestoredScrollRef = useRef(false);
+
+  const [workersState, set_workers] = useState(initialWorkers);
+  const [SpecialworkersState, set_special_workers] = useState(initialSpecialWorkers);
+  const [pagination, setPagination] = useState(initialPagination);
+
+  const [filterLoading, setFilterLoading] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
+
+  const [error, setError] = useState(initialError);
+  const [errorMessage, setErrorMessage] = useState(initialErrorMessage);
+
+  const [details, setDetails] = useState(initialDetails);
+  const [main_cats] = useState(initialMainCats);
+  const [neighborhoods] = useState(initialNeighborhoods);
+  const [seoNeighborhoods, setSeoNeighborhoods] = useState(initialSeoNeighborhoods);
+
+  const [activeFilterCount, setActiveFilterCount] = useState(0);
+  const [y_scroll, set_y_scroll] = useState(0);
+
+  const persian_city = useMemo(() => getPersianCityName(city), [city]);
+
+  const persian_category_name =
+    details?.name ||
+    main_cats.find((c) => c.eng_name === slugName)?.name ||
+    "";
+
+  const queryNeighborhood = getSingleParam(router.query?.neighborhoods);
+  const hasQueryNeighborhood = Boolean(queryNeighborhood);
+  const hasMultipleNeighborhoods = isMultiNeighborhoodValue(queryNeighborhood);
+
+  const activeNeighborhoodValue = hasQueryNeighborhood
+    ? queryNeighborhood
+    : routeNeighborhoodSlug;
+
+  const neighborhoodObject = useMemo(() => {
+    return findNeighborhoodBySlugOrId(neighborhoods, activeNeighborhoodValue);
+  }, [neighborhoods, activeNeighborhoodValue]);
+
+  const neighborhoodId = useMemo(() => {
+    if (hasQueryNeighborhood) return queryNeighborhood;
+    if (neighborhoodObject?.id) return neighborhoodObject.id;
+    return "";
+  }, [hasQueryNeighborhood, queryNeighborhood, neighborhoodObject]);
+
+  const neighborhoodName = useMemo(() => {
+    if (hasMultipleNeighborhoods) return "";
+    if (neighborhoodObject?.name) return neighborhoodObject.name;
+    if (neighborhoodObject?.title) return neighborhoodObject.title;
+    return getNeighborhoodDisplayName(neighborhoods, activeNeighborhoodValue);
+  }, [
+    hasMultipleNeighborhoods,
+    neighborhoodObject,
+    neighborhoods,
+    activeNeighborhoodValue,
+  ]);
+
+  const neighborhoodDescription = useMemo(() => {
+    if (hasMultipleNeighborhoods) return "";
+    if (!neighborhoodObject) return "";
+    return (
+      neighborhoodObject?.description ||
+      neighborhoodObject?.desc ||
+      neighborhoodObject?.content ||
+      ""
+    );
+  }, [neighborhoodObject, hasMultipleNeighborhoods]);
+
+  const totalCount = useMemo(
+    () => pagination.total_count || workersState.length,
+    [pagination, workersState]
+  );
+
+  const hasMore = useMemo(() => {
+    return pagination.current_page < pagination.total_pages;
+  }, [pagination]);
+
+  const canonicalUrl = useMemo(() => {
+    return buildCanonical({
+      city,
+      category: slugName,
+      neighborhoodSlug: routeNeighborhoodSlug,
+      hasMultipleNeighborhoods,
+      hasQueryNeighborhood,
+    });
+  }, [
+    city,
+    slugName,
+    routeNeighborhoodSlug,
+    hasMultipleNeighborhoods,
+    hasQueryNeighborhood,
+  ]);
+
+  const scrollStorageKey = useMemo(() => {
+    return `category_scroll:${city}:${slugName}:${routeNeighborhoodSlug}:${JSON.stringify(
+      cleanRouterQuery(router.query || {})
+    )}`;
+  }, [city, slugName, routeNeighborhoodSlug, router.query]);
+
+  const appliedFiltersForWorkerFilter = useMemo(() => {
+    if (neighborhoodId) {
+      return {
+        ...(router.query || {}),
+        neighborhoods: String(neighborhoodId),
+      };
+    }
+    return router.query || {};
+  }, [router.query, neighborhoodId]);
+
+  const finalSeoNeighborhoods = useMemo(() => {
+    if (seoNeighborhoods && seoNeighborhoods.length > 0) {
+      return seoNeighborhoods;
+    }
+    if (!neighborhoods || neighborhoods.length === 0) return [];
+
+    return neighborhoods.map((n) => ({
+      city_slug: city,
+      cat_slug: slugName,
+      cat_name: persian_category_name || "آگهی املاک",
+      neighborhood_slug: n.eng_name || n.slug || n.id,
+      neighborhood_name: n.name || n.title,
+    }));
+  }, [seoNeighborhoods, neighborhoods, city, slugName, persian_category_name]);
+
+  const saveCurrentScroll = useCallback(() => {
+    if (typeof window === "undefined") return;
+    try {
+      sessionStorage.setItem(scrollStorageKey, String(window.scrollY || 0));
+    } catch (e) {
+      console.error("Scroll save error:", e);
+    }
+  }, [scrollStorageKey]);
+
+  const handleCardClick = () => {
+    saveCurrentScroll();
+  };
+
+  useEffect(() => {
+    if (!router.isReady) return;
+
+    const onRouteChangeStart = () => {
+      saveCurrentScroll();
+    };
+
+    router.events.on("routeChangeStart", onRouteChangeStart);
+    window.addEventListener("beforeunload", saveCurrentScroll);
+
+    return () => {
+      router.events.off("routeChangeStart", onRouteChangeStart);
+      window.removeEventListener("beforeunload", saveCurrentScroll);
+    };
+  }, [router.isReady, router.events, saveCurrentScroll]);
+
+  useEffect(() => {
+    if (!router.isReady) return;
+    if (hasRestoredScrollRef.current) return;
+    if (filterLoading) return;
+
+    const workersReady = (workersState && workersState.length > 0) || error;
+    if (!workersReady) return;
+
+    const savedScroll = sessionStorage.getItem(scrollStorageKey);
+    if (!savedScroll) return;
+
+    const scrollY = parseInt(savedScroll, 10);
+    if (!Number.isFinite(scrollY)) return;
+
+    hasRestoredScrollRef.current = true;
+
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        window.scrollTo(0, scrollY);
+      });
+    });
+  }, [router.isReady, filterLoading, workersState, error, scrollStorageKey]);
+
+  useEffect(() => {
+    hasRestoredScrollRef.current = false;
+  }, [scrollStorageKey]);
+
+  useEffect(() => {
+    if (!router.isReady) return;
+    if (!routeNeighborhoodSlug) return;
+    if (!hasMultipleNeighborhoods) return;
+    if (!slugName || !city) return;
+
+    const cleanedQuery = cleanRouterQuery(router.query);
+
+    router.replace(
+      {
+        pathname: `/${city}/${slugName}`,
+        query: {
+          ...cleanedQuery,
+          page: cleanedQuery.page || 1,
+          neighborhoods: queryNeighborhood,
+        },
+      },
+      undefined,
+      { shallow: true, scroll: false }
+    );
+  }, [
+    router.isReady,
+    router.query,
+    routeNeighborhoodSlug,
+    hasMultipleNeighborhoods,
+    city,
+    slugName,
+    queryNeighborhood,
+    router,
+  ]);
+
+  useEffect(() => {
+    if (!router.isReady) return;
+    if (!slugName || !city) return;
+
+    if (!firstClientFetchSkippedRef.current) {
+      firstClientFetchSkippedRef.current = true;
+      return;
+    }
+
+    if (routeNeighborhoodSlug && hasMultipleNeighborhoods) return;
+
+    const fetchFilteredWorkers = async () => {
+      try {
+        setFilterLoading(true);
+        setError(false);
+        setErrorMessage("");
+
+        const query = router.query || {};
+        const page = query.page ? parseInt(getSingleParam(query.page), 10) : 1;
+        const per_page = pagination.per_page || 10;
+
+        const finalNeighborhoodId = queryNeighborhood || neighborhoodId || "";
+
+        const apiUrl = buildWorkersApiUrl({
+          catname: slugName,
+          city,
+          page,
+          per_page,
+          query,
+          finalNeighborhoodId,
+        });
+
+        const response = await axios.get(apiUrl, {
+          timeout: 8000,
+          headers: { Accept: "application/json" },
+        });
+
+        const data = response.data;
+
+        set_workers(data.workers || []);
+        set_special_workers(data.special_workers || []);
+        if (data.the_city_category_neighborhoods) {
+          setSeoNeighborhoods(data.the_city_category_neighborhoods);
+        }
+
+        setPagination(
+          data.pagination || {
+            current_page: page,
+            per_page,
+            total_count: data.workers?.length || 0,
+            total_pages: 1,
+          }
+        );
+
+        if (data?.filters_applied?.persian_category_name) {
+          setDetails({
+            name: data.filters_applied.persian_category_name,
+            id: data.filters_applied.category_id,
+          });
+        }
+      } catch (e) {
+        console.error("Client filter fetch error:", e);
+        setError(true);
+        setErrorMessage("خطا در دریافت اطلاعات. لطفا بعدا تلاش کنید.");
+      } finally {
+        setFilterLoading(false);
+      }
+    };
+
+    fetchFilteredWorkers();
+  }, [
+    router.isReady,
+    router.asPath,
+    slugName,
+    city,
+    routeNeighborhoodSlug,
+    hasMultipleNeighborhoods,
+    queryNeighborhood,
+    neighborhoodId,
+    pagination.per_page,
+  ]);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      set_y_scroll(window.scrollY);
+    };
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  const handleCategoryChange = (newCategory) => {
+    if (newCategory) {
+      router.push(
+        {
+          pathname: `/${city}/${newCategory.eng_name}`,
+        },
+        undefined,
+        { scroll: false }
+      );
+    } else {
+      router.push(`/${city}`, undefined, { scroll: false });
+    }
+  };
+
+  const loadMoreWorkers = useCallback(async () => {
+    if (loadingMore || !hasMore) return;
+
+    setLoadingMore(true);
+    const nextPage = pagination.current_page + 1;
+
+    try {
+      const query = router.query || {};
+      const finalNeighborhoodId = queryNeighborhood || neighborhoodId || "";
+
+      const apiUrl = buildWorkersApiUrl({
+        catname: slugName,
+        city,
+        page: nextPage,
+        per_page: pagination.per_page,
+        query,
+        finalNeighborhoodId,
+      });
+
+      const response = await axios.get(apiUrl, {
+        timeout: 8000,
+        headers: { Accept: "application/json" },
+      });
+
+      const data = response.data;
+
+      set_workers((prev) => {
+        const existingIds = new Set(prev.map((w) => w.id));
+        const newWorkers = (data.workers || []).filter((w) => !existingIds.has(w.id));
+        return [...prev, ...newWorkers];
+      });
+
+      setPagination(
+        data.pagination || {
+          current_page: nextPage,
+          per_page: pagination.per_page,
+          total_count: pagination.total_count,
+          total_pages: pagination.total_pages,
+        }
+      );
+    } catch (e) {
+      console.error("Error loading more workers:", e);
+    } finally {
+      setLoadingMore(false);
+    }
+  }, [
+    loadingMore,
+    hasMore,
+    pagination,
+    router.query,
+    slugName,
+    city,
+    queryNeighborhood,
+    neighborhoodId,
+  ]);
+
+  const seoTitle = useMemo(() => {
+    const categoryName = persian_category_name || slugName || "آگهی";
+    const cityName = persian_city || city || "تهران";
+
+    if (neighborhoodName) {
+      if (totalCount > 0) {
+        return `${categoryName} در ${neighborhoodName} ${cityName} | لیست ${totalCount} آگهی | آجر`;
+      }
+      return `${categoryName} در ${neighborhoodName} ${cityName} | آجر`;
+    }
+
+    if (totalCount > 0) {
+      return `${categoryName} در ${cityName} | لیست ${totalCount} آگهی | آجر`;
+    }
+
+    return `${categoryName} در ${cityName} | آجر`;
+  }, [persian_category_name, persian_city, neighborhoodName, totalCount, slugName, city]);
+
+  const seoDescription = useMemo(() => {
+    const categoryName = persian_category_name || slugName || "آگهی";
+    const cityName = persian_city || city || "تهران";
+
+    if (neighborhoodName && neighborhoodDescription) {
+      return neighborhoodDescription.slice(0, 155);
+    }
+
+    if (neighborhoodName) {
+      if (totalCount > 0) {
+        return `${totalCount} آگهی ${categoryName} در ${neighborhoodName} ${cityName}. جدیدترین فایل‌ها، قیمت‌ها و مشخصات را در آجر ببینید.`;
+      }
+      return `جدیدترین آگهی‌های ${categoryName} در ${neighborhoodName} ${cityName} در آجر.`;
+    }
+
+    if (totalCount > 0) {
+      return `${totalCount} آگهی ${categoryName} در ${cityName}. جدیدترین فایل‌ها، قیمت‌ها و مشخصات را در آجر ببینید.`;
+    }
+
+    return `جدیدترین آگهی‌های ${categoryName} در ${cityName} در آجر.`;
+  }, [
+    persian_category_name,
+    persian_city,
+    neighborhoodName,
+    neighborhoodDescription,
+    totalCount,
+    slugName,
+    city,
+  ]);
+
+  const seoImage = details?.avatar
+    ? `https://api.ajur.app/cats_image/${details.avatar}.jpg`
+    : "https://api.ajur.app/logo/og-default.jpg";
+
+  const breadcrumbJsonLd = useMemo(() => {
+    const displayName = persian_category_name || slugName || "آگهی";
+    const cityName = persian_city || city || "تهران";
+    const validCitySlug = city || "tehran";
+    const validCategorySlug = slugName || "";
+
+    const items = [
+      {
+        "@type": "ListItem",
+        position: 1,
+        name: "خانه",
+        item: "https://ajur.app/",
+      },
+      {
+        "@type": "ListItem",
+        position: 2,
+        name: cityName,
+        item: `https://ajur.app/${safePathSegment(validCitySlug)}`,
+      },
+    ];
+
+    if (validCategorySlug) {
+      items.push({
+        "@type": "ListItem",
+        position: 3,
+        name: displayName,
+        item: `https://ajur.app/${safePathSegment(validCitySlug)}/${safePathSegment(
+          validCategorySlug
+        )}`,
+      });
+    }
+
+    if (neighborhoodName && validCategorySlug) {
+      items.push({
+        "@type": "ListItem",
+        position: 4,
+        name: neighborhoodName,
+        item: canonicalUrl,
+      });
+    }
+
+    return {
+      "@context": "https://schema.org",
+      "@type": "BreadcrumbList",
+      itemListElement: items,
+    };
+  }, [persian_category_name, slugName, persian_city, city, neighborhoodName, canonicalUrl]);
+
+  const collectionJsonLd = useMemo(() => {
+    const items = (workersState || []).slice(0, 10).map((worker, index) => {
+      const price = normalizePriceToIRR(worker?.price || worker?.specialvalue2);
+      const image = worker?.thumb || worker?.image || seoImage;
+      const url = `https://ajur.app/worker/${worker.id}?slug=${worker.slug || ""}`;
+
+      return {
+        "@type": "ListItem",
+        position: index + 1,
+        url,
+        item: {
+          "@type": "RealEstateListing",
+          name: worker.name || `${persian_category_name} در ${persian_city}`,
+          url,
+          image,
+          ...(price
+            ? {
+                offers: {
+                  "@type": "Offer",
+                  price,
+                  priceCurrency: "IRR",
+                },
+              }
+            : {}),
+        },
+      };
+    });
+
+    return {
+      "@context": "https://schema.org",
+      "@type": "CollectionPage",
+      name: seoTitle,
+      description: seoDescription,
+      url: canonicalUrl,
+      mainEntity: {
+        "@type": "ItemList",
+        numberOfItems: totalCount,
+        itemListElement: items,
+      },
+    };
+  }, [
+    workersState,
+    seoTitle,
+    seoDescription,
+    canonicalUrl,
+    totalCount,
+    persian_category_name,
+    persian_city,
+    seoImage,
+  ]);
+
+  const webPageJsonLd = useMemo(() => {
+    return buildWebPageJsonLd({ canonicalUrl, seoTitle, seoDescription });
+  }, [canonicalUrl, seoTitle, seoDescription]);
+
+  const orgJsonLd = useMemo(() => buildOrganizationJsonLd(), []);
+
+  const renderBreadcrumb = () => {
+    const displayName = persian_category_name || slugName || "آگهی";
+    const cityName = persian_city || city || "تهران";
+
+    return (
+      <div
+        style={{
+          padding: "20px 20px",
+          paddingTop: isMobile ? "70px" : "1px",
+          marginBottom: "10px",
+          marginTop: "20px",
+          borderRadius: "8px",
+          boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
+        }}
+      >
+        <Breadcrumbs aria-label="breadcrumb" separator="›" sx={{ direction: "rtl" }}>
+          <Link href="/" passHref legacyBehavior>
+            <Box
+              component="a"
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                color: "#666",
+                textDecoration: "none",
+                fontSize: "14px",
+                "&:hover": { color: "#b92a31" },
+              }}
+            >
+              <HomeIcon sx={{ fontSize: "16px", ml: 0.5 }} />
+              خانه
+            </Box>
+          </Link>
+
+          <Link href={`/${city}`} passHref legacyBehavior>
+            <Box
+              component="a"
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                color: "#666",
+                textDecoration: "none",
+                fontSize: "14px",
+                "&:hover": { color: "#b92a31" },
+              }}
+            >
+              <LocationOnIcon sx={{ fontSize: "16px", ml: 0.5 }} />
+              {cityName}
+            </Box>
+          </Link>
+
+          {neighborhoodName && slugName ? (
+            <Link href={`/${city}/${slugName}`} passHref legacyBehavior>
+              <Box
+                component="a"
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  color: "#666",
+                  textDecoration: "none",
+                  fontSize: "14px",
+                  "&:hover": { color: "#b92a31" },
+                }}
+              >
+                <CategoryIcon sx={{ fontSize: "16px", ml: 0.5 }} />
+                {displayName}
+              </Box>
+            </Link>
+          ) : (
+            <Box
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                color: "#b92a31",
+                fontWeight: "500",
+                fontSize: "14px",
+              }}
+            >
+              <CategoryIcon sx={{ fontSize: "16px", ml: 0.5 }} />
+              {displayName}
+            </Box>
+          )}
+
+          {neighborhoodName && (
+            <Box
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                color: "#b92a31",
+                fontWeight: "500",
+                fontSize: "14px",
+              }}
+            >
+              <LocationOnIcon sx={{ fontSize: "16px", ml: 0.5 }} />
+              {neighborhoodName}
+            </Box>
+          )}
+        </Breadcrumbs>
+      </div>
+    );
+  };
+
+  const renderHeader = () => {
+    return (
+      <div
+        className={y_scroll > 250 ? Styles["header-wrapper"] : ""}
+        style={{
+          padding: y_scroll > 250 ? "10px 0" : "0",
+          backgroundColor: "white",
+          transition: "padding 0.3s ease",
+        }}
+      >
+        <Box sx={{ flexGrow: 0 }}>
+          <Grid container spacing={2}>
+            <Grid item xs={12}>
+              <WorkerFilter
+                workers={workersState}
+                onFilteredWorkersChange={set_workers}
+                onLoadingChange={setFilterLoading}
+                initialCategory={{
+                  id: details?.id,
+                  name: persian_category_name,
+                  value: details?.name,
+                }}
+                onCategoryChange={handleCategoryChange}
+                city={city}
+                appliedFilters={appliedFiltersForWorkerFilter}
+                onFilterCountChange={setActiveFilterCount}
+              />
+            </Grid>
+          </Grid>
+        </Box>
+      </div>
+    );
+  };
+
+  const renderSpecialWorkers = () => {
+    if (filterLoading) {
+      return (
+        <>
+          {[1, 2, 3].map((n) => (
+            <CardSkeleton key={n} />
+          ))}
+        </>
+      );
+    }
+
+    if (error) {
+      return (
+        <Grid item xs={12}>
+          <Alert severity="error">{errorMessage || "خطایی رخ داده است"}</Alert>
+        </Grid>
+      );
+    }
+
+    if (SpecialworkersState && SpecialworkersState.length > 0 && activeFilterCount < 1) {
+      return (
+        <>
+          {SpecialworkersState.map((worker) => (
+            <Grid
+              item
+              xs={12}
+              sm={6}
+              md={4}
+              key={`worker-${worker.id}`}
+              sx={{ display: "flex", justifyContent: "center" }}
+            >
+              <Link
+                href={`/worker/${worker.id}?slug=${worker.slug}`}
+                passHref
+                scroll={false}
+                style={{ width: "100%", textDecoration: "none" }}
+                onClick={handleCardClick}
+                prefetch={false}
+              >
+                <MemoizedWorkerCard worker={worker} />
+              </Link>
+            </Grid>
+          ))}
+        </>
+      );
+    }
+
+    return null;
+  };
+
+  const renderWorkers = () => {
+    if (filterLoading) {
+      return (
+        <>
+          {[1, 2, 3, 4, 5, 6].map((n) => (
+            <CardSkeleton key={n} />
+          ))}
+        </>
+      );
+    }
+
+    if (error) {
+      return (
+        <Grid item xs={12}>
+          <Alert severity="error">{errorMessage || "خطایی رخ داده است"}</Alert>
+        </Grid>
+      );
+    }
+
+    if (workersState && workersState.length > 0) {
+      return (
+        <>
+          {workersState.map((worker) => (
+            <Grid
+              item
+              xs={12}
+              sm={6}
+              md={4}
+              key={`worker-${worker.id}`}
+              sx={{ display: "flex", justifyContent: "center" }}
+            >
+              <Link
+                href={`/worker/${worker.id}?slug=${worker.slug}`}
+                passHref
+                scroll={false}
+                style={{ width: "100%", textDecoration: "none" }}
+                onClick={handleCardClick}
+                prefetch={false}
+              >
+                <MemoizedWorkerCard worker={worker} />
+              </Link>
+            </Grid>
+          ))}
+
+          {hasMore && (
+            <Grid item xs={12} sx={{ textAlign: "center", py: 4 }}>
+              {loadingMore ? (
+                <CircularProgress size={30} sx={{ color: "#b92a31" }} />
+              ) : (
+                <Button
+                  variant="outlined"
+                  onClick={loadMoreWorkers}
+                  sx={{
+                    color: "#b92a31",
+                    borderColor: "#b92a31",
+                    px: 4,
+                    py: 1,
+                  }}
+                >
+                  نمایش بیشتر
+                </Button>
+              )}
+            </Grid>
+          )}
+        </>
+      );
+    }
+
+    return (
+      <Grid item xs={12}>
+        <Box
+          sx={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            py: 5,
+          }}
+        >
+          <img
+            src="/logo/not-found.png"
+            alt="ملکی پیدا نشد"
+            width={200}
+            height={120}
+            loading="lazy"
+            style={{ opacity: 0.7 }}
+          />
+          <p style={{ marginTop: 20, color: "#666", fontSize: 16 }}>
+            متاسفانه موردی یافت نشد
+          </p>
+        </Box>
+
+        <FileRequest
+          onCallClick={() => {
+            window.location.href = "tel:+989382740488";
+          }}
+          onActionClick={() => router.push("/file-request")}
+        />
+      </Grid>
+    );
+  };
+
+  const h1Text = neighborhoodName
+    ? `${persian_category_name || "آگهی"} در ${neighborhoodName} ${persian_city || "تهران"}`
+    : `${persian_category_name || "آگهی"} در ${persian_city || "تهران"}`;
+
+  const introText = neighborhoodName
+    ? `لیست آگهی‌های ${persian_category_name || "آگهی"} در ${neighborhoodName} ${persian_city || "تهران"} به همراه قیمت، تصاویر و مشخصات. برای دیدن جزئیات هر فایل روی آن کلیک کنید.`
+    : `لیست آگهی‌های ${persian_category_name || "آگهی"} در ${persian_city || "تهران"} به همراه قیمت، تصاویر و مشخصات. برای دیدن جزئیات هر فایل روی آن کلیک کنید.`;
+
+  return (
+    <div className="realstate-contents-wrapper">
+      <Head>
+        <meta charSet="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <meta httpEquiv="Content-Language" content="fa" />
+
+        <title>{seoTitle}</title>
+        <meta name="description" content={seoDescription} />
+
+        <meta name="robots" content="index, follow, max-image-preview:large" />
+        <meta name="googlebot" content="index, follow, max-image-preview:large" />
+
+        <link rel="canonical" href={canonicalUrl} />
+
+        <meta property="og:locale" content="fa_IR" />
+        <meta property="og:type" content="website" />
+        <meta property="og:site_name" content="آجر - مشاور املاک هوشمند" />
+        <meta property="og:title" content={seoTitle} />
+        <meta property="og:description" content={seoDescription} />
+        <meta property="og:url" content={canonicalUrl} />
+        <meta property="og:image" content={seoImage} />
+        <meta property="og:image:width" content="1200" />
+        <meta property="og:image:height" content="630" />
+      </Head>
+
+      <Script
+        id="breadcrumb-jsonld"
+        type="application/ld+json"
+        strategy="afterInteractive"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
+      />
+
+      <Script
+        id="collection-jsonld"
+        type="application/ld+json"
+        strategy="afterInteractive"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(collectionJsonLd) }}
+      />
+
+      <Script
+        id="webpage-jsonld"
+        type="application/ld+json"
+        strategy="afterInteractive"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(webPageJsonLd) }}
+      />
+
+      <Script
+        id="organization-jsonld"
+        type="application/ld+json"
+        strategy="afterInteractive"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(orgJsonLd) }}
+      />
+
+      <div className={Styles["realstate-items-wrapper"]}>
+        <div className={Styles["main-wrapper"]}>
+          {renderHeader()}
+          {renderBreadcrumb()}
+
+          <Box
+            sx={{
+              px: { xs: 2, sm: 3 },
+              mt: 1,
+              mb: 2,
+              textAlign: "center",
+              direction: "rtl",
+            }}
+          >
+            <Box
+              component="h1"
+              sx={{
+                m: 0,
+                mb: 1,
+                fontWeight: 700,
+                lineHeight: 1.4,
+                fontSize: { xs: "18px", sm: "20px" },
+                color: "#111",
+              }}
+            >
+              {h1Text}
+            </Box>
+
+            <Box
+              component="p"
+              sx={{
+                m: 0,
+                mx: "auto",
+                maxWidth: 720,
+                color: "text.secondary",
+                lineHeight: 1.9,
+                fontSize: { xs: "12.5px", sm: "13.5px" },
+              }}
+            >
+              {introText}
+            </Box>
+
+            {neighborhoodDescription && (
+              <Box
+                sx={{
+                  mt: 3,
+                  mx: "auto",
+                  maxWidth: 850,
+                  p: 3,
+                  borderRadius: 2,
+                  backgroundColor: "#fafafa",
+                  border: "1px solid #eee",
+                  textAlign: "right",
+                  direction: "rtl",
+                  lineHeight: 2,
+                  fontSize: { xs: "13px", sm: "14px" },
+                  color: "#444",
+                }}
+              >
+                {neighborhoodDescription}
+              </Box>
+            )}
+          </Box>
+
+          <Box sx={{ flexGrow: 1, py: 3, px: { xs: 2, sm: 3 } }}>
+            <Grid
+              container
+              spacing={{ xs: 2, sm: 3 }}
+              justifyContent={{ xs: "center", sm: "flex-start" }}
+            >
+              {renderSpecialWorkers()}
+            </Grid>
+          </Box>
+
+          <Box sx={{ flexGrow: 1, py: 3, px: { xs: 2, sm: 3 } }}>
+            <Grid
+              container
+              spacing={{ xs: 2, sm: 3 }}
+              justifyContent={{ xs: "center", sm: "flex-start" }}
+            >
+              {renderWorkers()}
+            </Grid>
+          </Box>
+
+          <Box
+            sx={{
+              display: "flex",
+              flexWrap: "wrap",
+              gap: 1.5,
+              mt: 2,
+              direction: "rtl",
+            }}
+          >
+            {finalSeoNeighborhoods.map((item, index) => (
+              <Link
+                key={index}
+                href={`/${item.city_slug}/${item.cat_slug}/${item.neighborhood_slug}`}
+                style={{ textDecoration: "none" }}
+              >
+                <Box
+                  sx={{
+                    px: 2,
+                    py: 1,
+                    borderRadius: "8px",
+                    backgroundColor: "#f5f5f5",
+                    border: "1px solid #e0e0e0",
+                    fontSize: "13.5px",
+                    color: "#333",
+                    transition: "all 0.2s ease",
+                    "&:hover": {
+                      backgroundColor: "#b92a31",
+                      color: "#fff",
+                      borderColor: "#b92a31",
+                    },
+                  }}
+                >
+                  {item.cat_name} در {item.neighborhood_name}
+                </Box>
+              </Link>
+            ))}
+          </Box>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default SingleCategory;
+
+SingleCategory.propTypes = {
+  initialWorkers: PropTypes.array,
+  initialSpecialWorkers: PropTypes.array,
+  initialPagination: PropTypes.object,
+  initialDetails: PropTypes.object,
+  initialMainCats: PropTypes.array,
+  initialNeighborhoods: PropTypes.array,
+  initialSeoNeighborhoods: PropTypes.array,
+  initialError: PropTypes.bool,
+  initialErrorMessage: PropTypes.string,
+  cityFromServer: PropTypes.string,
+  nameFromServer: PropTypes.string,
+  neighborhoodFromServer: PropTypes.string,
+};
+
+export async function getServerSideProps(context) {
+  const { categories, slug = [] } = context.params || {};
+
+  const slugArray = Array.isArray(slug) ? slug : [];
+
+  const city = categories || "tehran";
+  const catname = slugArray[0] || "";
+  const neighborhoodSlug = slugArray[1] || "";
+
+  const query = context.query || {};
+  const page = query.page ? parseInt(getSingleParam(query.page), 10) : 1;
+  const per_page = 10;
+
+  if (!catname) {
+    return {
+      notFound: true,
+    };
+  }
+
+  let baseData = null;
+
+  try {
+    const baseRes = await axios.get(
+      `https://api.ajur.app/api/base?city=${encodeURIComponent(city)}`,
+      {
+        timeout: 8000,
+        headers: { Accept: "application/json" },
+      }
+    );
+
+    baseData = baseRes.data;
+  } catch (e) {
+    console.error("Base fetch error:", e);
+  }
+
+  const queryNeighborhood = getSingleParam(query.neighborhoods);
+  const hasQueryNeighborhood = Boolean(queryNeighborhood);
+  const hasMultipleNeighborhoods = isMultiNeighborhoodValue(queryNeighborhood);
+
+  if (neighborhoodSlug && hasMultipleNeighborhoods) {
+    const cleanedQuery = cleanRouterQuery(query);
+
+    return {
+      redirect: {
+        destination: `/${city}/${catname}?${new URLSearchParams({
+          ...cleanedQuery,
+          page: String(cleanedQuery.page || 1),
+          neighborhoods: queryNeighborhood,
+        }).toString()}`,
+        permanent: false,
+      },
+    };
+  }
+
+  let resolvedNeighborhood = null;
+
+  if (!hasQueryNeighborhood && neighborhoodSlug && baseData?.the_neighborhoods) {
+    resolvedNeighborhood = findNeighborhoodBySlugOrId(
+      baseData.the_neighborhoods,
+      neighborhoodSlug
+    );
+  }
+
+  if (!resolvedNeighborhood && queryNeighborhood && baseData?.the_neighborhoods) {
+    resolvedNeighborhood = findNeighborhoodBySlugOrId(
+      baseData.the_neighborhoods,
+      queryNeighborhood
+    );
+  }
+
+  const finalNeighborhoodId = hasQueryNeighborhood
+    ? queryNeighborhood
+    : resolvedNeighborhood?.id || "";
+
+  const apiUrl = buildWorkersApiUrl({
+    catname,
+    city,
+    page,
+    per_page,
+    query,
+    finalNeighborhoodId,
+  });
+
+  try {
+    const workersRes = await axios.get(apiUrl, {
+      timeout: 8000,
+      headers: { Accept: "application/json" },
+    });
+
+    const workersData = workersRes.data;
+
+    const initialWorkers = workersData?.workers || [];
+    const initialSpecialWorkers = workersData?.special_workers || [];
+    const initialSeoNeighborhoods = workersData?.the_city_category_neighborhoods || [];
+
+    const initialPagination =
+      workersData?.pagination || {
+        current_page: page,
+        per_page,
+        total_count: initialWorkers.length,
+        total_pages: Math.ceil((initialWorkers.length || 0) / per_page),
+      };
+
+    const initialDetails = workersData?.filters_applied?.persian_category_name
+      ? {
+          name: workersData.filters_applied.persian_category_name,
+          id: workersData.filters_applied.category_id,
+        }
+      : {};
+
+    return {
+      props: {
+        initialWorkers,
+        initialSpecialWorkers,
+        initialPagination,
+        initialDetails,
+        initialMainCats: baseData?.cats || [],
+        initialNeighborhoods: baseData?.the_neighborhoods || [],
+        initialSeoNeighborhoods,
+        initialError: false,
+        initialErrorMessage: "",
+        cityFromServer: city,
+        nameFromServer: catname,
+        neighborhoodFromServer: neighborhoodSlug,
+      },
+    };
+  } catch (e) {
+    console.error("SSR fetch error:", e);
+
+    return {
+      props: {
+        initialWorkers: [],
+        initialSpecialWorkers: [],
+        initialPagination: {
+          current_page: 1,
+          per_page: 10,
+          total_count: 0,
+          total_pages: 1,
+        },
+        initialDetails: {},
+        initialMainCats: baseData?.cats || [],
+        initialNeighborhoods: baseData?.the_neighborhoods || [],
+        initialSeoNeighborhoods: [],
+        initialError: true,
+        initialErrorMessage: "خطا در دریافت اطلاعات. لطفا بعدا تلاش کنید.",
+        cityFromServer: city,
+        nameFromServer: catname,
+        neighborhoodFromServer: neighborhoodSlug,
+      },
+    };
+  }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//////////////////////// filtering is work fine here  //////////////////////////
+
+import React, {
+  useState,
+  useEffect,
+  useMemo,
+  useCallback,
+  useRef,
+} from "react";
+import PropTypes from "prop-types";
+import { useRouter } from "next/router";
+import Head from "next/head";
+import Script from "next/script";
+import Styles from "../../styles/CategoriesWorkersIndex.module.css";
+import Grid from "@mui/material/Grid";
+import Box from "@mui/material/Box";
+import WorkerCard from "../../components/cards/WorkerCard";
+import Link from "next/link";
+// import WorkerFilter from "../../components/WorkerFilter";
+import FilterComponent from "../../components/filter/FilterComponent";
+import { useMediaQuery, useTheme } from "@mui/material";
+import Breadcrumbs from "@mui/material/Breadcrumbs";
+import HomeIcon from "@mui/icons-material/Home";
+import LocationOnIcon from "@mui/icons-material/LocationOn";
+import CategoryIcon from "@mui/icons-material/Category";
+import Button from "@mui/material/Button";
+import CircularProgress from "@mui/material/CircularProgress";
+import Alert from "@mui/material/Alert";
+import Skeleton from "@mui/material/Skeleton";
+import axios from "axios";
+import dynamic from "next/dynamic";
+import { getPersianCityName } from "../../components/util/cityNames";
+
+const FileRequest = dynamic(() => import("../../components/request/FileRequest"), {
+  ssr: false,
+  loading: () => <div className="section-skeleton" />,
+});
+
+const MemoizedWorkerCard = React.memo(WorkerCard, (prevProps, nextProps) => {
+  return prevProps.worker.id === nextProps.worker.id;
+});
+
+const CardSkeleton = () => (
+  <Grid item xs={12} sm={6} md={4}>
+    <Skeleton
+      variant="rectangular"
+      height={200}
+      sx={{ borderRadius: 2, mb: 1 }}
+    />
+    <Skeleton variant="text" sx={{ fontSize: "1rem" }} />
+    <Skeleton variant="text" sx={{ fontSize: "1rem", width: "60%" }} />
+  </Grid>
+);
+
+function normalizePriceToIRR(price) {
+  if (!price) return null;
+  const n = String(price).replace(/[^0-9]/g, "");
+  return n ? n : null;
+}
+
+function getSingleParam(value) {
+  if (Array.isArray(value)) return value[0] || "";
+  return value || "";
+}
+
+function getSlugArray(slug) {
+  if (Array.isArray(slug)) return slug;
+  if (slug) return [slug];
+  return [];
+}
+
+function isMultiNeighborhoodValue(value) {
+  return String(value || "").includes(",");
+}
+
+function cleanRouterQuery(query = {}) {
+  const cleaned = { ...query };
+  delete cleaned.categories;
+  delete cleaned.slug;
+  return cleaned;
+}
+
+function findNeighborhoodBySlugOrId(neighborhoods, value) {
+  if (!value || !Array.isArray(neighborhoods)) return null;
+  const stringValue = String(value);
+
+  if (stringValue.includes(",")) return null;
+
+  return (
+    neighborhoods.find((item) => {
+      return (
+        String(item?.id) === stringValue ||
+        String(item?.eng_name || "") === stringValue ||
+        String(item?.slug || "") === stringValue ||
+        String(item?.value || "") === stringValue ||
+        String(item?.name || "") === stringValue ||
+        String(item?.title || "") === stringValue
+      );
+    }) || null
+  );
+}
+
+function getNeighborhoodDisplayName(neighborhoods, value) {
+  const found = findNeighborhoodBySlugOrId(neighborhoods, value);
+  return found?.name || found?.title || "";
+}
+
+function buildWorkersApiUrl({
+  catname,
+  city,
+  page = 1,
+  per_page = 10,
+  query = {},
+  finalNeighborhoodId = "",
+}) {
+  let apiUrl = `https://api.ajur.app/api/server-filtered-workers?catname=${encodeURIComponent(
+    catname
+  )}&city=${encodeURIComponent(city)}&page=${page}&per_page=${per_page}`;
+
+  if (query.categoryId) {
+    apiUrl += `&category_id=${encodeURIComponent(getSingleParam(query.categoryId))}`;
+  }
+
+  if (query.features) {
+    apiUrl += `&features=${encodeURIComponent(getSingleParam(query.features))}`;
+  }
+
+  if (finalNeighborhoodId) {
+    apiUrl += `&neighborhoods=${encodeURIComponent(finalNeighborhoodId)}`;
+  }
+
+  Object.keys(query).forEach((key) => {
+    if (key.includes("_min") || key.includes("_max")) {
+      apiUrl += `&${key}=${encodeURIComponent(getSingleParam(query[key]))}`;
+    }
+  });
+
+  if (query.sortBy && query.sortBy !== "newest") {
+    const sortMap = {
+      newest: "created_at_desc",
+      oldest: "created_at_asc",
+      most_viewed: "total_view_desc",
+    };
+
+    const [field, order] = sortMap[query.sortBy]?.split("_") || [
+      "created_at",
+      "desc",
+    ];
+
+    apiUrl += `&sort_by=${field}&sort_order=${order}`;
+  }
+
+  // Forward every remaining filter param to the API
+  // (predefine, tick, dynamic fields). Routing / UI-only keys are excluded.
+  const skipKeys = new Set([
+    "categories",
+    "slug",
+    "city",
+    "catname",
+    "page",
+    "per_page",
+    "categoryId",
+    "category_id",
+    "features",
+    "neighborhoods",
+    "sortBy",
+    "sort_by",
+    "sort_order",
+  ]);
+
+  Object.keys(query).forEach((key) => {
+    if (skipKeys.has(key)) return;
+    const rawValue = query[key];
+    const value = Array.isArray(rawValue) ? rawValue[0] : rawValue;
+    if (value === undefined || value === null || value === "") return;
+    apiUrl += `&${encodeURIComponent(key)}=${encodeURIComponent(value)}`;
+  });
+
+  return apiUrl;
+}
+
+function stripTrailingSlash(url) {
+  return String(url || "").replace(/\/+$/, "");
+}
+
+function safePathSegment(v) {
+  return encodeURIComponent(String(v || "").trim());
+}
+
+function buildCanonical({
+  city,
+  category,
+  neighborhoodSlug,
+  hasMultipleNeighborhoods,
+  hasQueryNeighborhood,
+}) {
+  const validCity = city || "tehran";
+  const validCategory = category || "";
+
+  if (!validCategory) return `https://ajur.app/${safePathSegment(validCity)}`;
+
+  if (neighborhoodSlug && !hasMultipleNeighborhoods && !hasQueryNeighborhood) {
+    return `https://ajur.app/${safePathSegment(validCity)}/${safePathSegment(
+      validCategory
+    )}/${safePathSegment(neighborhoodSlug)}`;
+  }
+
+  return `https://ajur.app/${safePathSegment(validCity)}/${safePathSegment(validCategory)}`;
+}
+
+function buildWebPageJsonLd({ canonicalUrl, seoTitle, seoDescription }) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "WebPage",
+    "@id": `${stripTrailingSlash(canonicalUrl)}#webpage`,
+    url: canonicalUrl,
+    name: seoTitle,
+    description: seoDescription,
+    inLanguage: "fa-IR",
+    isPartOf: {
+      "@type": "WebSite",
+      "@id": "https://ajur.app/#website",
+      url: "https://ajur.app/",
+      name: "آجر - مشاور املاک هوشمند",
+    },
+  };
+}
+
+function buildOrganizationJsonLd() {
+  return {
+    "@context": "https://schema.org",
+    "@type": "RealEstateAgent",
+    "@id": "https://ajur.app/#realestateagent",
+    name: "آجر",
+    url: "https://ajur.app/",
+    logo: {
+      "@type": "ImageObject",
+      url: "https://api.ajur.app/logo/og-default.jpg",
+    },
+    sameAs: [],
+  };
+}
+
+const SingleCategory = ({
+  initialWorkers = [],
+  initialSpecialWorkers = [],
+  initialPagination = {
+    current_page: 1,
+    per_page: 10,
+    total_count: 0,
+    total_pages: 1,
+  },
+  initialDetails = {},
+  initialMainCats = [],
+  initialNeighborhoods = [],
+  initialSeoNeighborhoods = [],
+  initialFeatures = [],
+  initialError = false,
+  initialErrorMessage = "",
+  cityFromServer,
+  nameFromServer,
+  neighborhoodFromServer,
+}) => {
+  const router = useRouter();
+  const routerSlugArray = getSlugArray(router.query?.slug);
+
+  const city = useMemo(() => {
+    const routeCity = router.isReady
+      ? getSingleParam(router.query?.categories)
+      : "";
+    return routeCity || cityFromServer || "tehran";
+  }, [router.isReady, router.query?.categories, cityFromServer]);
+
+  const slugName = useMemo(() => {
+    const routeSlug = router.isReady ? routerSlugArray[0] : "";
+    return routeSlug || nameFromServer || "";
+  }, [router.isReady, routerSlugArray, nameFromServer]);
+
+  const routeNeighborhoodSlug = useMemo(() => {
+    const fromRoute = router.isReady ? routerSlugArray[1] || "" : "";
+    return fromRoute || (!router.isReady ? neighborhoodFromServer || "" : "");
+  }, [router.isReady, routerSlugArray, neighborhoodFromServer]);
+
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("md"));
+
+  const firstClientFetchSkippedRef = useRef(false);
+  const hasRestoredScrollRef = useRef(false);
+
+  const [workersState, set_workers] = useState(initialWorkers);
+  const [SpecialworkersState, set_special_workers] = useState(initialSpecialWorkers);
+  const [pagination, setPagination] = useState(initialPagination);
+
+  const [filterLoading, setFilterLoading] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
+
+  const [error, setError] = useState(initialError);
+  const [errorMessage, setErrorMessage] = useState(initialErrorMessage);
+
+  const [details, setDetails] = useState(initialDetails);
+  const [main_cats] = useState(initialMainCats);
+  const [neighborhoods] = useState(initialNeighborhoods);
+  const [seoNeighborhoods, setSeoNeighborhoods] = useState(initialSeoNeighborhoods);
+
+  const [activeFilterCount, setActiveFilterCount] = useState(0);
+  const [y_scroll, set_y_scroll] = useState(0);
+
+  const persian_city = useMemo(() => getPersianCityName(city), [city]);
+
+  const persian_category_name =
+    details?.name ||
+    main_cats.find((c) => c.eng_name === slugName)?.name ||
+    "";
+
+  const queryNeighborhood = getSingleParam(router.query?.neighborhoods);
+  const hasQueryNeighborhood = Boolean(queryNeighborhood);
+  const hasMultipleNeighborhoods = isMultiNeighborhoodValue(queryNeighborhood);
+
+  const activeNeighborhoodValue = hasQueryNeighborhood
+    ? queryNeighborhood
+    : routeNeighborhoodSlug;
+
+  const neighborhoodObject = useMemo(() => {
+    return findNeighborhoodBySlugOrId(neighborhoods, activeNeighborhoodValue);
+  }, [neighborhoods, activeNeighborhoodValue]);
+
+  const neighborhoodId = useMemo(() => {
+    if (hasQueryNeighborhood) return queryNeighborhood;
+    if (neighborhoodObject?.id) return neighborhoodObject.id;
+    return "";
+  }, [hasQueryNeighborhood, queryNeighborhood, neighborhoodObject]);
+
+  const neighborhoodName = useMemo(() => {
+    if (hasMultipleNeighborhoods) return "";
+    if (neighborhoodObject?.name) return neighborhoodObject.name;
+    if (neighborhoodObject?.title) return neighborhoodObject.title;
+    return getNeighborhoodDisplayName(neighborhoods, activeNeighborhoodValue);
+  }, [
+    hasMultipleNeighborhoods,
+    neighborhoodObject,
+    neighborhoods,
+    activeNeighborhoodValue,
+  ]);
+
+  const neighborhoodDescription = useMemo(() => {
+    if (hasMultipleNeighborhoods) return "";
+    if (!neighborhoodObject) return "";
+    return (
+      neighborhoodObject?.description ||
+      neighborhoodObject?.desc ||
+      neighborhoodObject?.content ||
+      ""
+    );
+  }, [neighborhoodObject, hasMultipleNeighborhoods]);
+
+  const totalCount = useMemo(
+    () => pagination.total_count || workersState.length,
+    [pagination, workersState]
+  );
+
+  const hasMore = useMemo(() => {
+    return pagination.current_page < pagination.total_pages;
+  }, [pagination]);
+
+  const canonicalUrl = useMemo(() => {
+    return buildCanonical({
+      city,
+      category: slugName,
+      neighborhoodSlug: routeNeighborhoodSlug,
+      hasMultipleNeighborhoods,
+      hasQueryNeighborhood,
+    });
+  }, [
+    city,
+    slugName,
+    routeNeighborhoodSlug,
+    hasMultipleNeighborhoods,
+    hasQueryNeighborhood,
+  ]);
+
+  const scrollStorageKey = useMemo(() => {
+    return `category_scroll:${city}:${slugName}:${routeNeighborhoodSlug}:${JSON.stringify(
+      cleanRouterQuery(router.query || {})
+    )}`;
+  }, [city, slugName, routeNeighborhoodSlug, router.query]);
+
+  const appliedFiltersForWorkerFilter = useMemo(() => {
+    if (neighborhoodId) {
+      return {
+        ...(router.query || {}),
+        neighborhoods: String(neighborhoodId),
+      };
+    }
+    return router.query || {};
+  }, [router.query, neighborhoodId]);
+
+  const finalSeoNeighborhoods = useMemo(() => {
+    if (seoNeighborhoods && seoNeighborhoods.length > 0) {
+      return seoNeighborhoods;
+    }
+    if (!neighborhoods || neighborhoods.length === 0) return [];
+
+    return neighborhoods.map((n) => ({
+      city_slug: city,
+      cat_slug: slugName,
+      cat_name: persian_category_name || "آگهی املاک",
+      neighborhood_slug: n.eng_name || n.slug || n.id,
+      neighborhood_name: n.name || n.title,
+    }));
+  }, [seoNeighborhoods, neighborhoods, city, slugName, persian_category_name]);
+
+  const saveCurrentScroll = useCallback(() => {
+    if (typeof window === "undefined") return;
+    try {
+      sessionStorage.setItem(scrollStorageKey, String(window.scrollY || 0));
+    } catch (e) {
+      console.error("Scroll save error:", e);
+    }
+  }, [scrollStorageKey]);
+
+  const handleCardClick = () => {
+    saveCurrentScroll();
+  };
+
+  useEffect(() => {
+    if (!router.isReady) return;
+
+    const onRouteChangeStart = () => {
+      saveCurrentScroll();
+    };
+
+    router.events.on("routeChangeStart", onRouteChangeStart);
+    window.addEventListener("beforeunload", saveCurrentScroll);
+
+    return () => {
+      router.events.off("routeChangeStart", onRouteChangeStart);
+      window.removeEventListener("beforeunload", saveCurrentScroll);
+    };
+  }, [router.isReady, router.events, saveCurrentScroll]);
+
+  useEffect(() => {
+    if (!router.isReady) return;
+    if (hasRestoredScrollRef.current) return;
+    if (filterLoading) return;
+
+    const workersReady = (workersState && workersState.length > 0) || error;
+    if (!workersReady) return;
+
+    const savedScroll = sessionStorage.getItem(scrollStorageKey);
+    if (!savedScroll) return;
+
+    const scrollY = parseInt(savedScroll, 10);
+    if (!Number.isFinite(scrollY)) return;
+
+    hasRestoredScrollRef.current = true;
+
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        window.scrollTo(0, scrollY);
+      });
+    });
+  }, [router.isReady, filterLoading, workersState, error, scrollStorageKey]);
+
+  useEffect(() => {
+    hasRestoredScrollRef.current = false;
+  }, [scrollStorageKey]);
+
+  useEffect(() => {
+    if (!router.isReady) return;
+    if (!routeNeighborhoodSlug) return;
+    if (!hasMultipleNeighborhoods) return;
+    if (!slugName || !city) return;
+
+    const cleanedQuery = cleanRouterQuery(router.query);
+
+    router.replace(
+      {
+        pathname: `/${city}/${slugName}`,
+        query: {
+          ...cleanedQuery,
+          page: cleanedQuery.page || 1,
+          neighborhoods: queryNeighborhood,
+        },
+      },
+      undefined,
+      { shallow: true, scroll: false }
+    );
+  }, [
+    router.isReady,
+    router.query,
+    routeNeighborhoodSlug,
+    hasMultipleNeighborhoods,
+    city,
+    slugName,
+    queryNeighborhood,
+    router,
+  ]);
+
+  useEffect(() => {
+    if (!router.isReady) return;
+    if (!slugName || !city) return;
+
+    if (!firstClientFetchSkippedRef.current) {
+      firstClientFetchSkippedRef.current = true;
+      return;
+    }
+
+    if (routeNeighborhoodSlug && hasMultipleNeighborhoods) return;
+
+    const fetchFilteredWorkers = async () => {
+      try {
+        setFilterLoading(true);
+        setError(false);
+        setErrorMessage("");
+
+        const query = router.query || {};
+        const page = query.page ? parseInt(getSingleParam(query.page), 10) : 1;
+        const per_page = pagination.per_page || 10;
+
+        const finalNeighborhoodId = queryNeighborhood || neighborhoodId || "";
+
+        const apiUrl = buildWorkersApiUrl({
+          catname: slugName,
+          city,
+          page,
+          per_page,
+          query,
+          finalNeighborhoodId,
+        });
+
+        // 🔍 TEMP LOG
+        console.log("[filter] router.query:", JSON.parse(JSON.stringify(query)));
+        console.log("[filter] final api url:", apiUrl);
+
+        const response = await axios.get(apiUrl, {
+          timeout: 8000,
+          headers: { Accept: "application/json" },
+        });
+
+        const data = response.data;
+
+        set_workers(data.workers || []);
+        set_special_workers(data.special_workers || []);
+        if (data.the_city_category_neighborhoods) {
+          setSeoNeighborhoods(data.the_city_category_neighborhoods);
+        }
+
+        setPagination(
+          data.pagination || {
+            current_page: page,
+            per_page,
+            total_count: data.workers?.length || 0,
+            total_pages: 1,
+          }
+        );
+
+        if (data?.filters_applied?.persian_category_name) {
+          setDetails({
+            name: data.filters_applied.persian_category_name,
+            id: data.filters_applied.category_id,
+          });
+        }
+      } catch (e) {
+        console.error("Client filter fetch error:", e);
+        setError(true);
+        setErrorMessage("خطا در دریافت اطلاعات. لطفا بعدا تلاش کنید.");
+      } finally {
+        setFilterLoading(false);
+      }
+    };
+
+    fetchFilteredWorkers();
+  }, [
+    router.isReady,
+    router.asPath,
+    slugName,
+    city,
+    routeNeighborhoodSlug,
+    hasMultipleNeighborhoods,
+    queryNeighborhood,
+    neighborhoodId,
+    pagination.per_page,
+  ]);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      set_y_scroll(window.scrollY);
+    };
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  const handleCategoryChange = (newCategory) => {
+    if (newCategory) {
+      router.push(
+        {
+          pathname: `/${city}/${newCategory.eng_name}`,
+        },
+        undefined,
+        { scroll: false }
+      );
+    } else {
+      router.push(`/${city}`, undefined, { scroll: false });
+    }
+  };
+
+  const loadMoreWorkers = useCallback(async () => {
+    if (loadingMore || !hasMore) return;
+
+    setLoadingMore(true);
+    const nextPage = pagination.current_page + 1;
+
+    try {
+      const query = router.query || {};
+      const finalNeighborhoodId = queryNeighborhood || neighborhoodId || "";
+
+      const apiUrl = buildWorkersApiUrl({
+        catname: slugName,
+        city,
+        page: nextPage,
+        per_page: pagination.per_page,
+        query,
+        finalNeighborhoodId,
+      });
+
+      const response = await axios.get(apiUrl, {
+        timeout: 8000,
+        headers: { Accept: "application/json" },
+      });
+
+      const data = response.data;
+
+      set_workers((prev) => {
+        const existingIds = new Set(prev.map((w) => w.id));
+        const newWorkers = (data.workers || []).filter((w) => !existingIds.has(w.id));
+        return [...prev, ...newWorkers];
+      });
+
+      setPagination(
+        data.pagination || {
+          current_page: nextPage,
+          per_page: pagination.per_page,
+          total_count: pagination.total_count,
+          total_pages: pagination.total_pages,
+        }
+      );
+    } catch (e) {
+      console.error("Error loading more workers:", e);
+    } finally {
+      setLoadingMore(false);
+    }
+  }, [
+    loadingMore,
+    hasMore,
+    pagination,
+    router.query,
+    slugName,
+    city,
+    queryNeighborhood,
+    neighborhoodId,
+  ]);
+
+  const seoTitle = useMemo(() => {
+    const categoryName = persian_category_name || slugName || "آگهی";
+    const cityName = persian_city || city || "تهران";
+
+    if (neighborhoodName) {
+      if (totalCount > 0) {
+        return `${categoryName} در ${neighborhoodName} ${cityName} | لیست ${totalCount} آگهی | آجر`;
+      }
+      return `${categoryName} در ${neighborhoodName} ${cityName} | آجر`;
+    }
+
+    if (totalCount > 0) {
+      return `${categoryName} در ${cityName} | لیست ${totalCount} آگهی | آجر`;
+    }
+
+    return `${categoryName} در ${cityName} | آجر`;
+  }, [persian_category_name, persian_city, neighborhoodName, totalCount, slugName, city]);
+
+  const seoDescription = useMemo(() => {
+    const categoryName = persian_category_name || slugName || "آگهی";
+    const cityName = persian_city || city || "تهران";
+
+    if (neighborhoodName && neighborhoodDescription) {
+      return neighborhoodDescription.slice(0, 155);
+    }
+
+    if (neighborhoodName) {
+      if (totalCount > 0) {
+        return `${totalCount} آگهی ${categoryName} در ${neighborhoodName} ${cityName}. جدیدترین فایل‌ها، قیمت‌ها و مشخصات را در آجر ببینید.`;
+      }
+      return `جدیدترین آگهی‌های ${categoryName} در ${neighborhoodName} ${cityName} در آجر.`;
+    }
+
+    if (totalCount > 0) {
+      return `${totalCount} آگهی ${categoryName} در ${cityName}. جدیدترین فایل‌ها، قیمت‌ها و مشخصات را در آجر ببینید.`;
+    }
+
+    return `جدیدترین آگهی‌های ${categoryName} در ${cityName} در آجر.`;
+  }, [
+    persian_category_name,
+    persian_city,
+    neighborhoodName,
+    neighborhoodDescription,
+    totalCount,
+    slugName,
+    city,
+  ]);
+
+  const seoImage = details?.avatar
+    ? `https://api.ajur.app/cats_image/${details.avatar}.jpg`
+    : "https://api.ajur.app/logo/og-default.jpg";
+
+  const breadcrumbJsonLd = useMemo(() => {
+    const displayName = persian_category_name || slugName || "آگهی";
+    const cityName = persian_city || city || "تهران";
+    const validCitySlug = city || "tehran";
+    const validCategorySlug = slugName || "";
+
+    const items = [
+      {
+        "@type": "ListItem",
+        position: 1,
+        name: "خانه",
+        item: "https://ajur.app/",
+      },
+      {
+        "@type": "ListItem",
+        position: 2,
+        name: cityName,
+        item: `https://ajur.app/${safePathSegment(validCitySlug)}`,
+      },
+    ];
+
+    if (validCategorySlug) {
+      items.push({
+        "@type": "ListItem",
+        position: 3,
+        name: displayName,
+        item: `https://ajur.app/${safePathSegment(validCitySlug)}/${safePathSegment(
+          validCategorySlug
+        )}`,
+      });
+    }
+
+    if (neighborhoodName && validCategorySlug) {
+      items.push({
+        "@type": "ListItem",
+        position: 4,
+        name: neighborhoodName,
+        item: canonicalUrl,
+      });
+    }
+
+    return {
+      "@context": "https://schema.org",
+      "@type": "BreadcrumbList",
+      itemListElement: items,
+    };
+  }, [persian_category_name, slugName, persian_city, city, neighborhoodName, canonicalUrl]);
+
+  const collectionJsonLd = useMemo(() => {
+    const items = (workersState || []).slice(0, 10).map((worker, index) => {
+      const price = normalizePriceToIRR(worker?.price || worker?.specialvalue2);
+      const image = worker?.thumb || worker?.image || seoImage;
+      const url = `https://ajur.app/worker/${worker.id}?slug=${worker.slug || ""}`;
+
+      return {
+        "@type": "ListItem",
+        position: index + 1,
+        url,
+        item: {
+          "@type": "RealEstateListing",
+          name: worker.name || `${persian_category_name} در ${persian_city}`,
+          url,
+          image,
+          ...(price
+            ? {
+                offers: {
+                  "@type": "Offer",
+                  price,
+                  priceCurrency: "IRR",
+                },
+              }
+            : {}),
+        },
+      };
+    });
+
+    return {
+      "@context": "https://schema.org",
+      "@type": "CollectionPage",
+      name: seoTitle,
+      description: seoDescription,
+      url: canonicalUrl,
+      mainEntity: {
+        "@type": "ItemList",
+        numberOfItems: totalCount,
+        itemListElement: items,
+      },
+    };
+  }, [
+    workersState,
+    seoTitle,
+    seoDescription,
+    canonicalUrl,
+    totalCount,
+    persian_category_name,
+    persian_city,
+    seoImage,
+  ]);
+
+  const webPageJsonLd = useMemo(() => {
+    return buildWebPageJsonLd({ canonicalUrl, seoTitle, seoDescription });
+  }, [canonicalUrl, seoTitle, seoDescription]);
+
+  const orgJsonLd = useMemo(() => buildOrganizationJsonLd(), []);
+
+  const renderBreadcrumb = () => {
+    const displayName = persian_category_name || slugName || "آگهی";
+    const cityName = persian_city || city || "تهران";
+
+    return (
+      <div
+        style={{
+          padding: "20px 20px",
+          paddingTop: isMobile ? "70px" : "1px",
+          marginBottom: "10px",
+          marginTop: "20px",
+          borderRadius: "8px",
+          boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
+        }}
+      >
+        <Breadcrumbs aria-label="breadcrumb" separator="›" sx={{ direction: "rtl" }}>
+          <Link href="/" passHref legacyBehavior>
+            <Box
+              component="a"
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                color: "#666",
+                textDecoration: "none",
+                fontSize: "14px",
+                "&:hover": { color: "#b92a31" },
+              }}
+            >
+              <HomeIcon sx={{ fontSize: "16px", ml: 0.5 }} />
+              خانه
+            </Box>
+          </Link>
+
+          <Link href={`/${city}`} passHref legacyBehavior>
+            <Box
+              component="a"
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                color: "#666",
+                textDecoration: "none",
+                fontSize: "14px",
+                "&:hover": { color: "#b92a31" },
+              }}
+            >
+              <LocationOnIcon sx={{ fontSize: "16px", ml: 0.5 }} />
+              {cityName}
+            </Box>
+          </Link>
+
+          {neighborhoodName && slugName ? (
+            <Link href={`/${city}/${slugName}`} passHref legacyBehavior>
+              <Box
+                component="a"
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  color: "#666",
+                  textDecoration: "none",
+                  fontSize: "14px",
+                  "&:hover": { color: "#b92a31" },
+                }}
+              >
+                <CategoryIcon sx={{ fontSize: "16px", ml: 0.5 }} />
+                {displayName}
+              </Box>
+            </Link>
+          ) : (
+            <Box
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                color: "#b92a31",
+                fontWeight: "500",
+                fontSize: "14px",
+              }}
+            >
+              <CategoryIcon sx={{ fontSize: "16px", ml: 0.5 }} />
+              {displayName}
+            </Box>
+          )}
+
+          {neighborhoodName && (
+            <Box
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                color: "#b92a31",
+                fontWeight: "500",
+                fontSize: "14px",
+              }}
+            >
+              <LocationOnIcon sx={{ fontSize: "16px", ml: 0.5 }} />
+              {neighborhoodName}
+            </Box>
+          )}
+        </Breadcrumbs>
+      </div>
+    );
+  };
+
+  const renderHeader = () => {
+    return (
+      <div style={{ backgroundColor: "white" }}>
+        <FilterComponent
+          initialCategoryId={details?.id || null}
+          availableNeighborhoods={neighborhoods}
+          availableFeatures={initialFeatures}
+          top={70}
+        />
+      </div>
+    );
+  };
+
+  const renderSpecialWorkers = () => {
+    if (filterLoading) {
+      return (
+        <>
+          {[1, 2, 3].map((n) => (
+            <CardSkeleton key={n} />
+          ))}
+        </>
+      );
+    }
+
+    if (error) {
+      return (
+        <Grid item xs={12}>
+          <Alert severity="error">{errorMessage || "خطایی رخ داده است"}</Alert>
+        </Grid>
+      );
+    }
+
+    if (SpecialworkersState && SpecialworkersState.length > 0 && activeFilterCount < 1) {
+      return (
+        <>
+          {SpecialworkersState.map((worker) => (
+            <Grid
+              item
+              xs={12}
+              sm={6}
+              md={4}
+              key={`worker-${worker.id}`}
+              sx={{ display: "flex", justifyContent: "center" }}
+            >
+              <Link
+                href={`/worker/${worker.id}?slug=${worker.slug}`}
+                passHref
+                scroll={false}
+                style={{ width: "100%", textDecoration: "none" }}
+                onClick={handleCardClick}
+                prefetch={false}
+              >
+                <MemoizedWorkerCard worker={worker} />
+              </Link>
+            </Grid>
+          ))}
+        </>
+      );
+    }
+
+    return null;
+  };
+
+  const renderWorkers = () => {
+    if (filterLoading) {
+      return (
+        <>
+          {[1, 2, 3, 4, 5, 6].map((n) => (
+            <CardSkeleton key={n} />
+          ))}
+        </>
+      );
+    }
+
+    if (error) {
+      return (
+        <Grid item xs={12}>
+          <Alert severity="error">{errorMessage || "خطایی رخ داده است"}</Alert>
+        </Grid>
+      );
+    }
+
+    if (workersState && workersState.length > 0) {
+      return (
+        <>
+          {workersState.map((worker) => (
+            <Grid
+              item
+              xs={12}
+              sm={6}
+              md={4}
+              key={`worker-${worker.id}`}
+              sx={{ display: "flex", justifyContent: "center" }}
+            >
+              <Link
+                href={`/worker/${worker.id}?slug=${worker.slug}`}
+                passHref
+                scroll={false}
+                style={{ width: "100%", textDecoration: "none" }}
+                onClick={handleCardClick}
+                prefetch={false}
+              >
+                <MemoizedWorkerCard worker={worker} />
+              </Link>
+            </Grid>
+          ))}
+
+          {hasMore && (
+            <Grid item xs={12} sx={{ textAlign: "center", py: 4 }}>
+              {loadingMore ? (
+                <CircularProgress size={30} sx={{ color: "#b92a31" }} />
+              ) : (
+                <Button
+                  variant="outlined"
+                  onClick={loadMoreWorkers}
+                  sx={{
+                    color: "#b92a31",
+                    borderColor: "#b92a31",
+                    px: 4,
+                    py: 1,
+                  }}
+                >
+                  نمایش بیشتر
+                </Button>
+              )}
+            </Grid>
+          )}
+        </>
+      );
+    }
+
+    return (
+      <Grid item xs={12}>
+        <Box
+          sx={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            py: 5,
+          }}
+        >
+          <img
+            src="/logo/not-found.png"
+            alt="ملکی پیدا نشد"
+            width={200}
+            height={120}
+            loading="lazy"
+            style={{ opacity: 0.7 }}
+          />
+          <p style={{ marginTop: 20, color: "#666", fontSize: 16 }}>
+            متاسفانه موردی یافت نشد
+          </p>
+        </Box>
+
+        <FileRequest
+          onCallClick={() => {
+            window.location.href = "tel:+989382740488";
+          }}
+          onActionClick={() => router.push("/file-request")}
+        />
+      </Grid>
+    );
+  };
+
+  const h1Text = neighborhoodName
+    ? `${persian_category_name || "آگهی"} در ${neighborhoodName} ${persian_city || "تهران"}`
+    : `${persian_category_name || "آگهی"} در ${persian_city || "تهران"}`;
+
+  const introText = neighborhoodName
+    ? `لیست آگهی‌های ${persian_category_name || "آگهی"} در ${neighborhoodName} ${persian_city || "تهران"} به همراه قیمت، تصاویر و مشخصات. برای دیدن جزئیات هر فایل روی آن کلیک کنید.`
+    : `لیست آگهی‌های ${persian_category_name || "آگهی"} در ${persian_city || "تهران"} به همراه قیمت، تصاویر و مشخصات. برای دیدن جزئیات هر فایل روی آن کلیک کنید.`;
+
+  return (
+    <div className="realstate-contents-wrapper">
+      <Head>
+        <meta charSet="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <meta httpEquiv="Content-Language" content="fa" />
+
+        <title>{seoTitle}</title>
+        <meta name="description" content={seoDescription} />
+
+        <meta name="robots" content="index, follow, max-image-preview:large" />
+        <meta name="googlebot" content="index, follow, max-image-preview:large" />
+
+        <link rel="canonical" href={canonicalUrl} />
+
+        <meta property="og:locale" content="fa_IR" />
+        <meta property="og:type" content="website" />
+        <meta property="og:site_name" content="آجر - مشاور املاک هوشمند" />
+        <meta property="og:title" content={seoTitle} />
+        <meta property="og:description" content={seoDescription} />
+        <meta property="og:url" content={canonicalUrl} />
+        <meta property="og:image" content={seoImage} />
+        <meta property="og:image:width" content="1200" />
+        <meta property="og:image:height" content="630" />
+      </Head>
+
+      <Script
+        id="breadcrumb-jsonld"
+        type="application/ld+json"
+        strategy="afterInteractive"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
+      />
+
+      <Script
+        id="collection-jsonld"
+        type="application/ld+json"
+        strategy="afterInteractive"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(collectionJsonLd) }}
+      />
+
+      <Script
+        id="webpage-jsonld"
+        type="application/ld+json"
+        strategy="afterInteractive"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(webPageJsonLd) }}
+      />
+
+      <Script
+        id="organization-jsonld"
+        type="application/ld+json"
+        strategy="afterInteractive"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(orgJsonLd) }}
+      />
+
+      <div className={Styles["realstate-items-wrapper"]}>
+        <div className={Styles["main-wrapper"]}>
+          {renderHeader()}
+          {renderBreadcrumb()}
+
+          <Box
+            sx={{
+              px: { xs: 2, sm: 3 },
+              mt: 1,
+              mb: 2,
+              textAlign: "center",
+              direction: "rtl",
+            }}
+          >
+            <Box
+              component="h1"
+              sx={{
+                m: 0,
+                mb: 1,
+                fontWeight: 700,
+                lineHeight: 1.4,
+                fontSize: { xs: "18px", sm: "20px" },
+                color: "#111",
+              }}
+            >
+              {h1Text}
+            </Box>
+
+            <Box
+              component="p"
+              sx={{
+                m: 0,
+                mx: "auto",
+                maxWidth: 720,
+                color: "text.secondary",
+                lineHeight: 1.9,
+                fontSize: { xs: "12.5px", sm: "13.5px" },
+              }}
+            >
+              {introText}
+            </Box>
+
+            {neighborhoodDescription && (
+              <Box
+                sx={{
+                  mt: 3,
+                  mx: "auto",
+                  maxWidth: 850,
+                  p: 3,
+                  borderRadius: 2,
+                  backgroundColor: "#fafafa",
+                  border: "1px solid #eee",
+                  textAlign: "right",
+                  direction: "rtl",
+                  lineHeight: 2,
+                  fontSize: { xs: "13px", sm: "14px" },
+                  color: "#444",
+                }}
+              >
+                {neighborhoodDescription}
+              </Box>
+            )}
+          </Box>
+
+          <Box sx={{ flexGrow: 1, py: 3, px: { xs: 2, sm: 3 } }}>
+            <Grid
+              container
+              spacing={{ xs: 2, sm: 3 }}
+              justifyContent={{ xs: "center", sm: "flex-start" }}
+            >
+              {renderSpecialWorkers()}
+            </Grid>
+          </Box>
+
+          <Box sx={{ flexGrow: 1, py: 3, px: { xs: 2, sm: 3 } }}>
+            <Grid
+              container
+              spacing={{ xs: 2, sm: 3 }}
+              justifyContent={{ xs: "center", sm: "flex-start" }}
+            >
+              {renderWorkers()}
+            </Grid>
+          </Box>
+
+          <Box
+            sx={{
+              display: "flex",
+              flexWrap: "wrap",
+              gap: 1.5,
+              mt: 2,
+              direction: "rtl",
+            }}
+          >
+            {finalSeoNeighborhoods.map((item, index) => (
+              <Link
+                key={index}
+                href={`/${item.city_slug}/${item.cat_slug}/${item.neighborhood_slug}`}
+                style={{ textDecoration: "none" }}
+              >
+                <Box
+                  sx={{
+                    px: 2,
+                    py: 1,
+                    borderRadius: "8px",
+                    backgroundColor: "#f5f5f5",
+                    border: "1px solid #e0e0e0",
+                    fontSize: "13.5px",
+                    color: "#333",
+                    transition: "all 0.2s ease",
+                    "&:hover": {
+                      backgroundColor: "#b92a31",
+                      color: "#fff",
+                      borderColor: "#b92a31",
+                    },
+                  }}
+                >
+                  {item.cat_name} در {item.neighborhood_name}
+                </Box>
+              </Link>
+            ))}
+          </Box>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default SingleCategory;
+
+SingleCategory.propTypes = {
+  initialWorkers: PropTypes.array,
+  initialSpecialWorkers: PropTypes.array,
+  initialPagination: PropTypes.object,
+  initialDetails: PropTypes.object,
+  initialMainCats: PropTypes.array,
+  initialNeighborhoods: PropTypes.array,
+  initialSeoNeighborhoods: PropTypes.array,
+  initialFeatures: PropTypes.array,
+  initialError: PropTypes.bool,
+  initialErrorMessage: PropTypes.string,
+  cityFromServer: PropTypes.string,
+  nameFromServer: PropTypes.string,
+  neighborhoodFromServer: PropTypes.string,
+};
+
+export async function getServerSideProps(context) {
+  const { categories, slug = [] } = context.params || {};
+
+  const slugArray = Array.isArray(slug) ? slug : [];
+
+  const city = categories || "tehran";
+  const catname = slugArray[0] || "";
+  const neighborhoodSlug = slugArray[1] || "";
+
+  const query = context.query || {};
+  const page = query.page ? parseInt(getSingleParam(query.page), 10) : 1;
+  const per_page = 10;
+
+  if (!catname) {
+    return {
+      notFound: true,
+    };
+  }
+
+  let baseData = null;
+
+  try {
+    const baseRes = await axios.get(
+      `https://api.ajur.app/api/base?city=${encodeURIComponent(city)}`,
+      {
+        timeout: 8000,
+        headers: { Accept: "application/json" },
+      }
+    );
+
+    baseData = baseRes.data;
+  } catch (e) {
+    console.error("Base fetch error:", e);
+  }
+
+  const queryNeighborhood = getSingleParam(query.neighborhoods);
+  const hasQueryNeighborhood = Boolean(queryNeighborhood);
+  const hasMultipleNeighborhoods = isMultiNeighborhoodValue(queryNeighborhood);
+
+  if (neighborhoodSlug && hasMultipleNeighborhoods) {
+    const cleanedQuery = cleanRouterQuery(query);
+
+    return {
+      redirect: {
+        destination: `/${city}/${catname}?${new URLSearchParams({
+          ...cleanedQuery,
+          page: String(cleanedQuery.page || 1),
+          neighborhoods: queryNeighborhood,
+        }).toString()}`,
+        permanent: false,
+      },
+    };
+  }
+
+  let resolvedNeighborhood = null;
+
+  if (!hasQueryNeighborhood && neighborhoodSlug && baseData?.the_neighborhoods) {
+    resolvedNeighborhood = findNeighborhoodBySlugOrId(
+      baseData.the_neighborhoods,
+      neighborhoodSlug
+    );
+  }
+
+  if (!resolvedNeighborhood && queryNeighborhood && baseData?.the_neighborhoods) {
+    resolvedNeighborhood = findNeighborhoodBySlugOrId(
+      baseData.the_neighborhoods,
+      queryNeighborhood
+    );
+  }
+
+  const finalNeighborhoodId = hasQueryNeighborhood
+    ? queryNeighborhood
+    : resolvedNeighborhood?.id || "";
+
+  const apiUrl = buildWorkersApiUrl({
+    catname,
+    city,
+    page,
+    per_page,
+    query,
+    finalNeighborhoodId,
+  });
+
+  try {
+    const workersRes = await axios.get(apiUrl, {
+      timeout: 8000,
+      headers: { Accept: "application/json" },
+    });
+
+    const workersData = workersRes.data;
+
+    const initialWorkers = workersData?.workers || [];
+    const initialSpecialWorkers = workersData?.special_workers || [];
+    const initialSeoNeighborhoods = workersData?.the_city_category_neighborhoods || [];
+
+    const initialPagination =
+      workersData?.pagination || {
+        current_page: page,
+        per_page,
+        total_count: initialWorkers.length,
+        total_pages: Math.ceil((initialWorkers.length || 0) / per_page),
+      };
+
+    const initialDetails = workersData?.filters_applied?.persian_category_name
+      ? {
+          name: workersData.filters_applied.persian_category_name,
+          id: workersData.filters_applied.category_id,
+        }
+      : {};
+
+    return {
+      props: {
+        initialWorkers,
+        initialSpecialWorkers,
+        initialPagination,
+        initialDetails,
+        initialMainCats: baseData?.cats || [],
+        initialNeighborhoods: baseData?.the_neighborhoods || [],
+        initialSeoNeighborhoods,
+        initialFeatures: baseData?.features || [],
+        initialError: false,
+        initialErrorMessage: "",
+        cityFromServer: city,
+        nameFromServer: catname,
+        neighborhoodFromServer: neighborhoodSlug,
+      },
+    };
+  } catch (e) {
+    console.error("SSR fetch error:", e);
+
+    return {
+      props: {
+        initialWorkers: [],
+        initialSpecialWorkers: [],
+        initialPagination: {
+          current_page: 1,
+          per_page: 10,
+          total_count: 0,
+          total_pages: 1,
+        },
+        initialDetails: {},
+        initialMainCats: baseData?.cats || [],
+        initialNeighborhoods: baseData?.the_neighborhoods || [],
+        initialSeoNeighborhoods: [],
+        initialFeatures: baseData?.features || [],
+        initialError: true,
+        initialErrorMessage: "خطا در دریافت اطلاعات. لطفا بعدا تلاش کنید.",
+        cityFromServer: city,
+        nameFromServer: catname,
+        neighborhoodFromServer: neighborhoodSlug,
+      },
+    };
+  }
+}

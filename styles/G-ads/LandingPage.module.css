@@ -1,0 +1,317 @@
+/* --- Landing Page Layout --- */
+.landing-page {
+    font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #f9fafb;
+    color: #1f2937;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+    justify-content: center;
+    margin-bottom: 50px;
+    max-width: 100vw;
+}
+
+.intro-slide h2 {
+    color: #9a0007;
+    font-weight: 600;
+}
+
+/* Header */
+.page-header {
+    text-align: center;
+    padding: 1rem 0;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.header-title {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #dc2626;
+    /* red-600 */
+}
+
+/* Video Section */
+.video-section {
+    max-width: 900px;
+    margin: auto;
+    overflow: hidden;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    background: none;
+}
+
+.video-iframe {
+    width: 100%;
+    height: 280px;
+    border: none;
+}
+
+.pros {
+    margin: 2rem;
+    padding: 1rem 1.5rem;
+    background-color: #fff;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    direction: rtl;
+    text-align: right;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.pros p {
+    font-size: 1.125rem;
+    /* ~18px */
+    color: #374151;
+    display: flex;
+    align-items: center;
+    line-height: 1.8;
+}
+
+/* Portfolio Section */
+
+.section-title {
+    font-size: 1.875rem;
+    font-weight: 700;
+    margin-bottom: 1rem;
+    text-align: center;
+    color: #111827;
+}
+
+.portfolio-container {
+    margin: 50px 20px;
+
+    overflow-y: visible;
+    overflow-y: hidden;
+}
+
+.portfolio-section,
+.reviews-section,
+.portfolio-swiper,
+.reviews-swiper {
+    overflow: hidden;
+    width: 100%;
+    position: relative;
+    z-index: 100;
+}
+
+.portfolio-swiper {
+    padding-top: 1.5rem;
+
+
+    padding-bottom: 5rem;
+
+}
+
+/* Swiper slide link */
+.portfolio-link {
+    display: block;
+    text-decoration: none;
+    color: inherit;
+    transition: transform 0.3s ease;
+}
+
+.portfolio-link:hover {
+    transform: scale(1.05);
+}
+
+/* Reviews Section */
+.reviews-container {
+    max-width: 90vw;
+    margin: 2rem auto;
+    max-width: 100%;
+    min-width: 300px;
+    width: 100%;
+    margin: 0 auto;
+    padding: 1.5rem 1rem;
+    box-sizing: border-box;
+}
+
+
+.reviews-section {
+    width: 100%;
+    padding: 1.5rem 1rem;
+    box-sizing: border-box;
+    overflow: hidden;
+}
+
+
+.reviews-swiper {
+    width: 100%;
+    padding-bottom: 1.5rem;
+    box-sizing: border-box;
+}
+
+
+.review-card {
+    background: white;
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 4px 12px rgb(0 0 0 / 0.1);
+    min-height: 150px;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    text-align: center;
+}
+
+
+.review-name {
+    font-weight: 600;
+    font-size: 1.25rem;
+    color: #374151;
+}
+
+.review-comment {
+    font-size: 1rem;
+    color: #4b5563;
+}
+
+/* Loading text */
+.loading-text {
+    text-align: center;
+    font-size: 1.25rem;
+    padding: 2rem 0;
+    color: #6b7280;
+}
+
+/* Button Section */
+.button-container {
+    /* Keep CTA in the normal document flow so it doesn't overlap content
+       The container spans full width and centers its content. */
+    position: static;
+    left: 0;
+    width: 100%;
+    z-index: 999;
+    display: flex;
+    justify-content: center;
+    padding: 1rem 1rem 2rem; /* give breathing room from content */
+    box-sizing: border-box;
+}
+
+.start-button {
+    /* Full-width button visually, but part of the flow */
+    position: static;
+    width: 100%;
+    max-width: 720px;
+    padding: 15px 0;
+    font-size: 18px;
+    font-weight: 600;
+    background-color: #bc323a;
+    color: white;
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    border-radius: 8px;
+}
+
+.start-button:hover {
+    background-color: #9a0007;
+}
+
+.start-button:active {
+    background-color: #700004;
+}
+
+.intro-next-button {
+    /* Same style for continuity when used inside intro overlays */
+    position: static;
+    width: 100%;
+    max-width: 720px;
+    padding: 15px 0;
+    font-size: 18px;
+    font-weight: 600;
+    background-color: #bc323a;
+    color: white;
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    border-radius: 8px;
+}
+
+.intro-next-button:hover {
+    background-color: #9a0007;
+}
+
+.intro-next-button:active {
+    background-color: #700004;
+}
+
+
+/* Responsive tweaks */
+@media (max-width: 768px) {
+    .portfolio-link:hover {
+        transform: none;
+    }
+
+    .video-iframe {
+        height: 200px;
+    }
+}
+
+.intro-overlay {
+    position: fixed;
+    top: 0;
+    right: 0;
+    left: 0;
+    bottom: 0;
+    background: #fff;
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.intro-slide {
+    height: 70vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 2rem;
+    text-align: center;
+}
+
+.intro-slide h2 {
+    font-size: 2rem;
+    margin-bottom: 1rem;
+}
+
+.intro-slide p {
+    font-size: 1.2rem;
+    margin-bottom: 2rem;
+}
+
+.intro-slide button {
+    width: 100%;
+    padding: 1rem 0;
+    background-color: #dc2626;
+    color: white;
+    font-weight: 700;
+    font-size: 1.25rem;
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.empty-section {
+    text-align: center;
+    font-size: 1.2rem;
+    color: #777;
+    padding: 2rem 1rem;
+    border: 2px dashed #ccc;
+    border-radius: 12px;
+    margin: 2rem auto;
+    max-width: 500px;
+    background-color: #f9f9f9;
+    transition: all 0.3s ease;
+}
+
+.slide-image {
+    width: auto;
+    height: 35vh;
+    margin-bottom: 40px;
+}

@@ -1,0 +1,777 @@
+.introContainer {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.slideContainer {
+  width: 90%;
+  max-width: 900px;
+  background-color: #fff;
+  border-radius: 20px;
+  overflow: hidden;
+}
+.lottieContainer {
+  height: 250px;
+  background-color: #fff;
+}
+.lottieAnimation {
+  width: 100%;
+  height: 100%;
+}
+.textContainer {
+  padding: 20px;
+  background-color: #4caf50;
+}
+.slideTitle {
+  font-size: 22px;
+  font-weight: 700;
+  color: #fff;
+  text-align: center;
+  margin-bottom: 10px;
+}
+.slideDescription {
+  font-size: 16px;
+  color: #fff;
+  text-align: center;
+  margin-bottom: 20px;
+  line-height: 24px;
+}
+.pagination {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 20px;
+}
+.paginationDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 4px;
+  background-color: rgba(255, 255, 255, 0.5);
+  margin: 0 4px;
+}
+.paginationDotActive {
+  background-color: #fff;
+  width: 16px;
+}
+.navigationButtons {
+  display: flex;
+  justify-content: space-between;
+}
+.navButton {
+  padding: 12px 24px;
+  border-radius: 8px;
+  background-color: rgba(255, 255, 255, 0.2);
+  border: none;
+}
+.primaryButton {
+  background-color: #fff;
+}
+.navButtonText {
+  color: gray;
+  font-weight: 700;
+}
+.primaryButtonText {
+  color: #4caf50;
+}
+.categoryContainer {
+  margin: 8px 0;
+  position: relative; /* for fade overlay */
+}
+
+.categoryContent {
+  padding: 0 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  /* Horizontal carousel behavior */
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch; /* smooth scrolling on iOS */
+  scroll-behavior: smooth;
+  scroll-snap-type: x proximity;
+  white-space: nowrap;
+}
+
+.categoryButton {
+  padding: 8px 16px;
+  border-radius: 20px;
+  margin: 6px 0; /* vertical spacing for visual balance */
+  background: #f0e6d2;
+  border: none;
+  cursor: pointer;
+  flex: 0 0 auto; /* keep intrinsic size */
+  scroll-snap-align: start; /* snap each button to start */
+}
+
+/* Hide native scrollbars for modern browsers while preserving accessibility */
+.categoryContent::-webkit-scrollbar {
+  height: 8px;
+}
+.categoryContent::-webkit-scrollbar-thumb {
+  background: rgba(0,0,0,0.12);
+  border-radius: 4px;
+}
+.categoryContent::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* Right-edge gradient fade to indicate more content on small screens */
+@media (max-width: 640px) {
+  .categoryContainer::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 44px;
+    height: 100%;
+    pointer-events: none;
+    background: linear-gradient(90deg, rgba(8,82,131,0) 0%, rgba(8,82,131,0.12) 60%, rgba(8,82,131,0.22) 100%);
+  }
+}
+.categoryText {
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.noteCard {
+  background-color: #fff;
+  border-radius: 12px;
+  padding: 12px;
+  margin: 6px 0;
+  box-shadow: 0 1px 4px rgba(71, 70, 70, 0.1);
+}
+.contactCardContent {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 10px 0;
+}
+.contactNameSection {
+  flex: 1;
+  margin-right: 10px;
+  text-align: right;
+}
+.contactName {
+  font-size: 18px;
+  font-weight: 700;
+  color: #3e2723;
+}
+.contactNamePlaceholder {
+  font-size: 16px;
+  font-style: italic;
+  color: #8d6e63;
+}
+.callButton {
+  width: 50px;
+  height: 50px;
+  border-radius: 25px;
+  background-color: #4caf50;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border: none;
+  color: #fff;
+}
+
+.emptyState {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 40px;
+}
+.emptyStateText {
+  margin-top: 12px;
+  font-size: 16px;
+  color: #8d6e63;
+}
+
+.fab {
+  position: fixed;
+  bottom: 30px;
+  right: 30px;
+  width: 60px;
+  height: 60px;
+  border-radius: 30px;
+  background-color: #4caf50;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+  border: none;
+}
+.fabIcon {
+  font-size: 30px;
+  color: #fff;
+  font-weight: 700;
+}
+
+.modalOverlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.3);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+}
+.addModalContent {
+  background-color: #fff;
+  width: 100%;
+  max-width: 720px;
+  max-height: 80%;
+  border-radius: 12px;
+  padding: 20px;
+  overflow: auto;
+  box-sizing: border-box;
+}
+.modalHeader {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+.formTitle {
+  font-size: 18px;
+  font-weight: 700;
+  color: #5d4037;
+}
+.closeIcon {
+  font-size: 26px;
+  font-weight: 700;
+  color: #5d4037;
+  border: none;
+  background: transparent;
+}
+.textInput {
+  background-color: #f1f1f1;
+  border-radius: 8px;
+  padding: 10px;
+  margin: 6px 0;
+  color: #3e2723;
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid #e8e2d8;
+}
+.buttonRow {
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-end;
+  margin-top: 10px;
+  gap: 10px;
+}
+.actionButton {
+  padding: 10px 20px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+}
+.addButton {
+  background-color: #4caf50;
+  color: #fff;
+}
+.updateButton {
+  background-color: #2196f3;
+  color: #fff;
+}
+.cancelButton {
+  background-color: #9e9e9e;
+  color: #fff;
+}
+.actionButtonText {
+  color: #fff;
+  font-weight: 700;
+}
+
+.searchModalOverlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  justify-content: flex-start;
+  padding-top: 60px;
+}
+.searchModalContent {
+  background-color: #fff;
+  margin: 0 20px;
+  border-radius: 12px;
+  overflow: hidden;
+  max-height: 80%;
+}
+.searchModalHeader {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px;
+  border-bottom: 1px solid #f0e6d2;
+}
+.searchModalTitle {
+  font-size: 18px;
+  font-weight: 700;
+  color: #5d4037;
+}
+.searchInputContainer {
+  display: flex;
+  align-items: center;
+  padding: 12px 16px;
+  border-bottom: 1px solid #f0e6d2;
+}
+.searchIcon {
+  margin-left: 8px;
+}
+.searchInput {
+  flex: 1;
+  font-size: 16px;
+  color: #3e2723;
+  padding: 0;
+  border: none;
+  outline: none;
+  width: 100%;
+}
+.searchResultsContainer {
+  min-height: 200px;
+}
+.searchLoading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+}
+.searchLoadingText {
+  margin-top: 10px;
+  color: #8d6e63;
+}
+.searchEmpty {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+}
+.searchEmptyText {
+  margin-top: 10px;
+  color: #8d6e63;
+  font-size: 16px;
+}
+.searchResultItem {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  padding: 16px;
+  border-bottom: 1px solid #f5f5f5;
+}
+.searchResultContent {
+  flex: 1;
+  margin-right: 12px;
+}
+.searchResultName {
+  font-size: 16px;
+  font-weight: 700;
+  color: #3e2723;
+  margin-bottom: 4px;
+}
+.searchResultDetails {
+  display: flex;
+  flex-wrap: wrap;
+}
+.searchResultPhone {
+  display: flex;
+  align-items: center;
+  margin-right: 16px;
+  margin-bottom: 4px;
+  cursor: pointer;
+}
+.searchResultText {
+  font-size: 14px;
+  color: #5d4037;
+  margin-left: 4px;
+}
+.searchResultDescription {
+  font-size: 13px;
+  color: #8d6e63;
+  margin-top: 4px;
+}
+.searchResultCategory {
+  padding: 4px 8px;
+  border-radius: 12px;
+}
+.searchResultCategoryText {
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.section {
+  margin-bottom: 20px;
+}
+.sectionLabel {
+  font-size: 16px;
+  font-weight: 700;
+  color: #5d4037;
+  margin-bottom: 10px;
+}
+.categorySection {
+  margin-bottom: 20px;
+}
+.categoryScroll {
+  margin: -8px;
+}
+.selectContainer {
+  margin-bottom: 15px;
+}
+.selectLabel {
+  font-size: 14px;
+  font-weight: 700;
+  color: #5d4037;
+  margin-bottom: 8px;
+}
+.selectOptions {
+  display: flex;
+  flex-wrap: wrap;
+  margin: -4px;
+}
+.selectOption {
+  padding: 8px 12px;
+  border-radius: 16px;
+  background-color: #f0e6d2;
+  margin: 4px;
+  border: none;
+  cursor: pointer;
+}
+.selectOptionActive {
+  background-color: #4caf50;
+  color: #fff;
+}
+.selectOptionText {
+  color: #5d4037;
+  font-size: 14px;
+}
+.selectOptionTextActive {
+  color: #fff;
+}
+
+.singleContactOverlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+}
+.singleContactContent {
+  background-color: #fff;
+  border-radius: 16px;
+  width: 90%;
+  max-width: 720px;
+  max-height: 80%;
+  overflow: auto;
+}
+.singleContactHeader {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px;
+  border-bottom: 1px solid #f0e6d2;
+}
+.singleContactTitle {
+  font-size: 18px;
+  font-weight: 700;
+  color: #5d4037;
+}
+.singleContactScroll {
+  padding: 16px;
+}
+.contactCategory {
+  align-self: flex-start;
+  padding: 6px 12px;
+  border-radius: 12px;
+  margin-bottom: 16px;
+}
+.contactCategoryText {
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+}
+.contactNameLarge {
+  font-size: 24px;
+  font-weight: 700;
+  color: #3e2723;
+  text-align: center;
+  margin-bottom: 20px;
+}
+.contactDetails {
+  margin-bottom: 20px;
+}
+.detailRow {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  margin-bottom: 15px;
+}
+.detailContent {
+  margin-left: 12px;
+  flex: 1;
+}
+.detailLabel {
+  font-size: 12px;
+  color: #8d6e63;
+  margin-bottom: 2px;
+}
+.detailValue {
+  font-size: 16px;
+  color: #5d4037;
+  font-weight: 500;
+}
+.descriptionSection {
+  margin-bottom: 20px;
+  padding: 12px;
+  background-color: #f9f5f0;
+  border-radius: 8px;
+}
+.descriptionText {
+  font-size: 14px;
+  color: #5d4037;
+  line-height: 22px;
+}
+.timeInfo {
+  border-top: 1px solid #f0e6d2;
+  padding-top: 12px;
+  margin-bottom: 16px;
+}
+.timeText {
+  text-align: center;
+  font-size: 12px;
+  color: #8d6e63;
+}
+.actionButtons {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-around;
+  padding: 16px;
+  border-top: 1px solid #f0e6d2;
+}
+.callButtonLarge {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  background-color: #4caf50;
+  padding: 12px 20px;
+  border-radius: 25px;
+  min-width: 120px;
+  justify-content: center;
+  border: none;
+  color: #fff;
+}
+.callButtonText {
+  color: #fff;
+  font-weight: 700;
+  margin-left: 8px;
+}
+.editButton {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  background-color: #f0e6d2;
+  padding: 12px 20px;
+  border-radius: 25px;
+  min-width: 120px;
+  justify-content: center;
+  border: none;
+}
+.editButtonText {
+  color: #5d4037;
+  font-weight: 700;
+  margin-left: 8px;
+}
+
+.aboutOverlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+}
+.aboutContent {
+  background-color: #fff;
+  border-radius: 16px;
+  width: 100%;
+  max-width: 400px;
+  overflow: hidden;
+}
+.aboutHeader {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px;
+  border-bottom: 1px solid #f0e6d2;
+  background-color: #fff8e1;
+}
+.aboutTitle {
+  font-size: 18px;
+  font-weight: 700;
+  color: #5d4037;
+}
+.appInfo {
+  display: flex;
+  align-items: center;
+  padding: 24px;
+  border-bottom: 1px solid #f0e6d2;
+}
+.appName {
+  font-size: 22px;
+  font-weight: 700;
+  color: #4caf50;
+  margin: 12px 0;
+}
+.versionText {
+  font-size: 16px;
+  color: #5d4037;
+  margin-bottom: 8px;
+}
+.copyrightText {
+  font-size: 14px;
+  color: #8d6e63;
+  text-align: center;
+  margin-bottom: 4px;
+}
+.reportSection {
+  padding: 24px;
+}
+.reportTitle {
+  font-size: 18px;
+  font-weight: 700;
+  color: #5d4037;
+  margin-bottom: 16px;
+  text-align: center;
+}
+.reportBox {
+  background-color: #f9f5f0;
+  padding: 16px;
+  border-radius: 12px;
+  border: 1px solid #e0d6c2;
+  margin-bottom: 20px;
+}
+.reportText {
+  font-size: 16px;
+  color: #d32f2f;
+  font-weight: 700;
+  text-align: center;
+  margin-bottom: 8px;
+}
+.reportSubText {
+  font-size: 14px;
+  color: #8d6e63;
+  text-align: center;
+}
+.reportButton {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  background-color: #d32f2f;
+  padding: 16px;
+  border-radius: 25px;
+  border: none;
+  color: #fff;
+}
+.reportButtonText {
+  color: #fff;
+  font-weight: 700;
+  margin-left: 8px;
+  font-size: 16px;
+}
+.aboutFooter {
+  padding: 16px;
+  border-top: 1px solid #f0e6d2;
+  background-color: #f9f9f9;
+}
+.footerText {
+  font-size: 14px;
+  color: #8d6e63;
+  text-align: center;
+  font-style: italic;
+}
+
+.savePhoneOverlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+}
+.savePhoneContent {
+  background-color: #fff;
+  border-radius: 16px;
+  width: 100%;
+  max-width: 400px;
+  overflow: hidden;
+}
+.savePhoneHeader {
+  display: flex;
+  align-items: center;
+  padding: 24px;
+  border-bottom: 1px solid #f0e6d2;
+}
+.savePhoneTitle {
+  font-size: 20px;
+  font-weight: 700;
+  color: #2196f3;
+  margin: 12px 0;
+}
+.savePhoneBody {
+  padding: 24px;
+}
+.savePhoneText {
+  font-size: 16px;
+  color: #3e2723;
+  text-align: center;
+  margin-bottom: 16px;
+  line-height: 24px;
+}
+.savePhoneNote {
+  font-size: 14px;
+  color: #8d6e63;
+  text-align: center;
+  font-style: italic;
+}
+.savePhoneActions {
+  padding: 16px;
+  border-top: 1px solid #f0e6d2;
+}
+.savePhoneButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  border-radius: 8px;
+  margin-bottom: 12px;
+  border: none;
+  cursor: pointer;
+}
+.saveButton {
+  background-color: #4caf50;
+  color: #fff;
+}
+.skipButton {
+  background-color: transparent;
+  color: gray;
+}
+.cancelButton {
+  background-color: #9e9e9e;
+  color: #fff;
+}
+.savePhoneButtonText {
+  color: #fff;
+  font-weight: 700;
+  margin-left: 8px;
+  font-size: 16px;
+}

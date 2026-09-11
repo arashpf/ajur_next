@@ -1,0 +1,10 @@
+[{
+  "relation": ["delegate_permission/common.handle_all_urls"],
+  "target": {
+    "namespace": "android_app",
+    "package_name": "com.Ajour",
+    "sha256_cert_fingerprints": [
+      "C74530DC9CF5B707FE1FCA6C435A222602AF7FD8E5CFBF3CA4E812522C979D64"
+    ]
+  }
+}]

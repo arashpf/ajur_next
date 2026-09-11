@@ -1,0 +1,41 @@
+.share-buttons-wrapper .share-icons{
+	margin:10px 20px;
+	padding: 10px;
+  justify-content: center;
+  background: #f9f9f9;
+  text-align: center;
+
+}
+
+.share-buttons-wrapper .share-icon{
+	display: inline-block;
+	width: 35px;
+	height: 35px;
+	cursor: pointer;
+	background-color:  #33383b;
+	border-radius: 2px;
+
+	font-size: 20px;
+	color: #ffffff;
+	text-align: center;
+	line-height: 35px;
+
+	margin-right: 3px;
+	margin-bottom: 5px;
+}
+
+.share-buttons-wrapper .share-title {
+	display: inline-block;
+
+
+
+	border-radius: 2px;
+
+	font-size: 14px;
+	color: #444;
+
+	/* line-height: 35px; */
+
+	margin: 15px 20px;
+	/* margin-bottom: 5px; */
+}

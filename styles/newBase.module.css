@@ -1,0 +1,33 @@
+.new_single_type_wrapper {
+    background-color: rgb(193, 187, 187);
+    height: 50px;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    cursor:pointer;
+    
+}
+
+.single_info {
+    display: flex;
+    flex-direction: row;
+   
+    
+    padding-right: 5px;
+}
+
+.single_info p {
+    
+    padding-right: 5px;
+    padding-left: 5px;
+}
+
+
+
+.single_icon p {
+    
+    padding-left: 5px;
+    color: rgb(228, 218, 200);
+}
+

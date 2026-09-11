@@ -1,0 +1,181 @@
+/* .location-wrapper {
+  height: 400px;
+  width: 100%;
+} */
+
+@font-face {
+  font-family: 'iransans';
+  font-weight: 500;
+  src: local('components/fonts'), url(../../fonts/iran-sans.ttf) format('ttf');
+}
+
+.location {
+  height: 100%;
+  width: 100%;
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  justify-content: center;
+}
+
+.location-info-wrapper {
+  padding-top: 0px;
+}
+
+/* Fix for Leaflet map container */
+.leaflet-container {
+  width: 100% !important;
+  height: 100% !important;
+  position: relative;
+  z-index: 1;
+}
+
+/* Ensure the map controls are properly positioned */
+.leaflet-control-container {
+  position: relative;
+  z-index: 2;
+}
+
+/* Fix for tile layers */
+.leaflet-tile-container img {
+  width: 100%;
+  height: auto;
+}
+
+/* Desktop styles */
+@media (min-width: 600px) {
+  .search_locations_wrapper {
+    padding: 10px;
+  }
+
+  .singleSearchResault {
+    text-align: right;
+    font-size: 14px;
+  }
+
+  .search-wrapper {
+    position: fixed;
+    top: 10%;
+    left: 0;
+    width: 60%;
+    left: 20%;
+    right: 0;
+    z-index: 400;
+  }
+
+  .search-location-li {
+    background: linear-gradient(135deg, #ff6b6b 0%, #ff5252 100%);
+    z-index: 4;
+    position: relative;
+    top: 90%;
+    height: 50px;
+    width: 50%;
+    left: 25%;
+    border: 2px solid #ff5252;
+    overflow: hidden;
+    text-align: right;
+    border-radius: 12px;
+  }
+  
+  .search-location-li .search-location-li-close-icon {
+    position: absolute;
+    left: 10px;
+    padding-top: 15px;
+  }
+  
+  .search-location-li .search-location-li-close-icon:hover {
+    cursor: pointer;
+  }
+  
+  .search-location-li .search-location-text {
+    padding-right: 15px;
+    padding-top: 15px;
+    height: auto;
+    z-index: 2222222222;
+    margin-left: 40px;
+  }
+  
+  .search-location-li .search-my-location-text {
+    display: flex;
+    justify-content: flex-end;
+    padding-right: 15px;
+    padding-top: 15px;
+    height: auto;
+    z-index: 2222222222;
+    margin-left: 40px;
+  }
+  
+  .search-location-li .search-location-text:hover {
+    cursor: pointer;
+  }
+  
+  .search-location-li .search-location-text p {
+    padding-right: 15px;
+    margin-top: -5px;
+    font-size: 1.3em;
+    font-family: iransans;
+  }
+}
+
+/* Mobile styles */
+@media (max-width: 600px) {
+  .location {
+    height: 100%;
+    width: 100%;
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    margin-top: 0;
+  }
+
+  .search-wrapper {
+    position: fixed;
+    width: 80%;
+    top: 13%;
+    left: 10%;
+    z-index: 400;
+  }
+
+  .search_location_li {
+    background-color: white;
+    width: 100%;
+    overflow: scroll;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  }
+
+  .singleSearchResault {
+    text-align: right;
+    font-size: 14px;
+    padding: 8px 12px;
+    border-bottom: 1px solid #eee;
+  }
+
+  .singleSearchResault:last-child {
+    border-bottom: none;
+  }
+
+  .search_location_li_close_icon {
+    margin: 10px;
+  }
+
+  .search_locations_wrapper {
+    padding: 10px;
+  }
+}
+
+/* Additional fixes for mobile devices */
+@media (max-width: 480px) {
+  .location {
+    width: 100%;
+    left: 0;
+  }
+  
+  .leaflet-control-zoom {
+    display: none; /* Hide zoom controls on very small screens if needed */
+  }
+}

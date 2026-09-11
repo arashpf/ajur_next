@@ -1,0 +1,873 @@
+import React, { useState, useEffect, useRef } from "react";
+import axios from "axios";
+import Head from "next/head";
+import { useRouter } from "next/router";
+import SmallCard from "../../components/cards/SmallCard";
+
+const SEARCH_TIMEOUT = 15000;
+const DEBOUNCE_DELAY = 1000;
+
+const RealStateIndex = () => {
+  const router = useRouter();
+  const { citySlug } = router.query;
+
+  const [agents, setAgents] = useState([]);
+  const [city, setCity] = useState(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [loadingAgents, setLoadingAgents] = useState(false);
+  const [searchStatus, setSearchStatus] = useState("");
+
+  const debounceTimeout = useRef(null);
+
+  // Persian city name comes from API, NOT slug
+  const persianCity = city?.title || "";
+  const englishCity = citySlug || "";
+
+  const seoData = {
+    title: persianCity
+      ? `لیست مشاورین املاک ${persianCity} | آجر`
+      : "لیست مشاورین املاک | آجر",
+    description: persianCity
+      ? `بهترین مشاورین املاک در ${persianCity} را در آجر پیدا کنید.`
+      : "لیست مشاورین املاک در سراسر کشور.",
+    keywords: persianCity
+      ? `مشاور املاک ${persianCity}, املاک ${persianCity}`
+      : "مشاور املاک, املاک",
+    canonical: englishCity
+      ? `https://ajur.app/agents/${englishCity}`
+      : "https://ajur.app/agents",
+    image: "https://ajur.app/logo/ajour-meta-image.jpg",
+  };
+
+  const getAgentsCall = async (searchTerm = "all") => {
+    if (!citySlug) return;
+
+    try {
+      setLoadingAgents(true);
+
+      setSearchStatus(
+        searchTerm === "all"
+          ? "در حال دریافت لیست مشاورین..."
+          : "در حال جستجوی مشاورین..."
+      );
+
+      const response = await axios.get(
+        "https://api.ajur.app/api/city-agents-search",
+        {
+          params: {
+            title: searchTerm,
+            limit: 20,
+            city: citySlug, // slug → backend → city.name
+          },
+          timeout: SEARCH_TIMEOUT,
+        }
+      );
+
+      const result = response.data?.agents || [];
+      const cityData = response.data?.city || null;
+
+      setAgents(result);
+      setCity(cityData);
+      setSearchStatus(`${result.length} مشاور یافت شد`);
+    } catch (error) {
+      console.error("Agent search failed:", error);
+      setSearchStatus("خطا در بارگذاری اطلاعات");
+      setAgents([]);
+      setCity(null);
+    } finally {
+      setLoadingAgents(false);
+    }
+  };
+
+  useEffect(() => {
+    if (!router.isReady) return;
+    if (!citySlug) return;
+
+    getAgentsCall("all");
+  }, [router.isReady, citySlug]);
+
+  useEffect(() => {
+    return () => {
+      if (debounceTimeout.current) clearTimeout(debounceTimeout.current);
+    };
+  }, []);
+
+  const handleSearchInput = (value) => {
+    setSearchQuery(value);
+
+    if (debounceTimeout.current) clearTimeout(debounceTimeout.current);
+
+    debounceTimeout.current = setTimeout(() => {
+      const termToSearch = value.trim() === "" ? "all" : value.trim();
+      getAgentsCall(termToSearch);
+    }, DEBOUNCE_DELAY);
+  };
+
+  const handleSearchClick = () => {
+    if (debounceTimeout.current) clearTimeout(debounceTimeout.current);
+
+    const termToSearch =
+      searchQuery.trim() === "" ? "all" : searchQuery.trim();
+
+    getAgentsCall(termToSearch);
+  };
+
+  return (
+    <>
+      <Head>
+        <title>{seoData.title}</title>
+        <meta name="description" content={seoData.description} />
+        <meta name="keywords" content={seoData.keywords} />
+        <link rel="canonical" href={seoData.canonical} />
+      </Head>
+
+      <div className="w-full p-6">
+        <h1 className="text-xl font-bold mb-6 text-right">
+          {persianCity ? `مشاورین املاک ${persianCity}` : "مشاورین املاک"}
+        </h1>
+
+        {/* Search Bar */}
+        <div className="flex flex-row-reverse gap-2 mb-6">
+          <input
+            type="text"
+            className="flex-1 border rounded-xl p-3 text-right bg-white"
+            placeholder="نام مشاور را جستجو کنید..."
+            value={searchQuery}
+            onChange={(e) => handleSearchInput(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") handleSearchClick();
+            }}
+          />
+          <button
+            onClick={handleSearchClick}
+            className="bg-red-500 text-white px-6 rounded-xl"
+          >
+            جستجو
+          </button>
+        </div>
+
+        {searchStatus && (
+          <p className="text-gray-500 text-right mb-4">{searchStatus}</p>
+        )}
+
+        {loadingAgents && (
+          <div className="flex justify-center py-10">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-red-500"></div>
+          </div>
+        )}
+
+        {!loadingAgents && agents.length > 0 && (
+          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+            {agents.map((agent, index) => (
+              <SmallCard
+                key={agent.id || index}
+                realEstate={agent}
+                profileImageKey="profile_url"
+                compact={true}
+              />
+            ))}
+          </div>
+        )}
+
+        {!loadingAgents && agents.length === 0 && (
+          <div className="text-center text-gray-500 py-10">
+            مشاوری یافت نشد
+          </div>
+        )}
+      </div>
+    </>
+  );
+};
+
+export default RealStateIndex;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/// before canonical added ///////
+
+
+
+import React, { useState, useEffect, useRef, useMemo } from "react";
+import axios from "axios";
+import Head from "next/head";
+import { useRouter } from "next/router";
+import SmallCard from "../../components/cards/SmallCard";
+
+const SEARCH_TIMEOUT = 15000;
+const DEBOUNCE_DELAY = 1000;
+
+const RealStateIndex = () => {
+  const router = useRouter();
+  const rawSlug = router.query.citySlug;
+  const citySlug = Array.isArray(rawSlug) ? rawSlug[0] : rawSlug;
+
+  const [agents, setAgents] = useState([]);
+  const [city, setCity] = useState(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [loadingAgents, setLoadingAgents] = useState(false);
+  const [searchStatus, setSearchStatus] = useState("");
+
+  const debounceTimeout = useRef(null);
+
+  const persianCity = city?.title || "";
+  const englishCity = citySlug || "";
+
+  const fallbackReadableCity = useMemo(() => {
+    if (!englishCity) return "";
+    return englishCity.replace(/-/g, " ");
+  }, [englishCity]);
+
+  const titleCity = persianCity || fallbackReadableCity;
+
+  const seoData = useMemo(() => {
+    const title = titleCity
+      ? `مشاور املاک ${titleCity} | لیست مشاورین املاک ${titleCity} | آجر`
+      : "لیست مشاورین املاک | آجر";
+
+    const description = titleCity
+      ? `لیست بهترین مشاورین املاک ${titleCity} را در آجر ببینید. اطلاعات تماس، جستجو و مشاهده مشاورین فعال املاک در ${titleCity}.`
+      : "لیست مشاورین املاک در آجر. جستجو و مشاهده بهترین مشاورین املاک شهرهای مختلف.";
+
+    const keywords = titleCity
+      ? `مشاور املاک ${titleCity}, املاک ${titleCity}, بنگاه املاک ${titleCity}, لیست مشاورین املاک ${titleCity}`
+      : "مشاور املاک, املاک, بنگاه املاک, لیست مشاورین املاک";
+
+    const canonical = englishCity
+      ? `https://ajur.app/agents/${englishCity}`
+      : "https://ajur.app/agents";
+
+    return {
+      title,
+      description,
+      keywords,
+      canonical,
+      image: "https://ajur.app/logo/ajour-meta-image.jpg",
+    };
+  }, [titleCity, englishCity]);
+
+  const getAgentsCall = async (searchTerm = "all") => {
+    if (!citySlug) return;
+
+    try {
+      setLoadingAgents(true);
+
+      setSearchStatus(
+        searchTerm === "all"
+          ? "در حال دریافت لیست مشاورین..."
+          : "در حال جستجوی مشاورین..."
+      );
+
+      const response = await axios.get(
+        "https://api.ajur.app/api/city-agents-search",
+        {
+          params: {
+            title: searchTerm,
+            limit: 20,
+            city: citySlug,
+          },
+          timeout: SEARCH_TIMEOUT,
+        }
+      );
+
+      const result = response.data?.agents || [];
+      const cityData = response.data?.city || null;
+
+      setAgents(result);
+
+      if (cityData) {
+        setCity(cityData);
+      }
+
+      if (searchTerm === "all") {
+        setSearchStatus(`${result.length} مشاور یافت شد`);
+      } else {
+        setSearchStatus(
+          result.length > 0
+            ? `${result.length} مشاور برای "${searchTerm}" یافت شد`
+            : `هیچ مشاوری برای "${searchTerm}" یافت نشد`
+        );
+      }
+    } catch (error) {
+      console.error("Agent search failed:", error);
+      setSearchStatus("خطا در بارگذاری اطلاعات");
+      setAgents([]);
+    } finally {
+      setLoadingAgents(false);
+    }
+  };
+
+  useEffect(() => {
+    if (!router.isReady) return;
+    if (!citySlug) return;
+
+    getAgentsCall("all");
+  }, [router.isReady, citySlug]);
+
+  useEffect(() => {
+    return () => {
+      if (debounceTimeout.current) {
+        clearTimeout(debounceTimeout.current);
+      }
+    };
+  }, []);
+
+  const handleSearchInput = (value) => {
+    setSearchQuery(value);
+
+    if (debounceTimeout.current) {
+      clearTimeout(debounceTimeout.current);
+    }
+
+    debounceTimeout.current = setTimeout(() => {
+      const termToSearch = value.trim() === "" ? "all" : value.trim();
+      getAgentsCall(termToSearch);
+    }, DEBOUNCE_DELAY);
+  };
+
+  const handleSearchClick = () => {
+    if (debounceTimeout.current) {
+      clearTimeout(debounceTimeout.current);
+    }
+
+    const termToSearch =
+      searchQuery.trim() === "" ? "all" : searchQuery.trim();
+
+    getAgentsCall(termToSearch);
+  };
+
+  const jsonLd = useMemo(() => {
+    if (!englishCity) return null;
+
+    return {
+      "@context": "https://schema.org",
+      "@type": "CollectionPage",
+      name: titleCity
+        ? `لیست مشاورین املاک ${titleCity}`
+        : "لیست مشاورین املاک",
+      headline: titleCity
+        ? `مشاور املاک ${titleCity}`
+        : "لیست مشاورین املاک",
+      description: seoData.description,
+      url: seoData.canonical,
+      image: seoData.image,
+      inLanguage: "fa-IR",
+      about: {
+        "@type": "Place",
+        name: titleCity || englishCity,
+        address: {
+          "@type": "PostalAddress",
+          addressLocality: persianCity || fallbackReadableCity,
+          addressCountry: "IR",
+        },
+      },
+      mainEntity: {
+        "@type": "ItemList",
+        itemListElement: agents.slice(0, 10).map((agent, index) => ({
+          "@type": "ListItem",
+          position: index + 1,
+          name: [agent?.name, agent?.family].filter(Boolean).join(" "),
+          url: agent?.slug
+            ? `https://ajur.app/real-estate/${agent.slug}`
+            : seoData.canonical,
+        })),
+      },
+      breadcrumb: {
+        "@type": "BreadcrumbList",
+        itemListElement: [
+          {
+            "@type": "ListItem",
+            position: 1,
+            name: "آجر",
+            item: "https://ajur.app",
+          },
+          {
+            "@type": "ListItem",
+            position: 2,
+            name: "مشاورین املاک",
+            item: "https://ajur.app/agents",
+          },
+          {
+            "@type": "ListItem",
+            position: 3,
+            name: titleCity || englishCity,
+            item: seoData.canonical,
+          },
+        ],
+      },
+    };
+  }, [englishCity, titleCity, seoData, persianCity, fallbackReadableCity, agents]);
+
+  return (
+    <>
+      <Head>
+        <title>{seoData.title}</title>
+        <meta name="description" content={seoData.description} />
+        <meta name="keywords" content={seoData.keywords} />
+        <meta name="robots" content="index,follow,max-image-preview:large" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <meta charSet="utf-8" />
+        <link rel="canonical" href={seoData.canonical} />
+
+        <meta property="og:locale" content="fa_IR" />
+        <meta property="og:type" content="website" />
+        <meta property="og:title" content={seoData.title} />
+        <meta property="og:description" content={seoData.description} />
+        <meta property="og:url" content={seoData.canonical} />
+        <meta property="og:site_name" content="آجر" />
+        <meta property="og:image" content={seoData.image} />
+        <meta property="og:image:alt" content={seoData.title} />
+
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content={seoData.title} />
+        <meta name="twitter:description" content={seoData.description} />
+        <meta name="twitter:image" content={seoData.image} />
+
+        {jsonLd && (
+          <script
+            type="application/ld+json"
+            dangerouslySetInnerHTML={{
+              __html: JSON.stringify(jsonLd),
+            }}
+          />
+        )}
+      </Head>
+
+      <div className="w-full p-6">
+        <h1 className="text-xl font-bold mb-3 text-right">
+          {titleCity ? `مشاورین املاک ${titleCity}` : "مشاورین املاک"}
+        </h1>
+
+        <p className="text-sm text-gray-600 text-right mb-6">
+          {titleCity
+            ? `لیست مشاورین املاک فعال در ${titleCity}`
+            : "لیست مشاورین املاک فعال"}
+        </p>
+
+        <div className="flex flex-row-reverse gap-2 mb-6">
+          <input
+            type="text"
+            className="flex-1 border rounded-xl p-3 text-right bg-white"
+            placeholder={
+              titleCity
+                ? `جستجوی نام مشاور در ${titleCity}`
+                : "نام مشاور را جستجو کنید..."
+            }
+            value={searchQuery}
+            onChange={(e) => handleSearchInput(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                handleSearchClick();
+              }
+            }}
+          />
+          <button
+            onClick={handleSearchClick}
+            className="bg-red-500 text-white px-6 rounded-xl"
+          >
+            جستجو
+          </button>
+        </div>
+
+        {searchStatus && (
+          <p className="text-gray-500 text-right mb-4">{searchStatus}</p>
+        )}
+
+        {loadingAgents && (
+          <div className="flex justify-center py-10">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-red-500"></div>
+          </div>
+        )}
+
+        {!loadingAgents && agents.length > 0 && (
+          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+            {agents.map((agent, index) => (
+              <SmallCard
+                key={agent.id || index}
+                realEstate={agent}
+                profileImageKey="profile_url"
+                compact={true}
+              />
+            ))}
+          </div>
+        )}
+
+        {!loadingAgents && agents.length === 0 && (
+          <div className="text-center text-gray-500 py-10">
+            مشاوری یافت نشد
+          </div>
+        )}
+      </div>
+    </>
+  );
+};
+
+export default RealStateIndex;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//// before ssr ////////////
+
+import React, { useState, useEffect, useRef, useMemo } from "react";
+import axios from "axios";
+import Head from "next/head";
+import { useRouter } from "next/router";
+import SmallCard from "../../components/cards/SmallCard";
+
+const SEARCH_TIMEOUT = 15000;
+const DEBOUNCE_DELAY = 1000;
+
+const RealStateIndex = () => {
+  const router = useRouter();
+  const rawSlug = router.query.citySlug;
+  const citySlug = Array.isArray(rawSlug) ? rawSlug[0] : rawSlug;
+
+  const [agents, setAgents] = useState([]);
+  const [city, setCity] = useState(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [loadingAgents, setLoadingAgents] = useState(false);
+  const [searchStatus, setSearchStatus] = useState("");
+
+  const debounceTimeout = useRef(null);
+
+  const persianCity = city?.title || "";
+  const englishCity = citySlug || "";
+
+  // تبدیل نام انگلیسی (اسلاگ) به متن خوانا در صورت عدم لود کامل داده‌های شهر از API
+  const fallbackReadableCity = useMemo(() => {
+    if (!englishCity) return "";
+    return englishCity.replace(/-/g, " ");
+  }, [englishCity]);
+
+  // الویت اول با نام فارسی شهر بازگردانده شده از API است
+  const titleCity = persianCity || fallbackReadableCity;
+
+  const seoData = useMemo(() => {
+    const title = titleCity
+      ? `مشاور املاک ${titleCity} | لیست مشاورین املاک ${titleCity} | آجر`
+      : "لیست مشاورین املاک | آجر";
+
+    const description = titleCity
+      ? `لیست بهترین مشاورین املاک ${titleCity} را در آجر ببینید. اطلاعات تماس، جستجو و مشاهده مشاورین فعال املاک در ${titleCity}.`
+      : "لیست مشاورین املاک در آجر. جستجو و مشاهده بهترین مشاورین املاک شهرهای مختلف.";
+
+    const keywords = titleCity
+      ? `مشاور املاک ${titleCity}, املاک ${titleCity}, بنگاه املاک ${titleCity}, لیست مشاورین املاک ${titleCity}`
+      : "مشاور املاک, املاک, بنگاه املاک, لیست مشاورین املاک";
+
+    // ساخت آدرس Canonical بر اساس اسلاگ انگلیسی شهر
+    const canonical = englishCity
+      ? `https://ajur.app/agents/${englishCity}`
+      : "https://ajur.app/agents";
+
+    return {
+      title,
+      description,
+      keywords,
+      canonical,
+      image: "https://ajur.app/logo/ajour-meta-image.jpg",
+    };
+  }, [titleCity, englishCity]);
+
+  const getAgentsCall = async (searchTerm = "all") => {
+    if (!citySlug) return;
+
+    try {
+      setLoadingAgents(true);
+
+      setSearchStatus(
+        searchTerm === "all"
+          ? "در حال دریافت لیست مشاورین..."
+          : "در حال جستجوی مشاورین..."
+      );
+
+      const response = await axios.get(
+        "https://api.ajur.app/api/city-agents-search",
+        {
+          params: {
+            title: searchTerm,
+            limit: 20,
+            city: citySlug,
+          },
+          timeout: SEARCH_TIMEOUT,
+        }
+      );
+
+      const result = response.data?.agents || [];
+      const cityData = response.data?.city || null;
+
+      setAgents(result);
+
+      if (cityData) {
+        setCity(cityData);
+      }
+
+      if (searchTerm === "all") {
+        setSearchStatus(`${result.length} مشاور یافت شد`);
+      } else {
+        setSearchStatus(
+          result.length > 0
+            ? `${result.length} مشاور برای "${searchTerm}" یافت شد`
+            : `هیچ مشاوری برای "${searchTerm}" یافت نشد`
+        );
+      }
+    } catch (error) {
+      console.error("Agent search failed:", error);
+      setSearchStatus("خطا در بارگذاری اطلاعات");
+      setAgents([]);
+    } finally {
+      setLoadingAgents(false);
+    }
+  };
+
+  useEffect(() => {
+    if (!router.isReady) return;
+    if (!citySlug) return;
+
+    getAgentsCall("all");
+  }, [router.isReady, citySlug]);
+
+  useEffect(() => {
+    return () => {
+      if (debounceTimeout.current) {
+        clearTimeout(debounceTimeout.current);
+      }
+    };
+  }, []);
+
+  const handleSearchInput = (value) => {
+    setSearchQuery(value);
+
+    if (debounceTimeout.current) {
+      clearTimeout(debounceTimeout.current);
+    }
+
+    debounceTimeout.current = setTimeout(() => {
+      const termToSearch = value.trim() === "" ? "all" : value.trim();
+      getAgentsCall(termToSearch);
+    }, DEBOUNCE_DELAY);
+  };
+
+  const handleSearchClick = () => {
+    if (debounceTimeout.current) {
+      clearTimeout(debounceTimeout.current);
+    }
+
+    const termToSearch =
+      searchQuery.trim() === "" ? "all" : searchQuery.trim();
+
+    getAgentsCall(termToSearch);
+  };
+
+  const jsonLd = useMemo(() => {
+    if (!englishCity) return null;
+
+    return {
+      "@context": "https://schema.org",
+      "@type": "CollectionPage",
+      name: titleCity
+        ? `لیست مشاورین املاک ${titleCity}`
+        : "لیست مشاورین املاک",
+      headline: titleCity
+        ? `مشاور املاک ${titleCity}`
+        : "لیست مشاورین املاک",
+      description: seoData.description,
+      url: seoData.canonical,
+      image: seoData.image,
+      inLanguage: "fa-IR",
+      about: {
+        "@type": "Place",
+        name: titleCity || englishCity,
+        address: {
+          "@type": "PostalAddress",
+          addressLocality: persianCity || fallbackReadableCity,
+          addressCountry: "IR",
+        },
+      },
+      mainEntity: {
+        "@type": "ItemList",
+        itemListElement: agents.slice(0, 10).map((agent, index) => {
+          // ساخت نام کامل مشاور به شکل تمیز
+          const agentName = [agent?.name, agent?.family].filter(Boolean).join(" ");
+          return {
+            "@type": "ListItem",
+            position: index + 1,
+            name: agentName || agent?.realstate || "مشاور آجر",
+            url: agent?.slug
+              ? `https://ajur.app/real-estate/${agent.slug}`
+              : seoData.canonical,
+          };
+        }),
+      },
+      breadcrumb: {
+        "@type": "BreadcrumbList",
+        itemListElement: [
+          {
+            "@type": "ListItem",
+            position: 1,
+            name: "آجر",
+            item: "https://ajur.app",
+          },
+          {
+            "@type": "ListItem",
+            position: 2,
+            name: "مشاورین املاک",
+            item: "https://ajur.app/agents",
+          },
+          {
+            "@type": "ListItem",
+            position: 3,
+            name: titleCity || englishCity,
+            item: seoData.canonical,
+          },
+        ],
+      },
+    };
+  }, [englishCity, titleCity, seoData, persianCity, fallbackReadableCity, agents]);
+
+  return (
+    <>
+      <Head>
+        <title>{seoData.title}</title>
+        <meta name="description" content={seoData.description} />
+        <meta name="keywords" content={seoData.keywords} />
+        <meta name="robots" content="index,follow,max-image-preview:large" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <meta charSet="utf-8" />
+        <link rel="canonical" href={seoData.canonical} />
+
+        <meta property="og:locale" content="fa_IR" />
+        <meta property="og:type" content="website" />
+        <meta property="og:title" content={seoData.title} />
+        <meta property="og:description" content={seoData.description} />
+        <meta property="og:url" content={seoData.canonical} />
+        <meta property="og:site_name" content="آجر" />
+        <meta property="og:image" content={seoData.image} />
+        <meta property="og:image:alt" content={seoData.title} />
+
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content={seoData.title} />
+        <meta name="twitter:description" content={seoData.description} />
+        <meta name="twitter:image" content={seoData.image} />
+
+        {jsonLd && (
+          <script
+            type="application/ld+json"
+            dangerouslySetInnerHTML={{
+              __html: JSON.stringify(jsonLd),
+            }}
+          />
+        )}
+      </Head>
+
+      <div className="w-full p-6">
+        <h1 className="text-xl font-bold mb-3 text-right">
+          {titleCity ? `مشاورین املاک ${titleCity}` : "مشاورین املاک"}
+        </h1>
+
+        <p className="text-sm text-gray-600 text-right mb-6">
+          {titleCity
+            ? `لیست مشاورین املاک فعال در ${titleCity}`
+            : "لیست مشاورین املاک فعال"}
+        </p>
+
+        <div className="flex flex-row-reverse gap-2 mb-6">
+          <input
+            type="text"
+            className="flex-1 border rounded-xl p-3 text-right bg-white"
+            placeholder={
+              titleCity
+                ? `جستجوی نام مشاور در ${titleCity}`
+                : "نام مشاور را جستجو کنید..."
+            }
+            value={searchQuery}
+            onChange={(e) => handleSearchInput(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                handleSearchClick();
+              }
+            }}
+          />
+          <button
+            onClick={handleSearchClick}
+            className="bg-red-500 text-white px-6 rounded-xl"
+          >
+            جستجو
+          </button>
+        </div>
+
+        {searchStatus && (
+          <p className="text-gray-500 text-right mb-4">{searchStatus}</p>
+        )}
+
+        {loadingAgents && (
+          <div className="flex justify-center py-10">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-red-500"></div>
+          </div>
+        )}
+
+        {!loadingAgents && agents.length > 0 && (
+          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+            {agents.map((agent, index) => (
+              <SmallCard
+                key={agent.id || index}
+                realEstate={agent}
+                profileImageKey="profile_url"
+                compact={true}
+              />
+            ))}
+          </div>
+        )}
+
+        {!loadingAgents && agents.length === 0 && (
+          <div className="text-center text-gray-500 py-10">
+            مشاوری یافت نشد
+          </div>
+        )}
+      </div>
+    </>
+  );
+};
+
+export default RealStateIndex;

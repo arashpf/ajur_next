@@ -1,0 +1,53 @@
+.header-wrapper {
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    background-color: #fff;
+    padding: 12px 24px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    display: flex;
+    justify-content: flex-start;
+    /* for RTL, align to right side */
+    align-items: center;
+    direction: rtl;
+}
+
+.profile-section {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.profile-picture img {
+    width: 60px;
+    height: 60px;
+    border-radius: 999px;
+    object-fit: cover;
+    border: 2px solid #ddd;
+}
+
+.info {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    height: 60px;
+    /* Match image height */
+    text-align: right;
+}
+
+.name {
+    font-weight: 600;
+    font-size: 20px;
+    color: #222;
+    margin-bottom: 5px;
+}
+
+.info {
+    padding-top: 15px;
+}
+
+.back-button {
+    position: fixed;
+    left: 5%;
+    top: 4%;
+}

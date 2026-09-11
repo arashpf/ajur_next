@@ -1,0 +1,414 @@
+/**
+* VARIABLES
+**/
+
+.card-wrapper {
+  position: relative;
+  border-radius: 10px;
+  
+  box-shadow: rgba(0, 0, 0, 0.35) 0px 5px 15px;
+  margin: 0; /* keep card itself margin-free; page container will provide symmetric gutters */
+}
+
+.card-wrapper-urgent {
+  position: relative;
+  border-radius: 10px;
+  background: #e5e5e5;
+  box-shadow: rgba(0, 0, 0, 0.35) 0px 5px 15px;
+  margin: 0; /* keep card itself margin-free; page container will provide symmetric gutters */
+}
+
+.card-wrapper-special {
+  /* background: #e89a5a !important; */
+  /* background: linear-gradient(135deg, #8e44ad 0%, #f39c12 100%) !important; */
+  background: linear-gradient(135deg, #8e44ad 0%, #c9a227 50%, #f39c12 100%) !important;
+  /* background: linear-gradient(135deg, #9b59b6 0%, #d4af37 100%) !important; */
+  /* background: #c9a227 !important; */
+  /* background: #8e44ad !important; */
+  /* border: 2px solid rgba(0,0,0,0.05); */
+}
+
+/* make card a column flex container so media + content size predictably */
+.card-wrapper {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.card-media {
+  width: 100%;
+  max-height: 140px; /* decreased image height for a tighter card */
+  object-fit: cover;
+  flex: 0 0 auto;
+}
+
+/* image loading skeleton (subtle shimmer) */
+.image-skeleton {
+  width: 100%;
+  height: 160px;
+  background: linear-gradient(90deg, #f0f0f0 0%, #e8e8e8 50%, #f0f0f0 100%);
+  background-size: 200% 100%;
+  animation: shimmer 1.2s linear infinite;
+  border-radius: 8px 8px 0 0;
+}
+
+@keyframes shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+.card-content {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+}
+
+.card-inside-neighbor{
+  position: absolute;
+  /* place heart over the lower-right of the image area */
+  top: 125px; /* adjusted to align with smaller image */
+  left: 5px;
+
+  /* width: 360px; */
+  /* height: 8%; */
+  /* top: 1px; */
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  /* height: 30px;
+  width: 30px; */
+
+  padding: 6px;
+
+  background-color: rgba(255, 255, 255, 0.7);
+
+  /* margin: 0 5px; */
+  /* padding: 0 10px; */
+  border-radius: 6px;
+  z-index: 1;
+}
+
+.card-inside-heart {
+  position: absolute;
+  /* place heart over the lower-right of the image area */
+  top: 120px; /* adjusted to align with smaller image */
+  right: 10px;
+
+  /* width: 360px; */
+  /* height: 8%; */
+  /* top: 1px; */
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  /* height: 30px;
+  width: 30px; */
+
+  padding: 6px;
+
+  background-color: rgba(255, 255, 255, 0.7);
+
+  /* margin: 0 5px; */
+  /* padding: 0 10px; */
+  border-radius: 6px;
+  z-index: 1;
+}
+
+.card-inside-date {
+  position: absolute;
+  /* position to the left of the heart at the same vertical level */
+  top: 132px;
+  right: 55px; /* leaves space for the heart (adjust if heart width changes) */
+
+  /* width: 360px; */
+  /* height: 8%; */
+  /* top: 1px; */
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  /* height: 30px;
+  width: 30px; */
+
+  padding: 0 6px;
+
+  background-color: rgba(255, 255, 255, 0.7);
+
+  /* margin: 0 5px; */
+  /* padding: 0 10px; */
+  border-radius: 6px;
+  z-index: 1;
+}
+
+.price-wrapper {
+  font-size: 14px; /* slightly smaller to reduce wrapping */
+  text-align: right;
+  color: #444;
+  margin-bottom: -5px;
+  white-space: nowrap; /* prevent wrapping */
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: block;
+  max-width: 100%;
+}
+
+/* on hover show full price (allow wrapping / full visibility) */
+.card-wrapper:hover .price-wrapper {
+  white-space: normal;
+  overflow: visible;
+}
+
+.properties-wrapper {
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-end;
+  font-size: 14px;
+  text-align: right;
+}
+.card-inside-top {
+  position: relative;
+}
+
+.properties-hint {
+  margin-top: 10px;
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap; /* keep badges on a single row */
+  justify-content: flex-start;
+  gap: 6px;
+  width: 100%;
+  overflow-x: auto; /* allow horizontal scroll instead of wrapping */
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: 0px;
+}
+
+/* reserve space when there are no bottom tags: insert an invisible placeholder
+   so card heights remain consistent (acts like a skeleton but hidden) */
+.properties-hint:empty::after {
+  content: "";
+  display: block;
+  height: 24px; /* same approximate height as a tag */
+  visibility: hidden;
+}
+
+.absolute-center {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.card-inside-top {
+  justify-content: flex-end;
+  width: 100%;
+}
+
+.card-inside-top {
+  /* background-color: blue; */
+  position: absolute;
+  top: 0%;
+  left: 0%;
+  /* width: 360px; */
+  /* height: 8%; */
+  /* top: 1px; */
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  height: 30px;
+}
+
+.inside-top-right {
+  position: absolute;
+  top: 1px;
+  right: 5px;
+  font-size: 12px;
+  color: rgb(255, 255, 255);
+  background: #0a0a14bd;
+  border-radius: 999px;
+  padding: 2px 8px;
+  margin-top: 3px;
+  direction: rtl;
+}
+
+.card-top-icon-wrapper {
+  /* background: white; */
+  border: 1px solid white;
+  background: rgba(255, 255, 255, 0.746);
+  text-align: center;
+  font-family: sans-serif;
+  padding: 1px 2px;
+  margin: 3px;
+  font-size: 12px;
+}
+
+/* price bubble: summary + bubble shown on hover */
+.price-container {
+  position: relative;
+  display: inline-block;
+  width: 100%;
+}
+
+.price-summary {
+  font-size: 13px; /* slightly smaller */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.price-bubble {
+  display: none;
+  position: absolute;
+  right: 0;
+  top: 0;
+  transform: translateY(-8px);
+  background: white;
+  box-shadow: 0 6px 16px rgba(0,0,0,0.2);
+  padding: 8px 10px;
+  border-radius: 8px;
+  white-space: nowrap;
+  z-index: 60;
+}
+
+/* show the bubble on card hover, and keep the summary truncated */
+.card-wrapper:hover .price-bubble {
+  display: block;
+}
+
+.specials-wrapper {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+}
+
+.worker-card-row-special {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+}
+
+.worker-address {
+  text-align: right;
+  font-size: 14px;
+  color: #888;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+}
+
+@media (max-width: 600px) {
+  .card-wrapper {
+    margin: 3px auto; /* Center the card horizontally */
+    width: calc(100% - 16px); /* Control left/right spacing - adjust this value */
+    max-width: 100%;
+  }
+
+  .card-inside-top {
+    position: absolute;
+    top: 0%;
+    left: 0%;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    height: 30px;
+  }
+
+  .card-inside-bottom {
+    position: absolute;
+    /* lift bottom ribbon up to overlap the image bottom */
+    top: 135px; /* slightly below the image (image height 120px) */
+    left: 8px;
+    right: 8px;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    height: 28px;
+    background-color: rgba(255, 255, 255, 0.9);
+    margin: 0 5px;
+    padding: 4px 8px;
+    border-radius: 6px;
+    z-index: 22;
+  }
+
+  .properties-wrapper {
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-end;
+    font-size: 14px;
+    text-align: right;
+  }
+}
+
+@media (min-width: 600px) {
+  .card-inside-top {
+    justify-content: space-between;
+    width: 100%;
+  }
+}
+
+.card-inside-bottom {
+  position: absolute;
+  top: 135px;
+
+  /* width: 360px; */
+  /* height: 8%; */
+  /* top: 1px; */
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  height: 20px;
+  background-color: rgba(255, 255, 255, 0.7);
+
+  margin: 0 5px;
+  padding: 0 10px;
+  border-radius: 5px;
+  z-index: 1;
+}
+
+.properties-hint {
+  min-height: 24px;
+  display: flex;
+  align-items: center;
+  margin-bottom: -15px;
+}
+
+.no-hints {
+  margin-bottom: 0;
+  min-height: 9px;
+  height: 9px;
+  overflow: hidden;
+}
+
+.urgent-ribbon {
+  position: absolute;
+  top: 12px;
+  left: -34px;
+  background: #a92b31;
+  
+  color: #fff;
+  font-weight: 700;
+  font-size: 13px;
+  padding: 4px 40px;
+  text-align: center;
+  transform: rotate(-45deg);
+  z-index: 10;
+  border-radius: 4px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.25);
+  pointer-events: none;
+}
+
+.urgent-ribbon p {
+  
+  font-size: 17px;
+  font-family: 'iransans',
+}
+
+.ad-badge {
+  background: #a92b31;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 500;
+  padding: 2px 10px;
+  margin-right: 5px;
+  border-radius: 4px;
+  font-family: 'iransans',
+  
+  
+}

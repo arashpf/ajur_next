@@ -1,0 +1,28 @@
+
+
+.cat-card-2-title {
+  font-family: iransans;
+  font-size: 1.1em;
+  text-align: center;
+  
+}
+
+.cat-card-2-active {
+
+  padding: 10px;
+  background: white;
+  margin: 10px;
+  border-radius: 5px;
+  box-shadow: -5px 5px 5px 1px #ddd;
+  background: orange;
+
+}
+
+.cat-card-2-disactive {
+  padding: 10px;
+  background: white;
+  margin: 10px;
+  border-radius: 5px;
+  box-shadow: -5px 5px 5px 1px #ddd;
+
+}

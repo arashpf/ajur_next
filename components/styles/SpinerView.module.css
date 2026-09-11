@@ -1,0 +1,15 @@
+.spin-wrapper {
+
+  justify-content: center;
+  display: flex;
+  height: 100%;
+  width: 100%;
+
+
+}
+
+.spin-wrapper .spinner {
+  position: relative ;
+  top: calc(50% - 2em);
+
+}

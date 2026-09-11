@@ -1,0 +1,164 @@
+.loadingContainer {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+  z-index: 9999;
+  color: white;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.loader {
+  position: relative;
+  width: 120px;
+  height: 120px;
+  margin-bottom: 30px;
+}
+
+.orbit {
+  position: absolute;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  border-top-color: #00f2ff;
+  border-bottom-color: #b92a31;
+  animation: spin 3s linear infinite;
+}
+
+.orbit:nth-child(1) {
+  width: 100%;
+  height: 100%;
+  animation-delay: 0.1s;
+}
+
+.orbit:nth-child(2) {
+  top: 15%;
+  left: 15%;
+  width: 70%;
+  height: 70%;
+  animation-delay: 0.2s;
+}
+
+.orbit:nth-child(3) {
+  top: 30%;
+  left: 30%;
+  width: 40%;
+  height: 40%;
+  animation-delay: 0.3s;
+}
+
+.planet {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 20px;
+  height: 20px;
+  background: linear-gradient(45deg, #00f2ff, #b92a31);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  box-shadow: 0 0 15px rgba(185, 42, 49, 0.7);
+}
+
+.progressBar {
+  width: 200px;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 2px;
+  overflow: hidden;
+  margin: 20px 0;
+}
+
+.progress {
+  height: 100%;
+  width: 0;
+  background: linear-gradient(90deg, #00f2ff, #b92a31);
+  animation: progress 2.5s ease-in-out infinite;
+}
+
+.message {
+  font-size: 1.2rem;
+  text-align: center;
+  max-width: 80%;
+  margin-top: 20px;
+  direction: rtl;
+}
+
+.noDataContainer {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+  z-index: 9999;
+  color: white;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.noDataIllustration {
+  position: relative;
+  width: 150px;
+  height: 150px;
+  margin-bottom: 30px;
+}
+
+.magnifyingGlass {
+  width: 100%;
+  height: 100%;
+  border: 3px solid #b92a31;
+  border-radius: 50%;
+  position: relative;
+}
+
+.magnifyingGlass::after {
+  content: '';
+  position: absolute;
+  bottom: -15px;
+  right: -15px;
+  width: 30px;
+  height: 3px;
+  background: #b92a31;
+  transform: rotate(45deg);
+}
+
+.exclamation {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 3rem;
+  color: #00f2ff;
+  font-weight: bold;
+}
+
+.noDataTitle {
+  font-size: 1.5rem;
+  margin-bottom: 10px;
+  direction: rtl;
+}
+
+.noDataSubtitle {
+  font-size: 1rem;
+  opacity: 0.8;
+  direction: rtl;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+@keyframes progress {
+  0% { width: 0; left: 0; }
+  50% { width: 100%; left: 0; }
+  100% { width: 0; left: 100%; }
+}

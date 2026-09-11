@@ -1,0 +1,99 @@
+.introContainer {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.slideContainer {
+  width: 90%;
+  max-width: 900px;
+  background-color: #fff;
+  border-radius: 20px;
+  overflow: hidden;
+}
+.lottieContainer {
+  height: 250px;
+  /* keep container transparent so image doesn't show a moving white box while flipping */
+  background-color: transparent;
+  perspective: 1200px;
+}
+.lottieAnimation {
+  width: 100%;
+  height: 100%;
+}
+.slideImage {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+  transform-style: preserve-3d;
+  /* allow both sides to render correctly during a full 360deg spin */
+  backface-visibility: visible;
+}
+
+.animateFlip {
+  /* perform two full Y-axis rotations (360deg) over 1.6s and keep final upright state */
+  animation-name: flipY;
+  animation-duration: 1.6s; /* total duration for two flips */
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: 1;
+  animation-fill-mode: forwards;
+}
+
+@keyframes flipY {
+  from { transform: rotateY(0deg); }
+  to { transform: rotateY(360deg); }
+}
+.textContainer {
+  padding: 20px;
+  background-color: #4caf50;
+}
+.slideTitle {
+  font-size: 22px;
+  font-weight: 700;
+  color: #fff;
+  text-align: center;
+  margin-bottom: 10px;
+}
+.slideDescription {
+  font-size: 16px;
+  color: #fff;
+  text-align: center;
+  margin-bottom: 20px;
+  line-height: 24px;
+}
+.pagination {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 20px;
+}
+.paginationDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 4px;
+  background-color: rgba(255, 255, 255, 0.5);
+  margin: 0 4px;
+}
+.paginationDotActive {
+  background-color: #fff;
+  width: 16px;
+}
+.navigationButtons {
+  display: flex;
+  justify-content: space-between;
+}
+.navButton {
+  padding: 12px 24px;
+  border-radius: 8px;
+  background-color: rgba(255, 255, 255, 0.2);
+  border: none;
+}
+.primaryButton {
+  background-color: #fff;
+}
+.skipButton {
+  background-color: transparent;
+  color: gray;
+}

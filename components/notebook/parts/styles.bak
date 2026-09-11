@@ -1,0 +1,856 @@
+// // Converted to plain JS styles for web React (was React Native StyleSheet)
+// const width = typeof window !== 'undefined' ? window.innerWidth : 1024;
+
+// const styles = {
+//   // Intro Slider Styles
+//   introContainer: {
+//     position: 'fixed',
+//     inset: 0,
+//     backgroundColor: 'rgba(0, 0, 0, 0.7)',
+//     display: 'flex',
+//     justifyContent: 'center',
+//     alignItems: 'center',
+//   },
+//   slideContainer: {
+//     width: Math.min(width * 0.9, 900),
+//     backgroundColor: 'white',
+//     borderRadius: 20,
+//     overflow: 'hidden',
+//   },
+//   lottieContainer: {
+//     height: 250,
+//     backgroundColor: 'white',
+//   },
+//   lottieAnimation: {
+//     width: '100%',
+//     height: '100%',
+//   },
+//   textContainer: {
+//     padding: 20,
+//     backgroundColor: '#4CAF50',
+//   },
+//   slideTitle: {
+//     fontSize: 22,
+//     fontWeight: 'bold',
+//     color: 'white',
+//     textAlign: 'center',
+//     marginBottom: 10,
+//   },
+//   slideDescription: {
+//     fontSize: 16,
+//     color: 'white',
+//     textAlign: 'center',
+//     marginBottom: 20,
+//     lineHeight: 24,
+//   },
+//   pagination: {
+//     flexDirection: 'row',
+//     justifyContent: 'center',
+//     marginBottom: 20,
+//   },
+//   paginationDot: {
+//     width: 8,
+//     height: 8,
+//     borderRadius: 4,
+//     backgroundColor: 'rgba(255, 255, 255, 0.5)',
+//     marginHorizontal: 4,
+//   },
+//   paginationDotActive: {
+//     backgroundColor: 'white',
+//     width: 16,
+//   },
+//   navigationButtons: {
+//     flexDirection: 'row',
+//     justifyContent: 'space-between',
+//   },
+//   navButton: {
+//     paddingVertical: 12,
+//     paddingHorizontal: 24,
+//     borderRadius: 8,
+//     backgroundColor: 'rgba(255, 255, 255, 0.2)',
+//   },
+//   primaryButton: {
+//     backgroundColor: 'white',
+//   },
+//   navButtonText: {
+//     color: 'gray',
+//     fontWeight: 'bold',
+//   },
+//   primaryButtonText: {
+//     color: '#4CAF50',
+//   },
+  
+//   // Category Tabs Styles
+//   categoryContainer: {
+//     maxHeight: 60,
+//     margin: '8px 0',
+//   },
+//   categoryContent: {
+//     padding: '0 8px',
+//     display: 'flex',
+//     alignItems: 'center',
+//   },
+//   categoryButton: {
+//     paddingHorizontal: 16,
+//     paddingVertical: 8,
+//     borderRadius: 20,
+//     marginHorizontal: 6,
+//     justifyContent: 'center',
+//   },
+//   categoryText: {
+//     fontSize: 14,
+//     fontWeight: 'bold',
+//   },
+  
+//   // Contact Card Styles
+//   noteCard: {
+//     backgroundColor: 'white',
+//     borderRadius: 12,
+//     padding: 12,
+//     margin: '6px 0',
+//     boxShadow: '0 1px 4px rgba(71,70,70,0.1)',
+//   },
+//   noteHeader: {
+//     display: 'flex',
+//     flexDirection: 'row',
+//     justifyContent: 'space-between',
+//     alignItems: 'center',
+//   },
+//   noteLabel: {
+//     paddingHorizontal: 8,
+//     paddingVertical: 2,
+//     borderRadius: 10,
+//   },
+//   noteLabelText: {
+//     color: 'white',
+//     fontSize: 12,
+//     fontWeight: 'bold',
+//   },
+//   noteActions: {
+//     display: 'flex',
+//     gap: 12,
+//     flexDirection: 'row',
+//   },
+//   contactName: {
+//     fontSize: 16,
+//     fontWeight: 'bold',
+//     color: '#3e2723',
+//     marginTop: 6,
+//   },
+//   contactInfo: {
+//     marginTop: 4,
+//   },
+//   phoneRow: {
+//     flexDirection: 'row',
+//     alignItems: 'center',
+//     marginTop: 2,
+//     gap: 4,
+//   },
+//   phoneText: {
+//     fontSize: 14,
+//     color: '#5d4037',
+//   },
+//   noteDescription: {
+//     marginTop: 6,
+//     fontSize: 14,
+//     color: '#6d4c41',
+//   },
+//   noteFooter: {
+//     marginTop: 8,
+//     flexDirection: 'row',
+//     justifyContent: 'flex-end',
+//   },
+//   noteDate: {
+//     fontSize: 12,
+//     color: '#a1887f',
+//   },
+  
+//   // Empty State Styles
+//   emptyState: {
+//     display: 'flex',
+//     alignItems: 'center',
+//     justifyContent: 'center',
+//     marginTop: 40,
+//   },
+//   emptyStateText: {
+//     marginTop: 12,
+//     fontSize: 16,
+//     color: '#8d6e63',
+//   },
+  
+//   // FAB Styles
+//   fab: {
+//     position: 'fixed',
+//     bottom: 30,
+//     right: 30,
+//     width: 60,
+//     height: 60,
+//     borderRadius: 30,
+//     backgroundColor: '#4CAF50',
+//     display: 'flex',
+//     justifyContent: 'center',
+//     alignItems: 'center',
+//     boxShadow: '0 4px 10px rgba(0,0,0,0.08)'
+//   },
+//   fabIcon: {
+//     fontSize: 30,
+//     color: 'white',
+//     fontWeight: 'bold',
+//   },
+  
+//   // Modal Styles
+//   modalOverlay: {
+//     position: 'fixed',
+//     inset: 0,
+//     backgroundColor: 'rgba(0,0,0,0.3)',
+//     display: 'flex',
+//     justifyContent: 'center',
+//     alignItems: 'center',
+//     padding: 20,
+//   },
+//   addModalContent: {
+//     backgroundColor: 'white',
+//     width: '100%',
+//     maxWidth: 720,
+//     maxHeight: '80%',
+//     borderRadius: 12,
+//     padding: 20,
+//     overflow: 'auto',
+//   },
+//   modalHeader: {
+//     flexDirection: 'row',
+//     justifyContent: 'space-between',
+//     alignItems: 'center',
+//     marginBottom: 10,
+//   },
+//   formTitle: {
+//     fontSize: 18,
+//     fontWeight: 'bold',
+//     color: '#5d4037',
+//   },
+//   closeIcon: {
+//     fontSize: 26,
+//     fontWeight: 'bold',
+//     color: '#5d4037',
+//   },
+//   textInput: {
+//     backgroundColor: '#f1f1f1',
+//     borderRadius: 8,
+//     padding: 10,
+//     margin: '6px 0',
+//     color: '#3e2723',
+//     width: '100%',
+//     boxSizing: 'border-box',
+//   },
+//   buttonRow: {
+//     display: 'flex',
+//     flexDirection: 'row',
+//     justifyContent: 'flex-end',
+//     marginTop: 10,
+//     gap: 10,
+//   },
+//   actionButton: {
+//     paddingVertical: 10,
+//     paddingHorizontal: 20,
+//     borderRadius: 8,
+//   },
+//   addButton: {
+//     backgroundColor: '#4CAF50',
+//   },
+//   updateButton: {
+//     backgroundColor: '#2196F3',
+//   },
+//   cancelButton: {
+//     backgroundColor: '#9e9e9e',
+//   },
+//   actionButtonText: {
+//     color: 'white',
+//     fontWeight: 'bold',
+//   },
+
+//     // Search Modal Styles
+//   searchModalOverlay: {
+//     position: 'fixed',
+//     inset: 0,
+//     backgroundColor: 'rgba(0,0,0,0.5)',
+//     justifyContent: 'flex-start',
+//     paddingTop: 60,
+//   },
+//   searchModalContent: {
+//     backgroundColor: 'white',
+//     marginHorizontal: 20,
+//     borderRadius: 12,
+//     overflow: 'hidden',
+//     maxHeight: '80%',
+//   },
+//   searchModalHeader: {
+//     flexDirection: 'row',
+//     justifyContent: 'space-between',
+//     alignItems: 'center',
+//     padding: 16,
+//     borderBottomWidth: 1,
+//     borderBottomColor: '#f0e6d2',
+//   },
+//   searchModalTitle: {
+//     fontSize: 18,
+//     fontWeight: 'bold',
+//     color: '#5d4037',
+//   },
+//   searchInputContainer: {
+//     flexDirection: 'row',
+//     alignItems: 'center',
+//     paddingHorizontal: 16,
+//     paddingVertical: 12,
+//     borderBottomWidth: 1,
+//     borderBottomColor: '#f0e6d2',
+//   },
+//   searchIcon: {
+//     marginLeft: 8,
+//   },
+//   searchInput: {
+//     flex: 1,
+//     fontSize: 16,
+//     color: '#3e2723',
+//     padding: 0,
+//     border: 'none',
+//     outline: 'none',
+//     width: '100%'
+//   },
+//   searchResultsContainer: {
+//     flex: 1,
+//     minHeight: 200,
+//   },
+//   searchLoading: {
+//     flex: 1,
+//     justifyContent: 'center',
+//     alignItems: 'center',
+//     padding: 20,
+//   },
+//   searchLoadingText: {
+//     marginTop: 10,
+//     color: '#8d6e63',
+//   },
+//   searchEmpty: {
+//     flex: 1,
+//     justifyContent: 'center',
+//     alignItems: 'center',
+//     padding: 20,
+//   },
+//   searchEmptyText: {
+//     marginTop: 10,
+//     color: '#8d6e63',
+//     fontSize: 16,
+//   },
+//   searchResultItem: {
+//     flexDirection: 'row',
+//     alignItems: 'center',
+//     padding: 16,
+//     borderBottomWidth: 1,
+//     borderBottomColor: '#f5f5f5',
+//   },
+//   searchResultContent: {
+//     flex: 1,
+//     marginRight: 12,
+//   },
+//   searchResultName: {
+//     fontSize: 16,
+//     fontWeight: 'bold',
+//     color: '#3e2723',
+//     marginBottom: 4,
+//   },
+//   searchResultDetails: {
+//     flexDirection: 'row',
+//     flexWrap: 'wrap',
+//   },
+//   searchResultPhone: {
+//     flexDirection: 'row',
+//     alignItems: 'center',
+//     marginRight: 16,
+//     marginBottom: 4,
+//   },
+//   searchResultText: {
+//     fontSize: 14,
+//     color: '#5d4037',
+//     marginLeft: 4,
+//   },
+//   searchResultDescription: {
+//     fontSize: 13,
+//     color: '#8d6e63',
+//     marginTop: 4,
+//   },
+//   searchResultCategory: {
+//     paddingHorizontal: 8,
+//     paddingVertical: 4,
+//     borderRadius: 12,
+//   },
+//   searchResultCategoryText: {
+//     color: 'white',
+//     fontSize: 12,
+//     fontWeight: 'bold',
+//   },
+
+//   // بخش‌های مختلف فرم
+//   section: {
+//     marginBottom: 20,
+//   },
+// sectionLabel: {
+//   fontSize: 16,
+//   fontWeight: 'bold',
+//   color: '#5d4037',
+//   marginBottom: 10,
+// },
+// categorySection: {
+//   marginBottom: 20,
+// },
+// categoryScroll: {
+//   marginHorizontal: -8,
+// },
+
+// // استایل‌های select
+// selectContainer: {
+//   marginBottom: 15,
+// },
+// selectLabel: {
+//   fontSize: 14,
+//   fontWeight: 'bold',
+//   color: '#5d4037',
+//   marginBottom: 8,
+// },
+//   selectOptions: {
+//     display: 'flex',
+//     flexDirection: 'row',
+//     flexWrap: 'wrap',
+//     margin: '-4px',
+//   },
+// selectOption: {
+//   paddingHorizontal: 12,
+//   paddingVertical: 8,
+//   borderRadius: 16,
+//   backgroundColor: '#f0e6d2',
+//   margin: 4,
+// },
+// selectOptionActive: {
+//   backgroundColor: '#4CAF50',
+// },
+// selectOptionText: {
+//   color: '#5d4037',
+//   fontSize: 14,
+// },
+// selectOptionTextActive: {
+//   color: 'white',
+// },
+
+// // بخش‌های مختلف فرم
+// section: {
+//   marginBottom: 20,
+// },
+// sectionLabel: {
+//   fontSize: 16,
+//   fontWeight: 'bold',
+//   color: '#5d4037',
+//   marginBottom: 10,
+// },
+// categorySection: {
+//   marginBottom: 20,
+// },
+// categoryScroll: {
+//   marginHorizontal: -8,
+// },
+// // استایل‌های select
+// selectContainer: {
+//   marginBottom: 15,
+// },
+// selectLabel: {
+//   fontSize: 14,
+//   fontWeight: 'bold',
+//   color: '#5d4037',
+//   marginBottom: 8,
+// },
+// selectOptions: {
+//   flexDirection: 'row',
+//   flexWrap: 'wrap',
+//   marginHorizontal: -4,
+// },
+// selectOption: {
+//   paddingHorizontal: 12,
+//   paddingVertical: 8,
+//   borderRadius: 16,
+//   backgroundColor: '#f0e6d2',
+//   margin: 4,
+// },
+// selectOptionActive: {
+//   backgroundColor: '#4CAF50',
+// },
+// selectOptionText: {
+//   color: '#5d4037',
+//   fontSize: 14,
+// },
+// selectOptionTextActive: {
+//   color: 'white',
+// },
+
+
+//   contactCardContent: {
+//     display: 'flex',
+//     flexDirection: 'row',
+//     alignItems: 'center',
+//     justifyContent: 'space-between',
+//     margin: '10px 0',
+//   },
+//   contactNameSection: {
+//     flex: 1,
+//     marginRight: 10,
+//   },
+// contactName: {
+//   fontSize: 18,
+//   fontWeight: 'bold',
+//   color: '#3e2723',
+// },
+// contactNamePlaceholder: {
+//   fontSize: 16,
+//   fontStyle: 'italic',
+//   color: '#8d6e63',
+// },
+//   callButton: {
+//     width: 50,
+//     height: 50,
+//     borderRadius: 25,
+//     backgroundColor: '#4CAF50',
+//     display: 'flex',
+//     justifyContent: 'center',
+//     alignItems: 'center',
+//   },
+// contactFooter: {
+//   flexDirection: 'row',
+//   justifyContent: 'space-between',
+//   alignItems: 'center',
+//   marginTop: 5,
+// },
+// phoneInfo: {
+//   flex: 1,
+// },
+// phoneText: {
+//   fontSize: 14,
+//   color: '#5d4037',
+//   marginBottom: 2,
+// },
+
+// // استایل‌های مودال جزئیات مخاطب
+//   singleContactOverlay: {
+//     position: 'fixed',
+//     inset: 0,
+//     backgroundColor: 'rgba(0,0,0,0.5)',
+//     display: 'flex',
+//     justifyContent: 'center',
+//     alignItems: 'center',
+//     padding: 20,
+//   },
+//   singleContactContent: {
+//     backgroundColor: 'white',
+//     borderRadius: 16,
+//     width: '90%',
+//     maxWidth: 720,
+//     maxHeight: '80%',
+//     overflow: 'auto',
+//   },
+// singleContactHeader: {
+//   display: 'flex',
+//   flexDirection: 'row',
+//   justifyContent: 'space-between',
+//   alignItems: 'center',
+//   padding: 16,
+//   borderBottom: '1px solid #f0e6d2',
+// },
+// singleContactTitle: {
+//   fontSize: 18,
+//   fontWeight: 'bold',
+//   color: '#5d4037',
+// },
+// singleContactScroll: {
+//   padding: 16,
+// },
+// contactCategory: {
+//   alignSelf: 'flex-start',
+//   padding: '6px 12px',
+//   borderRadius: 12,
+//   marginBottom: 16,
+// },
+// contactCategoryText: {
+//   color: 'white',
+//   fontSize: 12,
+//   fontWeight: 'bold',
+// },
+// contactNameLarge: {
+//   fontSize: 24,
+//   fontWeight: 'bold',
+//   color: '#3e2723',
+//   textAlign: 'center',
+//   marginBottom: 20,
+// },
+// contactDetails: {
+//   marginBottom: 20,
+// },
+// detailRow: {
+//   display: 'flex',
+//   flexDirection: 'row',
+//   alignItems: 'center',
+//   marginBottom: 15,
+// },
+// detailContent: {
+//   marginLeft: 12,
+//   flex: 1,
+// },
+// detailLabel: {
+//   fontSize: 12,
+//   color: '#8d6e63',
+//   marginBottom: 2,
+// },
+// detailValue: {
+//   fontSize: 16,
+//   color: '#5d4037',
+//   fontWeight: '500',
+// },
+// descriptionSection: {
+//   marginBottom: 20,
+//   padding: 12,
+//   backgroundColor: '#f9f5f0',
+//   borderRadius: 8,
+// },
+// descriptionText: {
+//   fontSize: 14,
+//   color: '#5d4037',
+//   lineHeight: 22,
+// },
+// timeInfo: {
+//   borderTop: '1px solid #f0e6d2',
+//   paddingTop: 12,
+//   marginBottom: 16,
+// },
+// timeText: {
+//   fontSize: 12,
+//   color: '#8d6e63',
+//   textAlign: 'center',
+// },
+// actionButtons: {
+//   display: 'flex',
+//   flexDirection: 'row',
+//   justifyContent: 'space-around',
+//   padding: 16,
+//   borderTop: '1px solid #f0e6d2',
+// },
+// callButtonLarge: {
+//   display: 'flex',
+//   flexDirection: 'row',
+//   alignItems: 'center',
+//   backgroundColor: '#4CAF50',
+//   padding: '12px 20px',
+//   borderRadius: 25,
+//   minWidth: 120,
+//   justifyContent: 'center',
+// },
+// callButtonText: {
+//   color: 'white',
+//   fontWeight: 'bold',
+//   marginLeft: 8,
+// },
+// editButton: {
+//   display: 'flex',
+//   flexDirection: 'row',
+//   alignItems: 'center',
+//   backgroundColor: '#f0e6d2',
+//   padding: '12px 20px',
+//   borderRadius: 25,
+//   minWidth: 120,
+//   justifyContent: 'center',
+// },
+// editButtonText: {
+//   color: '#5d4037',
+//   fontWeight: 'bold',
+//   marginLeft: 8,
+// },
+
+// // استایل‌های مودال درباره ما
+// aboutOverlay: {
+//   flex: 1,
+//   backgroundColor: 'rgba(0,0,0,0.7)',
+//   justifyContent: 'center',
+//   alignItems: 'center',
+//   padding: 20,
+// },
+// aboutContent: {
+//   backgroundColor: 'white',
+//   borderRadius: 16,
+//   width: '100%',
+//   maxWidth: 400,
+//   overflow: 'hidden',
+// },
+// aboutHeader: {
+//   flexDirection: 'row',
+//   justifyContent: 'space-between',
+//   alignItems: 'center',
+//   padding: 16,
+//   borderBottomWidth: 1,
+//   borderBottomColor: '#f0e6d2',
+//   backgroundColor: '#fff8e1',
+// },
+// aboutTitle: {
+//   fontSize: 18,
+//   fontWeight: 'bold',
+//   color: '#5d4037',
+// },
+// appInfo: {
+//   alignItems: 'center',
+//   padding: 24,
+//   borderBottomWidth: 1,
+//   borderBottomColor: '#f0e6d2',
+// },
+// appName: {
+//   fontSize: 22,
+//   fontWeight: 'bold',
+//   color: '#4CAF50',
+//   marginTop: 12,
+//   marginBottom: 8,
+// },
+// versionText: {
+//   fontSize: 16,
+//   color: '#5d4037',
+//   marginBottom: 8,
+// },
+// copyrightText: {
+//   fontSize: 14,
+//   color: '#8d6e63',
+//   textAlign: 'center',
+//   marginBottom: 4,
+// },
+// reportSection: {
+//   padding: 24,
+// },
+// reportTitle: {
+//   fontSize: 18,
+//   fontWeight: 'bold',
+//   color: '#5d4037',
+//   marginBottom: 16,
+//   textAlign: 'center',
+// },
+// reportBox: {
+//   backgroundColor: '#f9f5f0',
+//   padding: 16,
+//   borderRadius: 12,
+//   borderWidth: 1,
+//   borderColor: '#e0d6c2',
+//   marginBottom: 20,
+// },
+// reportText: {
+//   fontSize: 16,
+//   color: '#d32f2f',
+//   fontWeight: 'bold',
+//   textAlign: 'center',
+//   marginBottom: 8,
+// },
+// reportSubText: {
+//   fontSize: 14,
+//   color: '#8d6e63',
+//   textAlign: 'center',
+// },
+// reportButton: {
+//   flexDirection: 'row',
+//   alignItems: 'center',
+//   justifyContent: 'center',
+//   backgroundColor: '#d32f2f',
+//   padding: 16,
+//   borderRadius: 25,
+//   elevation: 2,
+// },
+// reportButtonText: {
+//   color: 'white',
+//   fontWeight: 'bold',
+//   marginLeft: 8,
+//   fontSize: 16,
+// },
+// aboutFooter: {
+//   padding: 16,
+//   borderTopWidth: 1,
+//   borderTopColor: '#f0e6d2',
+//   backgroundColor: '#f9f9f9',
+// },
+// footerText: {
+//   fontSize: 14,
+//   color: '#8d6e63',
+//   textAlign: 'center',
+//   fontStyle: 'italic',
+// },
+
+// // استایل‌های مودال ذخیره در گوشی
+// savePhoneOverlay: {
+//   flex: 1,
+//   backgroundColor: 'rgba(0,0,0,0.5)',
+//   justifyContent: 'center',
+//   alignItems: 'center',
+//   padding: 20,
+// },
+// savePhoneContent: {
+//   backgroundColor: 'white',
+//   borderRadius: 16,
+//   width: '100%',
+//   maxWidth: 400,
+//   overflow: 'hidden',
+// },
+// savePhoneHeader: {
+//   alignItems: 'center',
+//   padding: 24,
+//   borderBottomWidth: 1,
+//   borderBottomColor: '#f0e6d2',
+// },
+// savePhoneTitle: {
+//   fontSize: 20,
+//   fontWeight: 'bold',
+//   color: '#2196F3',
+//   marginTop: 12,
+// },
+// savePhoneBody: {
+//   padding: 24,
+// },
+// savePhoneText: {
+//   fontSize: 16,
+//   color: '#3e2723',
+//   textAlign: 'center',
+//   marginBottom: 16,
+//   lineHeight: 24,
+// },
+// savePhoneNote: {
+//   fontSize: 14,
+//   color: '#8d6e63',
+//   textAlign: 'center',
+//   fontStyle: 'italic',
+// },
+// savePhoneActions: {
+//   padding: 16,
+//   borderTopWidth: 1,
+//   borderTopColor: '#f0e6d2',
+// },
+// savePhoneButton: {
+//   flexDirection: 'row',
+//   alignItems: 'center',
+//   justifyContent: 'center',
+//   padding: 16,
+//   borderRadius: 8,
+//   marginBottom: 12,
+// },
+// saveButton: {
+//   backgroundColor: '#4CAF50',
+// },
+// skipButton: {
+//   // backgroundColor: '#2196F3',
+// },
+// cancelButton: {
+//   backgroundColor: '#9e9e9e',
+// },
+// savePhoneButtonText: {
+//   color: 'white',
+//   fontWeight: 'bold',
+//   marginLeft: 8,
+//   fontSize: 16,
+// },
+// };
+
+// export default styles;

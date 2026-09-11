@@ -1,0 +1,69 @@
+.leaflet-popup-content-wrapper {
+  border-radius: 0px;
+  margin: 0;
+  padding: 0;
+}
+
+.leaflet-popup-content {
+  margin: 0 !important;
+
+
+}
+
+
+.worker-in-map-wrappr {
+  /* display: none !important; */
+  height: 300px;
+  width: 300px;
+
+
+
+}
+
+.worker-in-map-title {
+
+    text-align: right;
+    padding-right: 10px;
+    font-size: 18px;
+    font-family: iran;
+
+}
+
+.worker-in-map-wrappr .worker-row-one {
+  height: 50px;
+
+}
+.worker-in-map-wrappr .worker-row-two {
+
+  text-align: center;
+}
+
+.worker-in-map-wrappr .worker-row-two img{
+  height: 75% !important;
+  width: 75% !important;
+
+}
+.worker-in-map-wrappr .worker-row-three {
+  height: 50px;
+  margin:25px;
+
+}
+
+.more-info-button {
+  text-align: center;
+  border:1px solid black;
+  background: orange;
+  color: white;
+  font-family: iransans;
+  font-size: 14px;
+}
+
+.more-info-button a{
+
+}
+
+
+
+.worker-in-map-image {
+  height: 100% !important;
+}

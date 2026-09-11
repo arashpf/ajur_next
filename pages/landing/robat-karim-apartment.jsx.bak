@@ -1,0 +1,1676 @@
+// pages/landing/robat-karim-apartments.jsx
+import React, { useState, useEffect } from 'react';
+import Image from 'next/image';
+import Grid from '@mui/material/Grid';
+import Box from '@mui/material/Box';
+import Link from 'next/link';
+import WorkerCard from '../../components/cards/WorkerCard';
+import Head from 'next/head';
+
+export default function RabatKarimApartmentsPage() {
+  const [apartments, setApartments] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchApartments();
+  }, []);
+
+  const fetchApartments = async () => {
+    try {
+      const res = await fetch('https://api.ajur.app/api/robat-karim-apartments');
+      const data = await res.json();
+      
+      let apts = [];
+      if (Array.isArray(data)) {
+        apts = data.slice(0, 12);
+      } else if (data.apartments && Array.isArray(data.apartments)) {
+        apts = data.apartments.slice(0, 12);
+      } else if (data.items && Array.isArray(data.items)) {
+        apts = data.items.slice(0, 12);
+      } else if (data.data && Array.isArray(data.data)) {
+        apts = data.data.slice(0, 12);
+      }
+      
+      setApartments(apts);
+    } catch (error) {
+      console.error('Error:', error);
+      setApartments([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const availableCount = apartments.length;
+
+  return (
+    <>
+      <Head>
+        <title>آپارتمان‌های رباط کریم | مجموعه‌ای منتخب از بهترین واحدها</title>
+        <meta name="description" content={`${availableCount} آپارتمان منتخب در رباط کریم. قیمت‌های به‌روز، مشخصات کامل و امکان رزرو آنلاین.`} />
+        <meta charSet="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0" />
+        <meta name="robots" content="index, follow" />
+        <link rel="icon" href="/favicon.ico" />
+        <style>{`
+          @import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;700&display=swap');
+          body {
+            font-family: 'Vazirmatn', 'iransans', system-ui, sans-serif;
+            margin: 0;
+            padding: 0;
+            background: white;
+            direction: rtl;
+          }
+          * {
+            box-sizing: border-box;
+          }
+          .cta-button {
+            transition: all 0.3s ease;
+          }
+          .cta-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+          }
+          .apartment-card-hover:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+          }
+          @keyframes spin {
+            to { transform: rotate(360deg); }
+          }
+        `}</style>
+      </Head>
+
+      {/* Hero Section */}
+      <Box sx={{ 
+        background: 'linear-gradient(135deg, #1e40af 0%, #1e3a8a 100%)',
+        color: 'white',
+        py: { xs: 6, md: 8 },
+        px: 2,
+        textAlign: 'center',
+        width: '100%'
+      }}>
+        <h1 style={{ 
+          fontSize: 'clamp(1.8rem, 4vw, 2.5rem)',
+          margin: '0 0 1rem 0',
+          fontWeight: 'bold',
+          lineHeight: 1.3
+        }}>
+          {availableCount} آپارتمان به قیمت و کارشناسی شده در رباط کریم
+        </h1>
+        <p style={{ 
+          fontSize: 'clamp(1rem, 2vw, 1.2rem)',
+          opacity: 0.9,
+          margin: '0 auto 2rem',
+          maxWidth: '600px',
+          lineHeight: 1.6
+        }}>
+          دسترسی مستقیم به بهترین واحدهای کارشناسی شده آجر در رباط کریم
+        </p>
+        <button 
+          onClick={() => window.location.href = 'tel:+989382740488'}
+          style={{
+            background: '#f59e0b',
+            color: 'white',
+            border: 'none',
+            padding: '14px 36px',
+            fontSize: '1.1rem',
+            borderRadius: '8px',
+            fontWeight: 'bold',
+            cursor: 'pointer',
+            boxShadow: '0 4px 14px rgba(245, 158, 11, 0.4)'
+          }}
+          className="cta-button"
+        >
+           تماس فوری: 09382740488 
+        </button>
+      </Box>
+
+      {/* Loading State */}
+      {loading ? (
+        <Box sx={{ 
+          display: 'flex', 
+          justifyContent: 'center', 
+          alignItems: 'center',
+          minHeight: '400px',
+          textAlign: 'center'
+        }}>
+          <div>
+            <div style={{ 
+              width: '50px', 
+              height: '50px', 
+              border: '4px solid #e2e8f0',
+              borderTopColor: '#1e40af',
+              borderRadius: '50%',
+              animation: 'spin 1s linear infinite',
+              margin: '0 auto 1rem'
+            }}></div>
+            <p style={{ color: '#64748b' }}>در حال بارگذاری آپارتمان‌ها...</p>
+          </div>
+        </Box>
+      ) : (
+        <>
+          {/* Stats */}
+          {availableCount > 0 && (
+            <Box sx={{ 
+              bgcolor: '#f8fafc',
+              py: 3,
+              borderBottom: '1px solid #e2e8f0'
+            }}>
+              <Grid container sx={{ maxWidth: '1200px', margin: '0 auto', px: 2 }}>
+                {[
+                  { value: availableCount, label: 'واحد کارشناسی شده' },
+                  { value: '۶۰-۲۰۰', label: 'متراژ متنوع' },
+                  { value: '۲۴h', label: 'پاسخگویی' },
+                  { value: '۱۰۰٪', label: 'تضمین قیمت' }
+                ].map((stat, index) => (
+                  <Grid item xs={3} key={index} sx={{ textAlign: 'center' }}>
+                    <div style={{ 
+                      fontSize: '1.5rem', 
+                      fontWeight: 'bold', 
+                      color: '#1e40af',
+                      marginBottom: '0.25rem'
+                    }}>
+                      {stat.value}
+                    </div>
+                    <div style={{ 
+                      fontSize: '0.85rem', 
+                      color: '#64748b',
+                      fontWeight: '500'
+                    }}>
+                      {stat.label}
+                    </div>
+                  </Grid>
+                ))}
+              </Grid>
+            </Box>
+          )}
+
+          {/* Apartments Grid */}
+          <Box sx={{ 
+            py: 6,
+            maxWidth: '1200px',
+            margin: '0 auto',
+            px: { xs: 2, md: 3 },
+            minHeight: '500px'
+          }}>
+            {availableCount > 0 ? (
+              <>
+                <div style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  marginBottom: '2rem',
+                  flexWrap: 'wrap',
+                  gap: '1rem'
+                }}>
+                  <h2 style={{
+                    color: '#1e293b',
+                    fontSize: '1.5rem',
+                    fontWeight: 'bold',
+                    margin: 0
+                  }}>
+                    آپارتمان‌های رباط کریم ({availableCount} واحد)
+                  </h2>
+                  <button 
+                    onClick={() => {
+                      document.getElementById('contact-form')?.scrollIntoView({ behavior: 'smooth' });
+                    }}
+                    style={{
+                      background: 'transparent',
+                      color: '#1e40af',
+                      border: '2px solid #1e40af',
+                      padding: '8px 20px',
+                      borderRadius: '6px',
+                      fontWeight: 'bold',
+                      cursor: 'pointer',
+                      fontSize: '0.9rem'
+                    }}
+                  >
+                    درخواست مشاوره رایگان
+                  </button>
+                </div>
+                
+                <Grid container spacing={3}>
+                  {apartments.map((apartment) => (
+                    <Grid item xs={12} sm={6} md={4} lg={3} key={apartment.id}>
+                      <div className="apartment-card-hover" style={{ transition: 'all 0.3s ease' }}>
+                        <Link 
+                          href={`/worker/${apartment.id}?slug=${apartment.slug || ''}`}
+                          style={{ textDecoration: 'none', display: 'block' }}
+                        >
+                          <WorkerCard worker={apartment} />
+                        </Link>
+                      </div>
+                    </Grid>
+                  ))}
+                </Grid>
+
+                {/* Quick Action Bar */}
+                <Box sx={{
+                  mt: 6,
+                  p: 3,
+                  bgcolor: '#f0f9ff',
+                  borderRadius: '12px',
+                  border: '1px solid #bae6fd',
+                  textAlign: 'center'
+                }}>
+                  <p style={{ 
+                    margin: '0 0 1rem 0',
+                    color: '#0369a1',
+                    fontSize: '1.1rem',
+                    fontWeight: '500'
+                  }}>
+                    برای بازدید حضوری وقت رزرو کنید
+                  </p>
+                  <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', flexWrap: 'wrap' }}>
+                    <button 
+                      onClick={() => window.location.href = 'tel:+989382740488'}
+                      style={{
+                        background: '#10b981',
+                        color: 'white',
+                        border: 'none',
+                        padding: '12px 24px',
+                        borderRadius: '8px',
+                        fontWeight: 'bold',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '0.5rem'
+                      }}
+                    >
+                      📞 رزرو تلفنی
+                    </button>
+                    <button 
+                      onClick={() => window.open('https://wa.me/989382740488', '_blank')}
+                      style={{
+                        background: '#25D366',
+                        color: 'white',
+                        border: 'none',
+                        padding: '12px 24px',
+                        borderRadius: '8px',
+                        fontWeight: 'bold',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '0.5rem'
+                      }}
+                    >
+                      💬 رزرو در واتساپ
+                    </button>
+                  </div>
+                </Box>
+              </>
+            ) : (
+              <Box sx={{ 
+                display: 'flex', 
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                minHeight: '400px',
+                textAlign: 'center'
+              }}>
+                <Image
+                  src="/logo/half-heart.png"
+                  alt="ajur half heart"
+                  width={100}
+                  height={99}
+                  style={{ opacity: 0.6 }}
+                />
+                <h3 style={{ marginTop: '1.5rem', color: '#475569', fontSize: '1.25rem' }}>
+                  آپارتمانی برای نمایش وجود ندارد
+                </h3>
+                <p style={{ 
+                  color: '#64748b', 
+                  maxWidth: '500px', 
+                  marginTop: '0.75rem',
+                  lineHeight: 1.6
+                }}>
+                  با کارشناسان ما تماس بگیرید تا بهترین گزینه‌ها را به شما معرفی کنند.
+                </p>
+              </Box>
+            )}
+          </Box>
+
+          {/* Contact Form */}
+          <Box 
+            id="contact-form"
+            sx={{
+              py: 8,
+              px: { xs: 2, md: 3 },
+              bgcolor: '#f8fafc',
+              borderTop: '1px solid #e2e8f0'
+            }}
+          >
+            <div style={{ maxWidth: '800px', margin: '0 auto' }}>
+              <h2 style={{
+                textAlign: 'center',
+                color: '#1e293b',
+                fontSize: '1.8rem',
+                fontWeight: 'bold',
+                marginBottom: '0.5rem'
+              }}>
+                فرم درخواست مشاوره
+              </h2>
+              <p style={{
+                textAlign: 'center',
+                color: '#64748b',
+                marginBottom: '3rem'
+              }}>
+                اطلاعات خود را وارد کنید تا کارشناسان آجر با شما تماس بگیرند
+              </p>
+
+              <Grid container spacing={3}>
+                <Grid item xs={12} md={6}>
+                  <input 
+                    type="text"
+                    placeholder="نام و نام خانوادگی"
+                    style={{
+                      width: '100%',
+                      padding: '14px',
+                      border: '1px solid #cbd5e1',
+                      borderRadius: '8px',
+                      fontSize: '1rem',
+                      outline: 'none',
+                      transition: 'all 0.3s'
+                    }}
+                  />
+                </Grid>
+                <Grid item xs={12} md={6}>
+                  <input 
+                    type="tel"
+                    placeholder="شماره تماس"
+                    style={{
+                      width: '100%',
+                      padding: '14px',
+                      border: '1px solid #cbd5e1',
+                      borderRadius: '8px',
+                      fontSize: '1rem',
+                      outline: 'none',
+                      transition: 'all 0.3s'
+                    }}
+                  />
+                </Grid>
+                <Grid item xs={12}>
+                  <textarea
+                    placeholder="توضیحات یا سوالات شما"
+                    rows={4}
+                    style={{
+                      width: '100%',
+                      padding: '14px',
+                      border: '1px solid #cbd5e1',
+                      borderRadius: '8px',
+                      fontSize: '1rem',
+                      outline: 'none',
+                      resize: 'vertical',
+                      minHeight: '120px',
+                      transition: 'all 0.3s'
+                    }}
+                  />
+                </Grid>
+                <Grid item xs={12}>
+                  <button 
+                    onClick={() => alert('درخواست شما ثبت شد. به زودی با شما تماس می‌گیریم.')}
+                    style={{
+                      width: '100%',
+                      background: 'linear-gradient(135deg, #1e40af 0%, #1e3a8a 100%)',
+                      color: 'white',
+                      border: 'none',
+                      padding: '16px',
+                      borderRadius: '8px',
+                      fontSize: '1.1rem',
+                      fontWeight: 'bold',
+                      cursor: 'pointer',
+                      transition: 'all 0.3s'
+                    }}
+                    className="cta-button"
+                  >
+                    ارسال درخواست مشاوره رایگان
+                  </button>
+                </Grid>
+              </Grid>
+            </div>
+          </Box>
+
+          {/* Footer */}
+          <Box sx={{
+            py: 4,
+            px: 3,
+            bgcolor: '#1e293b',
+            color: 'white',
+            textAlign: 'center'
+          }}>
+            <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
+              <p style={{ margin: 0, fontSize: '0.9rem', opacity: 0.8 }}>
+                © {new Date().getFullYear()} آجر - مشاور املاک هوشمند. تمامی حقوق محفوظ است.
+              </p>
+              <div style={{ 
+                display: 'flex', 
+                justifyContent: 'center', 
+                gap: '2rem',
+                marginTop: '1rem',
+                flexWrap: 'wrap'
+              }}>
+                <a href="https://ajur.app" style={{ color: '#60a5fa', textDecoration: 'none' }}>
+                  صفحه اصلی آجر
+                </a>
+                <a href="tel:+989382740488" style={{ color: '#60a5fa', textDecoration: 'none' }}>
+                  ۰۲۱-۰۰۰۰۰۰۰۰
+                </a>
+                <a href="mailto:contact@ajur.app" style={{ color: '#60a5fa', textDecoration: 'none' }}>
+                  contact@ajur.app
+                </a>
+              </div>
+            </div>
+          </Box>
+        </>
+      )}
+    </>
+  );
+}
+
+
+//////
+// pages/landing/robat-karim-apartments.jsx
+import React, { useState, useEffect } from 'react';
+import Image from 'next/image';
+import Grid from '@mui/material/Grid';
+import Box from '@mui/material/Box';
+import Link from 'next/link';
+import WorkerCard from '../../components/cards/WorkerCard';
+import Head from 'next/head';
+
+export default function RabatKarimApartmentsPage() {
+  const [apartments, setApartments] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchApartments();
+  }, []);
+
+  const fetchApartments = async () => {
+    try {
+      const res = await fetch('https://api.ajur.app/api/robat-karim-apartments');
+      const data = await res.json();
+      
+      let apts = [];
+      if (Array.isArray(data)) {
+        apts = data.slice(0, 12);
+      } else if (data.apartments && Array.isArray(data.apartments)) {
+        apts = data.apartments.slice(0, 12);
+      } else if (data.items && Array.isArray(data.items)) {
+        apts = data.items.slice(0, 12);
+      } else if (data.data && Array.isArray(data.data)) {
+        apts = data.data.slice(0, 12);
+      }
+      
+      setApartments(apts);
+    } catch (error) {
+      console.error('Error:', error);
+      setApartments([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const availableCount = apartments.length;
+
+  return (
+    <>
+      <Head>
+        <title>آپارتمان‌های رباط کریم | مجموعه‌ای منتخب از بهترین واحدها</title>
+        <meta name="description" content={`${availableCount} آپارتمان منتخب در رباط کریم. قیمت‌های به‌روز، مشخصات کامل و امکان رزرو آنلاین.`} />
+        <meta charSet="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0" />
+        <meta name="robots" content="index, follow" />
+        <link rel="icon" href="/favicon.ico" />
+        <style>{`
+          @import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;700&display=swap');
+          body {
+            font-family: 'Vazirmatn', 'iransans', system-ui, sans-serif;
+            margin: 0;
+            padding: 0;
+            background: white;
+          }
+          * {
+            box-sizing: border-box;
+          }
+          .cta-button {
+            transition: all 0.3s ease;
+          }
+          .cta-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+          }
+          .apartment-card-hover:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+          }
+          @keyframes spin {
+            to { transform: rotate(360deg); }
+          }
+          .persian-text {
+            text-align: right;
+            direction: rtl;
+          }
+        `}</style>
+      </Head>
+
+      {/* Hero Section */}
+      <Box sx={{ 
+        background: 'linear-gradient(135deg, #1e40af 0%, #1e3a8a 100%)',
+        color: 'white',
+        py: { xs: 6, md: 8 },
+        px: 2,
+        textAlign: 'center',
+        width: '100%',
+      }}>
+        <h1 className="persian-text" style={{ 
+          fontSize: 'clamp(1.8rem, 4vw, 2.5rem)',
+          margin: '0 0 1rem 0',
+          fontWeight: 'bold',
+          lineHeight: 1.3
+        }}>
+          {availableCount} آپارتمان به قیمت  در رباط کریم
+        </h1>
+        <p className="persian-text" style={{ 
+          fontSize: 'clamp(1rem, 2vw, 1.2rem)',
+          opacity: 0.9,
+          margin: '0 auto 2rem',
+          maxWidth: '600px',
+          lineHeight: 1.6
+        }}>
+          دسترسی مستقیم به بهترین آپارتمان های کارشناسی شده آجر در رباط کریم
+        </p>
+        <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', flexWrap: 'wrap' }}>
+          <button 
+            onClick={() => window.location.href = 'tel:+989382740488'}
+            style={{
+              background: '#f59e0b',
+              color: 'white',
+              border: 'none',
+              padding: '14px 24px',
+              fontSize: '1rem',
+              borderRadius: '8px',
+              fontWeight: 'bold',
+              cursor: 'pointer',
+              boxShadow: '0 4px 14px rgba(245, 158, 11, 0.4)',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem'
+            }}
+            className="cta-button"
+          >
+            📞 تماس: ۰۹۳۸۲۷۴۰۴۸۸
+          </button>
+          <button 
+            onClick={() => window.open('https://wa.me/989382740488', '_blank')}
+            style={{
+              background: '#25D366',
+              color: 'white',
+              border: 'none',
+              padding: '14px 24px',
+              fontSize: '1rem',
+              borderRadius: '8px',
+              fontWeight: 'bold',
+              cursor: 'pointer',
+              boxShadow: '0 4px 14px rgba(37, 211, 102, 0.4)',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem'
+            }}
+            className="cta-button"
+          >
+            💬 واتساپ
+          </button>
+        </div>
+      </Box>
+
+      {/* Loading State */}
+      {loading ? (
+        <Box sx={{ 
+          display: 'flex', 
+          justifyContent: 'center', 
+          alignItems: 'center',
+          minHeight: '400px',
+          textAlign: 'center'
+        }}>
+          <div className="persian-text">
+            <div style={{ 
+              width: '50px', 
+              height: '50px', 
+              border: '4px solid #e2e8f0',
+              borderTopColor: '#1e40af',
+              borderRadius: '50%',
+              animation: 'spin 1s linear infinite',
+              margin: '0 auto 1rem'
+            }}></div>
+            <p style={{ color: '#64748b' }}>در حال بارگذاری آپارتمان‌ها...</p>
+          </div>
+        </Box>
+      ) : (
+        <>
+          
+
+          {/* Apartments Grid - 1 on mobile, 3 on desktop */}
+          <Box sx={{ 
+            py: 6,
+            maxWidth: '1200px',
+            margin: '0 auto',
+            px: { xs: 2, md: 3 },
+            minHeight: '500px'
+          }}>
+            {availableCount > 0 ? (
+              <>
+                {/* <div className="persian-text" style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  marginBottom: '2rem',
+                  flexWrap: 'wrap',
+                  gap: '1rem',
+                }}>
+                  <h2 style={{
+                    color: '#1e293b',
+                    fontSize: '1.5rem',
+                    fontWeight: 'bold',
+                    margin: 0,
+                    textAlign: 'right'
+                  }}>
+                    آپارتمان‌های رباط کریم ({availableCount} واحد)
+                  </h2>
+                  <div style={{ display: 'flex', gap: '0.5rem' }}>
+                    <button 
+                      onClick={() => window.location.href = 'tel:+989382740488'}
+                      style={{
+                        background: '#10b981',
+                        color: 'white',
+                        border: 'none',
+                        padding: '8px 16px',
+                        borderRadius: '6px',
+                        fontWeight: 'bold',
+                        cursor: 'pointer',
+                        fontSize: '0.9rem',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '0.25rem'
+                      }}
+                    >
+                      📞 تماس
+                    </button>
+                    <button 
+                      onClick={() => window.open('https://wa.me/989382740488', '_blank')}
+                      style={{
+                        background: '#25D366',
+                        color: 'white',
+                        border: 'none',
+                        padding: '8px 16px',
+                        borderRadius: '6px',
+                        fontWeight: 'bold',
+                        cursor: 'pointer',
+                        fontSize: '0.9rem',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '0.25rem'
+                      }}
+                    >
+                      💬 واتساپ
+                    </button>
+                  </div>
+                </div> */}
+
+                
+                
+                {/* Grid: 1 column on mobile, 3 columns on desktop */}
+                <Grid container spacing={3}>
+                  {apartments.map((apartment) => (
+                    <Grid item xs={12} sm={6} md={4} key={apartment.id}>
+                      <div className="apartment-card-hover" style={{ transition: 'all 0.3s ease' }}>
+                        <Link 
+                          href={`/worker/${apartment.id}?slug=${apartment.slug || ''}`}
+                          style={{ textDecoration: 'none', display: 'block' }}
+                        >
+                          <WorkerCard worker={apartment} />
+                        </Link>
+                      </div>
+                    </Grid>
+                  ))}
+                </Grid>
+
+                {/* Stats */}
+          {availableCount > 0 && (
+            <Box sx={{ 
+              bgcolor: '#f8fafc',
+              py: 3,
+              borderBottom: '1px solid #e2e8f0'
+            }}>
+              <Grid container sx={{ maxWidth: '1200px', margin: '0 auto', px: 2 }}>
+                {[
+                  { value: availableCount, label: 'واحد کارشناسی شده جدید' },
+                  { value: '۶۰-۲۰۰', label: 'متراژ متنوع' },
+                  { value: '۲۴ ساعته', label: 'پاسخگویی' },
+                  { value: '۱۰۰٪', label: 'تضمین قیمت' }
+                ].map((stat, index) => (
+                  <Grid item xs={6} sm={3} key={index} sx={{ textAlign: 'center' }}>
+                     <div className="persian-text" style={{ 
+                      fontSize: '0.85rem', 
+                      color: '#64748b',
+                      fontWeight: '500'
+                    }}>
+                      {stat.label}
+                    </div>
+                    <div className="persian-text" style={{ 
+                      fontSize: '1.5rem', 
+                      fontWeight: 'bold', 
+                      color: '#1e40af',
+                      marginBottom: '0.25rem'
+                    }}>
+                      {stat.value}
+                    </div>
+                   
+                  </Grid>
+                ))}
+              </Grid>
+            </Box>
+          )}
+
+                {/* Quick Action Bar - Only Call & WhatsApp */}
+                <Box sx={{
+                  mt: 8,
+                  p: 4,
+                  bgcolor: '#f0f9ff',
+                  borderRadius: '12px',
+                  border: '1px solid #bae6fd',
+                  textAlign: 'center'
+                }}>
+                  <h3 className="persian-text" style={{ 
+                    margin: '0 0 1rem 0',
+                    color: '#0369a1',
+                    fontSize: '1.3rem',
+                    fontWeight: 'bold',
+                    textAlign: 'right'
+                  }}>
+                    برای بازدید حضوری همین حالا تماس بگیرید
+                  </h3>
+                  <p className="persian-text" style={{ 
+                    color: '#64748b', 
+                    marginBottom: '2rem',
+                    maxWidth: '500px',
+                    margin: '0 auto',
+                    textAlign: 'right'
+                  }}>
+                    کارشناسان آجر آماده پاسخگویی و هماهنگی بازدید هستند
+                  </p>
+                  <div style={{ 
+                    display: 'flex', 
+                    gap: '1rem', 
+                    justifyContent: 'center', 
+                    flexWrap: 'wrap',
+                    maxWidth: '400px',
+                    margin: '0 auto'
+                  }}>
+                    <button 
+                      onClick={() => window.location.href = 'tel:+989382740488'}
+                      style={{
+                        background: '#10b981',
+                        color: 'white',
+                        border: 'none',
+                        padding: '14px 28px',
+                        borderRadius: '8px',
+                        fontWeight: 'bold',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '0.5rem',
+                        fontSize: '1rem',
+                        flex: 1,
+                        minWidth: '160px'
+                      }}
+                      className="cta-button"
+                    >
+                      📞 تماس مستقیم
+                    </button>
+                    <button 
+                      onClick={() => window.open('https://wa.me/989382740488', '_blank')}
+                      style={{
+                        background: '#25D366',
+                        color: 'white',
+                        border: 'none',
+                        padding: '14px 28px',
+                        borderRadius: '8px',
+                        fontWeight: 'bold',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '0.5rem',
+                        fontSize: '1rem',
+                        flex: 1,
+                        minWidth: '160px'
+                      }}
+                      className="cta-button"
+                    >
+                      💬 گفتگو در واتساپ
+                    </button>
+                  </div>
+                </Box>
+              </>
+            ) : (
+              <Box sx={{ 
+                display: 'flex', 
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                minHeight: '400px',
+                textAlign: 'center'
+              }}>
+                <Image
+                  src="/logo/half-heart.png"
+                  alt="ajur half heart"
+                  width={100}
+                  height={99}
+                  style={{ opacity: 0.6 }}
+                />
+                <h3 className="persian-text" style={{ 
+                  marginTop: '1.5rem', 
+                  color: '#475569', 
+                  fontSize: '1.25rem',
+                  textAlign: 'right'
+                }}>
+                  آپارتمانی برای نمایش وجود ندارد
+                </h3>
+                <p className="persian-text" style={{ 
+                  color: '#64748b', 
+                  maxWidth: '500px', 
+                  marginTop: '0.75rem',
+                  lineHeight: 1.6,
+                  marginBottom: '2rem',
+                  textAlign: 'right'
+                }}>
+                  همین حالا تماس بگیرید تا کارشناسان ما بهترین گزینه‌ها را معرفی کنند
+                </p>
+                <div style={{ 
+                  display: 'flex', 
+                  gap: '1rem', 
+                  flexWrap: 'wrap',
+                  justifyContent: 'center'
+                }}>
+                  <button 
+                    onClick={() => window.location.href = 'tel:+989382740488'}
+                    style={{
+                      background: '#10b981',
+                      color: 'white',
+                      border: 'none',
+                      padding: '12px 24px',
+                      borderRadius: '8px',
+                      fontWeight: 'bold',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.5rem'
+                    }}
+                  >
+                    📞 تماس بگیرید
+                  </button>
+                  <button 
+                    onClick={() => window.open('https://wa.me/989382740488', '_blank')}
+                    style={{
+                      background: '#25D366',
+                      color: 'white',
+                      border: 'none',
+                      padding: '12px 24px',
+                      borderRadius: '8px',
+                      fontWeight: 'bold',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.5rem'
+                    }}
+                  >
+                    💬 پیام در واتساپ
+                  </button>
+                </div>
+              </Box>
+
+              
+            )}
+          </Box>
+
+          {/* Footer - Clean & Simple */}
+          <Box sx={{
+            py: 4,
+            px: 3,
+            bgcolor: '#1e293b',
+            color: 'white',
+            textAlign: 'center',
+            borderTop: '1px solid #334155'
+          }}>
+            <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
+              <div className="persian-text" style={{ 
+                display: 'flex', 
+                justifyContent: 'center', 
+                gap: '2rem',
+                marginBottom: '1rem',
+                flexWrap: 'wrap'
+              }}>
+                <a href="tel:+989382740488" style={{ 
+                  color: '#60a5fa', 
+                  textDecoration: 'none',
+                  fontWeight: '500',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem'
+                }}>
+                  📞 ۰۹۳۸۲۷۴۰۴۸۸
+                </a>
+                <a href="https://ajur.app" style={{ 
+                  color: '#60a5fa', 
+                  textDecoration: 'none',
+                  fontWeight: '500'
+                }}>
+                  صفحه اصلی آجر
+                </a>
+              </div>
+              <p className="persian-text" style={{ 
+                margin: 0, 
+                fontSize: '0.9rem', 
+                opacity: 0.8,
+                borderTop: '1px solid #334155',
+                paddingTop: '1rem',
+                marginTop: '1rem',
+                textAlign: 'right'
+              }}>
+                © {new Date().getFullYear()} آجر - مشاور املاک هوشمند. تمامی حقوق محفوظ است.
+              </p>
+            </div>
+          </Box>
+        </>
+      )}
+    </>
+  );
+}
+
+
+//// before changing to 2 milion 
+
+// pages/landing/robat-karim-apartments.jsx
+import React, { useState, useEffect } from 'react';
+import Image from 'next/image';
+import Grid from '@mui/material/Grid';
+import Box from '@mui/material/Box';
+import Link from 'next/link';
+import WorkerCard from '../../components/cards/WorkerCard';
+import Head from 'next/head';
+
+export default function RabatKarimApartmentsPage() {
+  const [apartments, setApartments] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchApartments();
+  }, []);
+
+  const fetchApartments = async () => {
+    try {
+      const res = await fetch('https://api.ajur.app/api/robat-karim-apartments');
+      const data = await res.json();
+      
+      let apts = [];
+      if (Array.isArray(data)) {
+        apts = data.slice(0, 12);
+      } else if (data.apartments && Array.isArray(data.apartments)) {
+        apts = data.apartments.slice(0, 12);
+      } else if (data.items && Array.isArray(data.items)) {
+        apts = data.items.slice(0, 12);
+      } else if (data.data && Array.isArray(data.data)) {
+        apts = data.data.slice(0, 12);
+      }
+      
+      setApartments(apts);
+    } catch (error) {
+      console.error('Error:', error);
+      setApartments([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const availableCount = apartments.length;
+
+  return (
+    <>
+      <Head>
+        <title>آپارتمان‌های رباط کریم | مجموعه‌ای منتخب از بهترین واحدها</title>
+        <meta name="description" content={`${availableCount} آپارتمان منتخب در رباط کریم با قیمت ۳ تا ۸ میلیارد تومان. قیمت‌های به‌روز، مشخصات کامل و امکان رزرو آنلاین.`} />
+        <meta charSet="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0" />
+        <meta name="robots" content="index, follow" />
+        <link rel="icon" href="/favicon.ico" />
+        <style>{`
+          @import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;700&display=swap');
+          body {
+            font-family: 'Vazirmatn', 'iransans', system-ui, sans-serif;
+            margin: 0;
+            padding: 0;
+            background: white;
+          }
+          * {
+            box-sizing: border-box;
+          }
+          .cta-button {
+            transition: all 0.3s ease;
+          }
+          .cta-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+          }
+          .apartment-card-hover:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+          }
+          @keyframes spin {
+            to { transform: rotate(360deg); }
+          }
+          .persian-text {
+            text-align: right;
+            direction: rtl;
+          }
+          .subtle-badge {
+            animation: subtlePulse 3s infinite;
+          }
+          @keyframes subtlePulse {
+            0% { opacity: 0.9; }
+            50% { opacity: 1; }
+            100% { opacity: 0.9; }
+          }
+          /* STICKY FOOTER CTA */
+          .sticky-footer-cta {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            padding: 12px 16px;
+            box-shadow: 0 -2px 20px rgba(0,0,0,0.15);
+            z-index: 9999;
+            border-top: 2px solid #f59e0b;
+            display: flex;
+            gap: 12px;
+          }
+          .sticky-footer-cta button {
+            flex: 1;
+            padding: 14px;
+            border: none;
+            border-radius: 8px;
+            font-weight: bold;
+            font-size: 1rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+          }
+          .sticky-footer-cta .call-btn {
+            background: #a92b31; /* ✅ Your brand red */
+            color: white;
+          }
+          .sticky-footer-cta .whatsapp-btn {
+            background: #25D366;
+            color: white;
+          }
+          /* Add padding to body to prevent content hiding behind sticky footer */
+          body {
+            padding-bottom: 80px;
+          }
+          @media (min-width: 769px) {
+            .sticky-footer-cta {
+              display: none;
+            }
+            body {
+              padding-bottom: 0;
+            }
+          }
+        `}</style>
+      </Head>
+
+      {/* STICKY FOOTER CTA - Always visible on mobile */}
+      <div className="sticky-footer-cta">
+  <button 
+    onClick={() => window.location.href = 'tel:+989382740488'}
+    className="call-btn"
+    style={{ fontWeight: '600', fontSize: '1rem' }}
+  >
+    تماس با کارشناس
+  </button>
+  <button 
+    onClick={() => window.open('https://wa.me/989382740488', '_blank')}
+    className="whatsapp-btn"
+    style={{ fontWeight: '600', fontSize: '1rem' }}
+  >
+    مشاوره در واتساپ
+  </button>
+</div>
+
+      {/* Hero Section - SUPER COMPACT */}
+      <Box sx={{ 
+       
+        background: 'linear-gradient(135deg, #a92b31 0%, #8c2227 100%)',
+        
+        color: 'white',
+        py: { xs: 3, md: 4 },
+        px: 2,
+        textAlign: 'center',
+        width: '100%',
+      }}>
+        {/* Brand Only - Minimal */}
+        <div style={{ marginBottom: '0.5rem' }}>
+          <div style={{ 
+            fontSize: '1.5rem',
+            fontWeight: 'bold',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '0.5rem'
+          }}>
+           
+            
+            <span>مشاور املاک هوشمند</span>
+            <span>:</span>
+            <span style={{ color: '#f59e0b' }}>آجر</span>
+          </div>
+          <div style={{ 
+            fontSize: '0.85rem',
+            opacity: 0.9,
+            marginTop: '0.25rem'
+          }}>
+            آپارتمان‌های کارشناسی شده رباط کریم
+          </div>
+        </div>
+      </Box>
+
+      {/* Loading State */}
+      {loading ? (
+        <Box sx={{ 
+          display: 'flex', 
+          justifyContent: 'center', 
+          alignItems: 'center',
+          minHeight: '300px',
+          textAlign: 'center'
+        }}>
+          <div className="persian-text">
+            <div style={{ 
+              width: '40px', 
+              height: '40px', 
+              border: '3px solid #e2e8f0',
+              borderTopColor: '#1e40af',
+              borderRadius: '50%',
+              animation: 'spin 1s linear infinite',
+              margin: '0 auto 1rem'
+            }}></div>
+            <p style={{ color: '#64748b' }}>در حال بارگذاری آپارتمان‌ها...</p>
+          </div>
+        </Box>
+      ) : (
+        <>
+          {/* APARTMENTS FIRST - Mobile Optimized */}
+          <Box sx={{ 
+            py: 3,
+            maxWidth: '1200px',
+            margin: '0 auto',
+            px: { xs: 2, md: 3 },
+            minHeight: '300px'
+          }}>
+            {availableCount > 0 ? (
+              <>
+                <div className="persian-text" style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  marginBottom: '1.5rem',
+                  flexWrap: 'wrap',
+                  gap: '1rem',
+                }}>
+                  <div>
+                    <h1 style={{
+                      color: '#1e293b',
+                      fontSize: '1.5rem',
+                      fontWeight: 'bold',
+                      margin: '0 0 0.25rem 0',
+                      textAlign: 'right'
+                    }}>
+                      آپارتمان‌های رباط کریم ({availableCount} واحد)
+                    </h1>
+                    <p className="persian-text" style={{
+                      color: '#64748b',
+                      margin: 0,
+                      textAlign: 'right',
+                      fontSize: '0.9rem'
+                    }}>
+                      قیمت: ۳ تا ۸ میلیارد تومان
+                    </p>
+                  </div>
+                </div>
+                
+                {/* Grid: 1 column on mobile, 3 columns on desktop */}
+                <Grid container spacing={2}>
+                  {apartments.map((apartment) => (
+                    <Grid item xs={12} sm={6} md={4} key={apartment.id}>
+                      <div className="apartment-card-hover" style={{ 
+  transition: 'all 0.3s ease',
+  height: '100%',
+  marginBottom: '1rem'
+}}>
+  <Link 
+    href={`/worker/${apartment.id}?slug=${apartment.slug || ''}`}
+    passHref
+    legacyBehavior
+  >
+    <a style={{ textDecoration: 'none', display: 'block', height: '100%' }}>
+      <WorkerCard worker={apartment} />
+    </a>
+  </Link>
+</div>
+                    </Grid>
+                  ))}
+                </Grid>
+
+                {/* Quick Stats After Apartments - RTL Fixed */}
+{availableCount > 0 && (
+  <Box sx={{ 
+    bgcolor: '#f8fafc',
+    py: 3,
+    borderRadius: '8px',
+    mt: 4,
+    border: '1px solid #e2e8f0'
+  }}>
+    <div style={{ 
+      maxWidth: '800px', 
+      margin: '0 auto',
+      direction: 'rtl'  // Added RTL direction
+    }}>
+      <Grid container spacing={1}>
+        {[
+          { value: availableCount, label: 'واحد کارشناسی شده' },
+          { value: '۶۰-۲۰۰ متر', label: 'متراژ متنوع' },
+          { value: '۲۴ ساعته', label: 'پاسخگویی' },  // Fixed Persian ۲۴
+          { value: '۳-۸ میلیارد', label: 'قیمت' }
+        ].map((stat, index) => (
+          <Grid item xs={6} sm={3} key={index}>
+            <div style={{ 
+              fontSize: '0.8rem', 
+              color: '#64748b',
+              fontWeight: '500',
+              marginBottom: '0.25rem',
+              textAlign: 'right',  // Explicit right alignment
+              direction: 'rtl'     // RTL for text
+            }}>
+              {stat.label}
+            </div>
+            <div style={{ 
+              fontSize: '1.2rem', 
+              fontWeight: 'bold', 
+              color: '#1e40af',
+              textAlign: 'right',  // Explicit right alignment
+              direction: 'rtl'     // RTL for numbers
+            }}>
+              {stat.value}
+            </div>
+          </Grid>
+        ))}
+      </Grid>
+    </div>
+  </Box>
+)}
+
+                {/* Social Proof - AFTER Apartments */}
+                <Box sx={{ 
+  py: 4,
+  bgcolor: '#f8fafc',
+  borderRadius: '12px',
+  mt: 6,
+  border: '1px solid #e2e8f0',
+  direction: 'rtl'  // Added RTL direction to container
+}}>
+  <div style={{ 
+    maxWidth: '1200px', 
+    margin: '0 auto', 
+    px: { xs: 2, md: 3 },
+  }}>
+    <h3 style={{ 
+      textAlign: 'center',
+      color: '#1e293b',
+      fontSize: '1.2rem',
+      fontWeight: '600',
+      marginBottom: '1.5rem',
+      direction: 'rtl'  // RTL for heading
+    }}>
+      چرا آپارتمان‌های آجر؟
+    </h3>
+    
+    <Grid container spacing={2} sx={{ textAlign: 'center', direction: 'rtl' }}>
+      {[
+        { value: '۹۵٪', label: 'رضایت مشتریان', icon: '⭐' },
+        { value: '+۱۰۰۰', label: 'واحد کارشناسی شده', icon: '🏢' },
+        { value: '۲۴ ساعته', label: 'پاسخگویی مستقیم', icon: '📞' },
+        { value: '۱۰۰٪', label: 'تضمین قیمت', icon: '✅' }
+      ].map((stat, index) => (
+        <Grid item xs={6} sm={3} key={index}>
+          <div style={{ 
+            padding: '0.75rem 0.5rem',
+            background: 'white',
+            borderRadius: '8px',
+            boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
+            height: '100%',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center'
+          }}>
+            <div style={{ 
+              fontSize: '1.3rem',
+              marginBottom: '0.5rem'
+            }}>
+              {stat.icon}
+            </div>
+            <div style={{ 
+              fontSize: '1.3rem', 
+              fontWeight: 'bold', 
+              color: '#1e40af',
+              marginBottom: '0.25rem',
+              direction: 'rtl'  // RTL for values like "۹۵٪"
+            }}>
+              {stat.value}
+            </div>
+            <div style={{ 
+              fontSize: '0.8rem', 
+              color: '#475569',
+              fontWeight: '500',
+              lineHeight: 1.4,
+              textAlign: 'center',  // Center text but RTL direction
+              direction: 'rtl'      // Proper Persian text flow
+            }}>
+              {stat.label}
+            </div>
+          </div>
+        </Grid>
+      ))}
+    </Grid>
+  </div>
+</Box>
+
+                {/* Desktop Only CTA Section (hidden on mobile because we have sticky footer) */}
+                <Box sx={{
+                  mt: 6,
+                  p: 4,
+                  bgcolor: '#f0f9ff',
+                  borderRadius: '12px',
+                  border: '1px solid #bae6fd',
+                  textAlign: 'center',
+                  display: { xs: 'none', md: 'block' }
+                }}>
+                  <h3 className="persian-text" style={{ 
+                    margin: '0 0 1rem 0',
+                    color: '#0369a1',
+                    fontSize: '1.4rem',
+                    fontWeight: '600',
+                    textAlign: 'right'
+                  }}>
+                    برای بازدید حضوری تماس بگیرید
+                  </h3>
+                  <p className="persian-text" style={{ 
+                    color: '#64748b', 
+                    marginBottom: '1.5rem',
+                    maxWidth: '500px',
+                    margin: '0 auto',
+                    textAlign: 'right',
+                    fontSize: '1rem'
+                  }}>
+                    کارشناسان آجر آماده پاسخگویی و هماهنگی بازدید هستند
+                  </p>
+                  <div style={{ 
+                    display: 'flex', 
+                    gap: '1rem', 
+                    justifyContent: 'center', 
+                    flexWrap: 'wrap',
+                    maxWidth: '400px',
+                    margin: '0 auto'
+                  }}>
+                    <button 
+                      onClick={() => window.location.href = 'tel:+989382740488'}
+                      style={{
+                        background: '#10b981',
+                        color: 'white',
+                        border: 'none',
+                        padding: '14px 24px',
+                        borderRadius: '8px',
+                        fontWeight: 'bold',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '0.5rem',
+                        fontSize: '1rem',
+                        flex: 1,
+                        minWidth: '140px'
+                      }}
+                      className="cta-button"
+                    >
+                      📞 تماس مستقیم
+                    </button>
+                    <button 
+                      onClick={() => window.open('https://wa.me/989382740488', '_blank')}
+                      style={{
+                        background: '#25D366',
+                        color: 'white',
+                        border: 'none',
+                        padding: '14px 24px',
+                        borderRadius: '8px',
+                        fontWeight: 'bold',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '0.5rem',
+                        fontSize: '1rem',
+                        flex: 1,
+                        minWidth: '140px'
+                      }}
+                      className="cta-button"
+                    >
+                      💬 گفتگو در واتساپ
+                    </button>
+                  </div>
+                </Box>
+              </>
+            ) : (
+              <Box sx={{ 
+                display: 'flex', 
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                minHeight: '300px',
+                textAlign: 'center'
+              }}>
+                <Image
+                  src="/logo/half-heart.png"
+                  alt="ajur half heart"
+                  width={80}
+                  height={79}
+                  style={{ opacity: 0.6 }}
+                />
+                <h3 className="persian-text" style={{ 
+                  marginTop: '1rem', 
+                  color: '#475569', 
+                  fontSize: '1.2rem',
+                  textAlign: 'right'
+                }}>
+                  آپارتمانی برای نمایش وجود ندارد
+                </h3>
+                <p className="persian-text" style={{ 
+                  color: '#64748b', 
+                  maxWidth: '400px', 
+                  marginTop: '0.5rem',
+                  lineHeight: 1.5,
+                  marginBottom: '1.5rem',
+                  textAlign: 'right',
+                  fontSize: '0.9rem'
+                }}>
+                  همین حالا تماس بگیرید تا کارشناسان ما بهترین گزینه‌ها را معرفی کنند
+                </p>
+                <div style={{ 
+                  display: 'flex', 
+                  gap: '0.75rem', 
+                  flexWrap: 'wrap',
+                  justifyContent: 'center'
+                }}>
+                  <button 
+                    onClick={() => window.location.href = 'tel:+989382740488'}
+                    style={{
+                      background: '#10b981',
+                      color: 'white',
+                      border: 'none',
+                      padding: '10px 20px',
+                      borderRadius: '6px',
+                      fontWeight: 'bold',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.5rem',
+                      fontSize: '0.9rem'
+                    }}
+                  >
+                    📞 تماس بگیرید
+                  </button>
+                  <button 
+                    onClick={() => window.open('https://wa.me/989382740488', '_blank')}
+                    style={{
+                      background: '#25D366',
+                      color: 'white',
+                      border: 'none',
+                      padding: '10px 20px',
+                      borderRadius: '6px',
+                      fontWeight: 'bold',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.5rem',
+                      fontSize: '0.9rem'
+                    }}
+                  >
+                    💬 پیام در واتساپ
+                  </button>
+                </div>
+              </Box>
+            )}
+          </Box>
+
+          {/* Clean Final CTA - Desktop Only */}
+          <Box sx={{
+            py: 6,
+            px: 3,
+            background: 'linear-gradient(135deg, #a92b31 0%, #8c2227 100%)',
+            color: 'white',
+            textAlign: 'center',
+            marginTop: '2rem',
+            display: { xs: 'none', md: 'block' }
+          }}>
+            <div style={{ maxWidth: '800px', margin: '0 auto' }}>
+              <h2 className="persian-text" style={{ 
+                fontSize: '1.6rem',
+                fontWeight: '600',
+                marginBottom: '1rem'
+              }}>
+                همین حالا برای مشاوره رایگان اقدام کنید
+              </h2>
+              <p className="persian-text" style={{ 
+                fontSize: '1rem',
+                opacity: 0.9,
+                marginBottom: '1.5rem',
+                maxWidth: '500px',
+                margin: '0 auto'
+              }}>
+                کارشناسان آجر آماده ارائه مشاوره تخصصی و هماهنگی بازدید هستند
+              </p>
+              <div style={{ 
+                display: 'flex', 
+                gap: '1rem', 
+                justifyContent: 'center',
+                flexWrap: 'wrap' 
+              }}>
+                <button 
+                  onClick={() => window.location.href = 'tel:+989382740488'}
+                  style={{
+                    background: '#f59e0b',
+                    color: 'white',
+                    border: 'none',
+                    padding: '14px 28px',
+                    fontSize: '1.1rem',
+                    borderRadius: '8px',
+                    fontWeight: 'bold',
+                    cursor: 'pointer',
+                    boxShadow: '0 4px 14px rgba(245, 158, 11, 0.3)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.5rem'
+                  }}
+                  className="cta-button"
+                >
+                  📞 تماس برای مشاوره
+                </button>
+              </div>
+            </div>
+          </Box>
+
+          {/* Footer - Simple */}
+          <Box sx={{
+            py: 3,
+            px: 2,
+            bgcolor: '#1e293b',
+            color: 'white',
+            textAlign: 'center',
+            borderTop: '1px solid #334155',
+            position: 'relative',
+            zIndex: 1 // Lower than sticky footer (9999)
+          }}>
+            <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
+              <div className="persian-text" style={{ 
+                display: 'flex', 
+                justifyContent: 'center', 
+                gap: '1.5rem',
+                marginBottom: '1rem',
+                flexWrap: 'wrap'
+              }}>
+                <a href="tel:+989382740488" style={{ 
+                  color: '#60a5fa', 
+                  textDecoration: 'none',
+                  fontWeight: '500',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                  fontSize: '1rem'
+                }}>
+                  📞 ۰۹۳۸۲۷۴۰۴۸۸
+                </a>
+                <a href="https://ajur.app" style={{ 
+                  color: '#60a5fa', 
+                  textDecoration: 'none',
+                  fontWeight: '500',
+                  fontSize: '1rem'
+                }}>
+                  صفحه اصلی آجر
+                </a>
+              </div>
+              <p className="persian-text" style={{ 
+                margin: 0, 
+                fontSize: '0.8rem', 
+                opacity: 0.8,
+                borderTop: '1px solid #334155',
+                paddingTop: '0.75rem',
+                marginTop: '0.75rem',
+                textAlign: 'right'
+              }}>
+                © {new Date().getFullYear()} آجر - مشاور املاک هوشمند. تمامی حقوق محفوظ است.
+              </p>
+            </div>
+          </Box>
+        </>
+      )}
+    </>
+  );
+}
