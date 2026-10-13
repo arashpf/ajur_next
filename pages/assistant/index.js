@@ -10,13 +10,14 @@ const MagCards = dynamic(() => import("../../components/workers/MagCards"), {
 export default function AssistantButtons() {
   const router = useRouter();
   const buttons = [
-    {
-      key: "phonebook",
-      link: "/assistant/notebook",
-      label: "دفترچه تلفن",
-      color: "#ffffff",
-      icon: "/Assistant-Icons/notebook",
-    },
+    // ⚠️ Commented out for now — keep for later
+    // {
+    //   key: "phonebook",
+    //   link: "/assistant/notebook",
+    //   label: "دفترچه تلفن",
+    //   color: "#ffffff",
+    //   icon: "/Assistant-Icons/notebook",
+    // },
     {
       key: "files",
       link: "/panel",
@@ -31,35 +32,37 @@ export default function AssistantButtons() {
       color: "#ffffff",
       icon: "/Assistant-Icons/calculator",
     },
-    {
-      key: "management",
-      link: "/panel/department-entro",
-      label: "مدیریت",
-      color: "#ffffff",
-      icon: "/Assistant-Icons/management",
-    },
-    {
-      key: "filebank",
-      link: "/assistant/filebank",
-      label: "بانک فایل",
-      color: "#ffffff",
-      icon: "/Assistant-Icons/file-bank",
-    },
+    // ⚠️ Commented out for now — keep for later
+    // {
+    //   key: "management",
+    //   link: "/panel/department-entro",
+    //   label: "مدیریت",
+    //   color: "#ffffff",
+    //   icon: "/Assistant-Icons/management",
+    // },
+    // {
+    //   key: "filebank",
+    //   link: "/assistant/filebank",
+    //   label: "بانک فایل",
+    //   color: "#ffffff",
+    //   icon: "/Assistant-Icons/file-bank",
+    // },
     {
       key: "education",
       link: "https://mag.ajur.app/category/real-estate-education/",
       label: "آموزش",
       color: "#ffffff",
       icon: "/Assistant-Icons/instruction",
-      external: true
+      external: true,
     },
-    {
-      key: "views",
-      link: "/assistant/G-ads/landing-page",
-      label: "افزایش بازدید",
-      color: "#ffffff",
-      icon: "/Assistant-Icons/view",
-    },
+    // ⚠️ Commented out for now — keep for later
+    // {
+    //   key: "views",
+    //   link: "/assistant/G-ads/landing-page",
+    //   label: "افزایش بازدید",
+    //   color: "#ffffff",
+    //   icon: "/Assistant-Icons/view",
+    // },
     {
       key: "marketing",
       link: "/marketing",
@@ -70,26 +73,18 @@ export default function AssistantButtons() {
   ];
 
   const [showTop, setShowTop] = React.useState(false);
-  ("/");
-  // React.useEffect(() => {
-  //   function onScroll() {
-  //     setShowTop(window.scrollY > 300);
-  //   }
-  //   window.addEventListener("scroll", onScroll);
-  //   return () => window.removeEventListener("scroll", onScroll);
-  // }, []);
 
   function scrollToTop() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
   function handleClick(button) {
-  if (button.external) {
-    window.open(button.link, '_blank', 'noopener,noreferrer');
-  } else if (button.link) {
-    router.push(button.link);
+    if (button.external) {
+      window.open(button.link, "_blank", "noopener,noreferrer");
+    } else if (button.link) {
+      router.push(button.link);
+    }
   }
-}
 
   return (
     <div

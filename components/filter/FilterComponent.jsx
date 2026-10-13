@@ -17,6 +17,8 @@ import {
   getFieldUnit,
 } from "./utils/fieldUtils";
 
+
+
 import ActiveFiltersDialog from "./dialogs/ActiveFiltersDialog";
 import SortMenu from "./dialogs/SortMenu";
 import NeighborhoodDialog from "./dialogs/NeighborhoodDialog";
@@ -24,7 +26,7 @@ import FeaturesDialog from "./dialogs/FeaturesDialog";
 import FieldDialog from "./dialogs/FieldDialog";
 
 const SORT_LABELS = {
-  newest: "جدیدترین",
+  newest: "بروز ترین",
   oldest: "قدیمی‌ترین",
   most_viewed: "پر بازدید ترین",
 };
@@ -35,12 +37,19 @@ const SORT_LABELS = {
  *   availableNeighborhoods array        → passed from SingleCategory's base data
  *   availableFeatures   array           → features from base API
  *   top                 number          → chip bar top offset (default 80)
+ *   clientIp            string|null     → client IP for analytics
+ *   currentCitySlug     string|null     → for analytics context
+ *   currentCategorySlug string|null     → for analytics context
  */
 export default function FilterComponent({
   initialCategoryId = null,
   availableNeighborhoods = [],
   availableFeatures = [],
   top = 80,
+  // ─── Analytics props ───
+  clientIp = null,
+  currentCitySlug = null,
+  currentCategorySlug = null,
 }) {
   const router = useRouter();
 
@@ -80,7 +89,15 @@ export default function FilterComponent({
     activeCount,
     update,
     resetAll,
-  } = useFilterState({ fieldSlugs, fieldTypes });
+  } = useFilterState({
+    fieldSlugs,
+    fieldTypes,
+    // Analytics context (unused by the hook unless it decides to fire events;
+    // kept for future flexibility).
+    clientIp,
+    currentCitySlug,
+    currentCategorySlug,
+  });
 
   // 3. Which dialog is open
   const [dialog, setDialog] = useState(null);
@@ -102,8 +119,6 @@ export default function FilterComponent({
   const chips = useMemo(() => {
     const out = [];
 
-    
-
     // ---- Chip: محله ----
     out.push({
       key: "neighborhoods",
@@ -121,51 +136,26 @@ export default function FilterComponent({
     });
 
     // ---- Chips: one per category field (all fields, always visible) ----
-    // Label is always just the field name — no values. FilterSlider will
-    // reorder these by active-first, then field.sort ascending.
     allFields.forEach((field) => {
-        const value = fieldValues[field.slug];
-        const isActive = isFieldActive(field, value);
-        const type = String(field.type || "");
-      
-        // ---- Tick fields (type 2): tap toggles directly, no dialog ----
-        if (type === "2") {
-          out.push({
-            key: `field-${field.slug}`,
-            label: getFieldDisplayName(field),
-            active: isActive,
-            // Tap = toggle on/off
-            onPress: () => {
-              const next = { ...fieldValues };
-              if (isActive) {
-                delete next[field.slug];
-              } else {
-                // Tick value is an array; use [1] as the "on" flag — this is what
-                // the API expects for a boolean-style tick field.
-                next[field.slug] = [1];
-              }
-              update({ fieldValues: next });
-            },
-            // Same toggle when the user taps the X
-            onRemove: isActive
-              ? () => {
-                  const next = { ...fieldValues };
-                  delete next[field.slug];
-                  update({ fieldValues: next });
-                }
-              : undefined,
-            isFieldChip: true,
-            sortPriority: Number(field.sort) || 9999,
-          });
-          return;
-        }
-      
-        // ---- Range (1) and predefine (3): open the dialog ----
+      const value = fieldValues[field.slug];
+      const isActive = isFieldActive(field, value);
+      const type = String(field.type || "");
+
+      // ---- Tick fields (type 2): tap toggles directly, no dialog ----
+      if (type === "2") {
         out.push({
           key: `field-${field.slug}`,
           label: getFieldDisplayName(field),
           active: isActive,
-          onPress: () => setDialog({ type: "field", field }),
+          onPress: () => {
+            const next = { ...fieldValues };
+            if (isActive) {
+              delete next[field.slug];
+            } else {
+              next[field.slug] = [1];
+            }
+            update({ fieldValues: next });
+          },
           onRemove: isActive
             ? () => {
                 const next = { ...fieldValues };
@@ -176,21 +166,26 @@ export default function FilterComponent({
           isFieldChip: true,
           sortPriority: Number(field.sort) || 9999,
         });
-      });
+        return;
+      }
 
-    // ---- Chip: امکانات ----
-    // out.push({
-    //   key: "features",
-    //   label:
-    //     features.length > 0 ? `امکانات (${features.length})` : "امکانات",
-    //   active: features.length > 0,
-    //   startIcon: <CheckCircleIcon sx={{ fontSize: 18 }} />,
-    //   onPress: () => setDialog("features"),
-    //   onRemove:
-    //     features.length > 0
-    //       ? () => update({ features: [] })
-    //       : undefined,
-    // });
+      // ---- Range (1) and predefine (3): open the dialog ----
+      out.push({
+        key: `field-${field.slug}`,
+        label: getFieldDisplayName(field),
+        active: isActive,
+        onPress: () => setDialog({ type: "field", field }),
+        onRemove: isActive
+          ? () => {
+              const next = { ...fieldValues };
+              delete next[field.slug];
+              update({ fieldValues: next });
+            }
+          : undefined,
+        isFieldChip: true,
+        sortPriority: Number(field.sort) || 9999,
+      });
+    });
 
     // ---- Chip: حذف همه ----
     if (activeCount > 1) {
@@ -203,34 +198,31 @@ export default function FilterComponent({
       });
     }
 
-
-    
-  
-      // ---- Chip 2: مرتب‌سازی ----
-      out.push({
-        key: "sort",
-        label: `مرتب‌سازی: ${SORT_LABELS[sortBy] || SORT_LABELS.newest}`,
-        active: sortBy !== "newest",
-        startIcon: <SortIcon sx={{ fontSize: 18 }} />,
-        onPress: (e) => {
-          setSortAnchorEl(e?.currentTarget || null);
-          setDialog("sort");
-        },
-        onRemove:
-          sortBy !== "newest"
-            ? () => update({ sortBy: "newest" })
-            : undefined,
-      });
-
-      // ---- Chip 1: فیلترها (N) ----
+    // ---- Chip: مرتب‌سازی ----
     out.push({
-        key: "open-filters",
-        label: "فیلترها",
-        active: true,
-        badge: activeCount > 0 ? activeCount : null,
-        startIcon: <TuneIcon sx={{ fontSize: 20 }} />,
-        onPress: () => setDialog("active"),
-      });
+      key: "sort",
+      label: `مرتب‌سازی: ${SORT_LABELS[sortBy] || SORT_LABELS.newest}`,
+      active: sortBy !== "newest",
+      startIcon: <SortIcon sx={{ fontSize: 18 }} />,
+      onPress: (e) => {
+        setSortAnchorEl(e?.currentTarget || null);
+        setDialog("sort");
+      },
+      onRemove:
+        sortBy !== "newest"
+          ? () => update({ sortBy: "newest" })
+          : undefined,
+    });
+
+    // ---- Chip: فیلترها (N) ----
+    out.push({
+      key: "open-filters",
+      label: "فیلترها",
+      active: true,
+      badge: activeCount > 0 ? activeCount : null,
+      startIcon: <TuneIcon sx={{ fontSize: 20 }} />,
+      onPress: () => setDialog("active"),
+    });
 
     return out;
   }, [
@@ -258,7 +250,7 @@ export default function FilterComponent({
     <>
       <FilterSlider chips={chips} top={top} height={60} deps={scrollDeps} />
 
-      {/* Space reserving so content doesn’t sit under the fixed bar */}
+      {/* Space reserving so content doesn't sit under the fixed bar */}
       <Box sx={{ height: 70 }} />
 
       {/* ---------------- DIALOGS ---------------- */}

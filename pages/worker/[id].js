@@ -1,11 +1,12 @@
 // pages/worker/[id].jsx
-import React, { useState, useEffect, useMemo, useCallback } from "react";
+import React, { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import PropTypes from "prop-types";
 import { useRouter } from "next/router";
 import Head from "next/head";
 import dynamic from "next/dynamic";
 import Script from "next/script";
 import Cookies from "js-cookie";
+import { trackEvent } from "../../lib/track";
 import { styled } from "@mui/material/styles";
 import Box from "@mui/material/Box";
 import Paper from "@mui/material/Paper";
@@ -17,6 +18,7 @@ import CloseIcon from "@mui/icons-material/Close";
 import DirectionsIcon from "@mui/icons-material/Directions";
 import FavoriteBorderIcon from "@mui/icons-material/FavoriteBorder";
 import FavoriteIcon from "@mui/icons-material/Favorite";
+import ShareIcon from "@mui/icons-material/Share";
 import Link from "next/link";
 import axios from "axios";
 import CallIcon from "@mui/icons-material/Call";
@@ -99,18 +101,19 @@ const WorkerDetails = dynamic(() => import("../../components/workers/WorkerDetai
   ),
 });
 
-const LocationNoSsr = dynamic(() => import("../../components/map/Location"), {
-  ssr: false,
-  loading: () => (
-    <div
-      style={{
-        height: 300,
-        backgroundColor: "#f5f5f5",
-        borderRadius: "8px",
-      }}
-    />
-  ),
-});
+// ⚠️ MAP DISABLED
+// const LocationNoSsr = dynamic(() => import("../../components/map/Location"), {
+//   ssr: false,
+//   loading: () => (
+//     <div
+//       style={{
+//         height: 300,
+//         backgroundColor: "#f5f5f5",
+//         borderRadius: "8px",
+//       }}
+//     />
+//   ),
+// });
 
 // Import other components
 import WorkerCard from "../../components/cards/WorkerCard";
@@ -135,10 +138,367 @@ const Item = React.memo(
 const MemoizedWorkerCard = React.memo(WorkerCard);
 const MemoizedWorkerRealstateCard = React.memo(WorkerRealstateCard);
 
+// -------------------- Unavailable Notice (status 2 & 4) --------------------
+const UnavailableNotice = ({ reason, details }) => {
+  const isUnderReview = reason === "under_review";
+
+  const title = isUnderReview
+    ? "این آگهی در حال بررسی است"
+    : "این آگهی در دسترس نیست";
+
+  const message = isUnderReview
+    ? "این ملک در حال حاضر در حال بازبینی توسط کارشناسان آجر است و به‌زودی در دسترس قرار می‌گیرد. لطفاً بعداً مراجعه کنید."
+    : "این ملک دیگر در دسترس نیست. ممکن است آگهی حذف شده باشد یا معامله انجام شده باشد.";
+
+  return (
+    <div
+      dir="rtl"
+      style={{
+        minHeight: "70vh",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        padding: "40px 20px",
+        fontFamily: "Vazir, sans-serif",
+      }}
+    >
+      <div
+        style={{
+          maxWidth: 520,
+          width: "100%",
+          background: "#fff",
+          border: "1px solid #f0dede",
+          borderRadius: 20,
+          boxShadow: "0 12px 40px rgba(185, 42, 49, 0.08)",
+          padding: "40px 28px",
+          textAlign: "center",
+        }}
+      >
+        <div
+          style={{
+            width: 88,
+            height: 88,
+            margin: "0 auto 20px",
+            borderRadius: "50%",
+            background: isUnderReview ? "#FFF3E0" : "#FFEBEE",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            fontSize: 42,
+          }}
+          aria-hidden="true"
+        >
+          {isUnderReview ? "⏳" : "🚫"}
+        </div>
+
+        <h1
+          style={{
+            fontSize: 22,
+            fontWeight: 800,
+            color: "#b92a31",
+            margin: "0 0 12px",
+          }}
+        >
+          {title}
+        </h1>
+
+        <p
+          style={{
+            fontSize: 15,
+            lineHeight: 1.9,
+            color: "#555",
+            margin: "0 0 24px",
+          }}
+        >
+          {message}
+        </p>
+
+        {details?.name && (
+          <p
+            style={{
+              fontSize: 13,
+              color: "#999",
+              margin: "0 0 24px",
+            }}
+          >
+            {/* «{details.name}» */}
+          </p>
+        )}
+
+        <div
+          style={{
+            display: "flex",
+            gap: 12,
+            justifyContent: "center",
+            flexWrap: "wrap",
+          }}
+        >
+          <Link href="/" legacyBehavior>
+            <a
+              style={{
+                background: "#b92a31",
+                color: "#fff",
+                padding: "12px 28px",
+                borderRadius: 12,
+                fontWeight: 700,
+                fontSize: 15,
+                textDecoration: "none",
+              }}
+            >
+              بازگشت به صفحه اصلی
+            </a>
+          </Link>
+
+          <button
+            onClick={() => window.history.back()}
+            style={{
+              background: "#fff",
+              color: "#b92a31",
+              border: "1.5px solid #b92a31",
+              padding: "12px 28px",
+              borderRadius: 12,
+              fontWeight: 700,
+              fontSize: 15,
+              cursor: "pointer",
+            }}
+          >
+            صفحه قبل
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// -------------------- Transient Error Notice --------------------
+// Shown when the API is temporarily unreachable (not a real 404).
+const TransientErrorNotice = ({ onRetry }) => {
+  return (
+    <div
+      dir="rtl"
+      style={{
+        minHeight: "70vh",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        padding: "40px 20px",
+        fontFamily: "Vazir, sans-serif",
+      }}
+    >
+      <div
+        style={{
+          maxWidth: 520,
+          width: "100%",
+          background: "#fff",
+          border: "1px solid #eee",
+          borderRadius: 20,
+          boxShadow: "0 12px 40px rgba(0,0,0,0.06)",
+          padding: "40px 28px",
+          textAlign: "center",
+        }}
+      >
+        <div
+          style={{
+            width: 88,
+            height: 88,
+            margin: "0 auto 20px",
+            borderRadius: "50%",
+            background: "#FFF3E0",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            fontSize: 42,
+          }}
+          aria-hidden="true"
+        >
+          ⏱️
+        </div>
+
+        <h1
+          style={{
+            fontSize: 22,
+            fontWeight: 800,
+            color: "#b92a31",
+            margin: "0 0 12px",
+          }}
+        >
+          ارتباط با سرور برقرار نشد
+        </h1>
+
+        <p
+          style={{
+            fontSize: 15,
+            lineHeight: 1.9,
+            color: "#555",
+            margin: "0 0 24px",
+          }}
+        >
+          لطفاً چند لحظه دیگر دوباره تلاش کنید. این مشکل موقتی است.
+        </p>
+
+        <div
+          style={{
+            display: "flex",
+            gap: 12,
+            justifyContent: "center",
+            flexWrap: "wrap",
+          }}
+        >
+          <button
+            onClick={onRetry}
+            style={{
+              background: "#b92a31",
+              color: "#fff",
+              border: "none",
+              padding: "12px 28px",
+              borderRadius: 12,
+              fontWeight: 700,
+              fontSize: 15,
+              cursor: "pointer",
+            }}
+          >
+            تلاش مجدد
+          </button>
+
+          <Link href="/" legacyBehavior>
+            <a
+              style={{
+                background: "#fff",
+                color: "#b92a31",
+                border: "1.5px solid #b92a31",
+                padding: "12px 28px",
+                borderRadius: 12,
+                fontWeight: 700,
+                fontSize: 15,
+                textDecoration: "none",
+              }}
+            >
+              بازگشت به صفحه اصلی
+            </a>
+          </Link>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// -------------------- Stale Listing Modal (status 5) --------------------
+const StaleListingModal = ({ open, onClose, onCall }) => {
+  return (
+    <Dialog
+      open={open}
+      onClose={onClose}
+      maxWidth="xs"
+      fullWidth
+      aria-labelledby="stale-modal-title"
+      sx={{
+        "& .MuiDialog-paper": {
+          borderRadius: "18px",
+          padding: 0,
+          overflow: "hidden",
+        },
+      }}
+    >
+      <div
+        dir="rtl"
+        style={{
+          fontFamily: "Vazir, sans-serif",
+          padding: "28px 24px 24px",
+          textAlign: "center",
+        }}
+      >
+        <div
+          style={{
+            width: 72,
+            height: 72,
+            margin: "0 auto 16px",
+            borderRadius: "50%",
+            background: "#FFF3E0",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            fontSize: 36,
+          }}
+          aria-hidden="true"
+        >
+          ⚠️
+        </div>
+
+        <h2
+          id="stale-modal-title"
+          style={{
+            fontSize: 18,
+            fontWeight: 800,
+            color: "#b92a31",
+            margin: "0 0 12px",
+          }}
+        >
+          توجه: این آگهی قدیمی است
+        </h2>
+
+        <p
+          style={{
+            fontSize: 14,
+            lineHeight: 1.9,
+            color: "#555",
+            margin: "0 0 24px",
+          }}
+        >
+          بیش از ۲ ماه از بروزرسانی این ملک گذشته است. ممکن است این ملک دیگر
+          موجود نباشد و یا قیمت‌ها تغییر کرده باشد.
+        </p>
+
+        <div style={{ display: "flex", gap: 10 }}>
+          <button
+            onClick={onClose}
+            style={{
+              flex: 1,
+              background: "#b92a31",
+              color: "#fff",
+              border: "none",
+              padding: "12px 16px",
+              borderRadius: 12,
+              fontWeight: 700,
+              fontSize: 15,
+              cursor: "pointer",
+            }}
+          >
+            متوجه شدم
+          </button>
+
+          {onCall && (
+            <button
+              onClick={onCall}
+              style={{
+                flex: 1,
+                background: "#fff",
+                color: "#b92a31",
+                border: "1.5px solid #b92a31",
+                padding: "12px 16px",
+                borderRadius: 12,
+                fontWeight: 700,
+                fontSize: 15,
+                cursor: "pointer",
+              }}
+            >
+              تماس با مشاور
+            </button>
+          )}
+        </div>
+      </div>
+    </Dialog>
+  );
+};
+
 const WorkerSingle = (props) => {
   const [isFavorite, setIsFavorite] = useState(false);
   const [mapModalOpen, setMapModalOpen] = useState(false);
   const [isNavigating, setIsNavigating] = useState(false);
+  const [staleModalOpen, setStaleModalOpen] = useState(false);
+  const [shareFeedback, setShareFeedback] = useState("");
+  const [isActionsPinned, setIsActionsPinned] = useState(false);
+
+  const mediaWrapperRef = useRef(null);
 
   const router = useRouter();
   const { slug } = router.query;
@@ -169,7 +529,6 @@ const WorkerSingle = (props) => {
       seo_keywords: rawDetails.seo_keywords || "",
       city_slug: rawDetails.city_slug || rawDetails.city || "tehran",
       category_eng_name: rawDetails.category_eng_name || "",
-      // Keep coords as-is; don't force Tehran if not present (schema will include only if valid)
       latitude: rawDetails.latitude ?? null,
       longitude: rawDetails.longitude ?? null,
     };
@@ -214,10 +573,8 @@ const WorkerSingle = (props) => {
         .filter(Boolean)
         .join("، ");
 
-    // canonical (keep stable; optionally keep ?slug if you want a single canonical format)
     const canonicalUrl = `https://ajur.app/worker/${details.id}`;
 
-    // prefer thumb; else fallback
     const shareImage = details.thumb || "https://api.ajur.app/logo/og-default.jpg";
     const siteName = "آجر";
 
@@ -235,7 +592,6 @@ const WorkerSingle = (props) => {
   const structuredData = useMemo(() => {
     const canonicalUrl = seoData.canonicalUrl;
 
-    // images array for schema (best effort)
     const imagesForSchema = Array.isArray(images)
       ? images
           .map((img) => {
@@ -251,7 +607,6 @@ const WorkerSingle = (props) => {
 
     const propertyType = getPropertyType(details);
 
-    // Try to detect a numeric price if your API provides it (adjust keys if needed)
     const priceValue =
       cleanNumber(details.price) ||
       cleanNumber(details.amount) ||
@@ -266,9 +621,9 @@ const WorkerSingle = (props) => {
       "@context": "https://schema.org",
       "@type": "RealEstateListing",
       "@id": `${canonicalUrl}#listing`,
-      "url": canonicalUrl,
-      "name": details.name || `${details.category_name} در ${details.city || ""}`.trim(),
-      "description": seoData.metaDescription,
+      url: canonicalUrl,
+      name: details.name || `${details.category_name} در ${details.city || ""}`.trim(),
+      description: seoData.metaDescription,
       ...(imagesForSchema.length ? { image: imagesForSchema.slice(0, 10) } : {}),
       ...(details.created_at ? { datePosted: new Date(details.created_at).toISOString() } : {}),
       ...(details.updated_at ? { dateModified: new Date(details.updated_at).toISOString() } : {}),
@@ -276,10 +631,10 @@ const WorkerSingle = (props) => {
         ? {
             address: {
               "@type": "PostalAddress",
-              "streetAddress": details.address || details.neighbourhood || "",
-              "addressLocality": details.city || "",
-              "addressRegion": details.region || "",
-              "addressCountry": "IR",
+              streetAddress: details.address || details.neighbourhood || "",
+              addressLocality: details.city || "",
+              addressRegion: details.region || "",
+              addressCountry: "IR",
             },
           }
         : {}),
@@ -287,25 +642,24 @@ const WorkerSingle = (props) => {
         ? {
             geo: {
               "@type": "GeoCoordinates",
-              "latitude": lat,
-              "longitude": lng,
+              latitude: lat,
+              longitude: lng,
             },
             hasMap: `https://maps.google.com/?q=${lat},${lng}`,
           }
         : {}),
-      // The property itself
-      "mainEntity": {
+      mainEntity: {
         "@type": propertyType,
-        "name": details.name || undefined,
+        name: details.name || undefined,
         ...(imagesForSchema.length ? { image: imagesForSchema.slice(0, 10) } : {}),
         ...(details.address || details.city
           ? {
               address: {
                 "@type": "PostalAddress",
-                "streetAddress": details.address || details.neighbourhood || "",
-                "addressLocality": details.city || "",
-                "addressRegion": details.region || "",
-                "addressCountry": "IR",
+                streetAddress: details.address || details.neighbourhood || "",
+                addressLocality: details.city || "",
+                addressRegion: details.region || "",
+                addressCountry: "IR",
               },
             }
           : {}),
@@ -313,8 +667,8 @@ const WorkerSingle = (props) => {
           ? {
               geo: {
                 "@type": "GeoCoordinates",
-                "latitude": lat,
-                "longitude": lng,
+                latitude: lat,
+                longitude: lng,
               },
             }
           : {}),
@@ -323,10 +677,10 @@ const WorkerSingle = (props) => {
         ? {
             offers: {
               "@type": "Offer",
-              "price": priceValue,
-              "priceCurrency": "IRR",
-              "availability": "https://schema.org/InStock",
-              "url": canonicalUrl,
+              price: priceValue,
+              priceCurrency: "IRR",
+              availability: "https://schema.org/InStock",
+              url: canonicalUrl,
             },
           }
         : {}),
@@ -353,7 +707,6 @@ const WorkerSingle = (props) => {
       ],
     };
 
-    // Optional: agency/agent schema if you have realstate info
     const agentSchema = cleanRealstate?.id
       ? {
           "@context": "https://schema.org",
@@ -368,9 +721,14 @@ const WorkerSingle = (props) => {
     return { listingSchema, breadcrumbSchema, agentSchema };
   }, [seoData, details, images, cleanRealstate]);
 
-  // -------- Client-only favorites/history (do NOT block rendering) --------
   useEffect(() => {
-    // favorites
+    setIsNavigating(false);
+  }, [props.details?.id]);
+
+  useEffect(() => {
+    if (props.unavailableReason) return;
+    if (props.__transientError) return;
+
     try {
       const favorited = Cookies.get("favorited");
       if (favorited) {
@@ -381,7 +739,6 @@ const WorkerSingle = (props) => {
       console.error("Favorites load failed:", error);
     }
 
-    // history (deferred)
     const updateHistory = () => {
       try {
         let history = Cookies.get("history") || "[]";
@@ -401,11 +758,55 @@ const WorkerSingle = (props) => {
 
     const t = setTimeout(updateHistory, 1500);
     return () => clearTimeout(t);
-  }, [details.id]);
+  }, [details.id, props.unavailableReason, props.__transientError]);
+
+  useEffect(() => {
+    if (props.staleWarning) {
+      const t = setTimeout(() => setStaleModalOpen(true), 400);
+      return () => clearTimeout(t);
+    }
+  }, [props.staleWarning]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (props.unavailableReason) return;
+    if (props.__transientError) return;
+
+    const handleScroll = () => {
+      const el = mediaWrapperRef.current;
+      if (!el) return;
+
+      const rect = el.getBoundingClientRect();
+      const shouldPin = rect.bottom <= 0;
+      setIsActionsPinned((prev) => (prev !== shouldPin ? shouldPin : prev));
+    };
+
+    handleScroll();
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    window.addEventListener("resize", handleScroll);
+
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+      window.removeEventListener("resize", handleScroll);
+    };
+  }, [props.unavailableReason, props.__transientError]);
 
   const handlePropertyCall = async () => {
     const phone = cleanRealstate?.phone || details.cellphone;
 
+    // ─── Analytics: fire before navigation (sendBeacon survives unload) ───
+    trackEvent(
+      "listing_call",
+      {
+        listing_id: details.id,
+        phone: phone || null,
+        realstate_id: cleanRealstate?.id || null,
+        source: "worker-page",
+      },
+      props.__clientIp
+    );
+
+    // ─── Existing server-side call log — keep for backward compat ───
     try {
       await axios.post("https://api.ajur.app/api/track/worker-call", {
         worker_id: details.id,
@@ -414,6 +815,7 @@ const WorkerSingle = (props) => {
       console.error("Worker call tracking failed:", error);
     }
 
+    // ─── Trigger the dialer ───
     if (phone) window.location.href = `tel:${phone}`;
   };
 
@@ -422,6 +824,11 @@ const WorkerSingle = (props) => {
       let favorited = Cookies.get("favorited") || "[]";
       let favoriteItems = JSON.parse(favorited);
       if (!Array.isArray(favoriteItems)) favoriteItems = [];
+
+      // `isFavorite` reflects the state BEFORE the toggle, so:
+      //   isFavorite === true  → user is removing
+      //   isFavorite === false → user is adding
+      const action = isFavorite ? "remove" : "add";
 
       if (isFavorite) {
         favoriteItems = favoriteItems.filter((item) => item !== details.id);
@@ -434,10 +841,104 @@ const WorkerSingle = (props) => {
 
       Cookies.set("favorited", JSON.stringify(favoriteItems), { expires: 365 });
       setIsFavorite((prev) => !prev);
+
+      // ─── Analytics ───
+      trackEvent(
+        "listing_favorite",
+        {
+          listing_id: details.id,
+          action,
+        },
+        props.__clientIp
+      );
     } catch (error) {
       console.error("Failed to update favorites:", error);
     }
-  }, [isFavorite, details.id]);
+  }, [isFavorite, details.id, props.__clientIp]);
+
+  const handleShare = useCallback(async () => {
+    alert('sharing');
+    const shareUrl =
+      typeof window !== "undefined"
+        ? window.location.href
+        : seoData.canonicalUrl;
+
+    const shareTitle = details.name || seoData.pageTitle || "آگهی ملک در آجر";
+    const shareText = details.name
+      ? `${details.name} - ${details.category_name || ""} در ${
+          details.city || ""
+        }`.trim()
+      : seoData.metaDescription;
+
+    const sharePayload = {
+      title: shareTitle,
+      text: shareText,
+      url: shareUrl,
+    };
+
+    try {
+      // ── 1. Native share (mobile + supported desktop browsers) ──
+      if (
+        typeof navigator !== "undefined" &&
+        typeof navigator.share === "function"
+      ) {
+        await navigator.share(sharePayload);
+
+        // ─── Analytics: native share path ───
+        trackEvent(
+          "listing_share",
+          {
+            listing_id: details.id,
+            channel: "native",
+          },
+          props.__clientIp
+        );
+        return;
+      }
+
+      // ── 2. Clipboard fallback ──
+      if (
+        typeof navigator !== "undefined" &&
+        navigator.clipboard &&
+        navigator.clipboard.writeText
+      ) {
+        await navigator.clipboard.writeText(shareUrl);
+        setShareFeedback("لینک کپی شد");
+        setTimeout(() => setShareFeedback(""), 2000);
+
+        // ─── Analytics: clipboard path ───
+        trackEvent(
+          "listing_share",
+          {
+            listing_id: details.id,
+            channel: "clipboard",
+          },
+          props.__clientIp
+        );
+        return;
+      }
+
+      // ── 3. Prompt fallback ──
+      if (typeof window !== "undefined") {
+        window.prompt("لینک را کپی کنید:", shareUrl);
+
+        // ─── Analytics: prompt path ───
+        trackEvent(
+          "listing_share",
+          {
+            listing_id: details.id,
+            channel: "prompt",
+          },
+          props.__clientIp
+        );
+      }
+    } catch (error) {
+      // User cancelled the native share sheet — no analytics, that's correct.
+      if (error && error.name !== "AbortError") {
+        console.error("Share failed:", error);
+      }
+    }
+  }, [details, seoData, props.__clientIp]);
 
   const openDirections = useCallback(() => {
     if (details.latitude && details.longitude) {
@@ -470,32 +971,30 @@ const WorkerSingle = (props) => {
         itemsPerPage={8}
         delay={300}
         renderItem={(worker) => (
-          <Grid item md={4} xs={12} key={worker.id}>
-            <div
-              onClick={() => {
-                setIsNavigating(true);
-                window.location.href = `/worker/${worker.id}?slug=${worker.slug}`;
-              }}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" || e.key === " ") {
-                  e.preventDefault();
-                  setIsNavigating(true);
-                  window.location.href = `/worker/${worker.id}?slug=${worker.slug}`;
-                }
-              }}
-              role="link"
-              tabIndex={0}
+          <Grid
+            item
+            md={4}
+            xs={12}
+            key={worker.id}
+            sx={{ display: "flex", justifyContent: "center" }}
+          >
+            <Link
+              href={`/worker/${worker.id}`}
+              prefetch={false}
+              aria-label={`مشاهده ${worker.name}`}
+              onClick={() => setIsNavigating(true)}
               style={{
                 textDecoration: "none",
                 color: "inherit",
                 display: "block",
                 height: "100%",
+                width: "100%",
+                maxWidth: 400,
                 cursor: "pointer",
               }}
-              aria-label={`مشاهده ${worker.name}`}
             >
               <MemoizedWorkerCard worker={worker} />
-            </div>
+            </Link>
           </Grid>
         )}
         loadingComponent={
@@ -524,6 +1023,52 @@ const WorkerSingle = (props) => {
       />
     );
   }, [relateds]);
+
+  // ─── Transient error view (API timeout / 5xx / network — NOT a real 404) ───
+  if (props.__transientError) {
+    return (
+      <>
+        <Head>
+          <title>خطای موقت | آجر</title>
+          <meta name="robots" content="noindex, nofollow" />
+          <meta
+            name="description"
+            content="ارتباط با سرور برقرار نشد. لطفاً دوباره تلاش کنید."
+          />
+          <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0" />
+          <meta name="theme-color" content="#b92a31" />
+        </Head>
+
+        <TransientErrorNotice onRetry={() => window.location.reload()} />
+      </>
+    );
+  }
+
+  if (props.unavailableReason) {
+    const isUnderReview = props.unavailableReason === "under_review";
+    return (
+      <>
+        <Head>
+          <title>
+            {isUnderReview ? "آگهی در حال بررسی | آجر" : "آگهی در دسترس نیست | آجر"}
+          </title>
+          <meta name="robots" content="noindex, nofollow" />
+          <meta
+            name="description"
+            content={
+              isUnderReview
+                ? "این آگهی در حال بررسی است و به‌زودی در دسترس قرار می‌گیرد."
+                : "این آگهی دیگر در دسترس نیست."
+            }
+          />
+          <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0" />
+          <meta name="theme-color" content="#b92a31" />
+        </Head>
+
+        <UnavailableNotice reason={props.unavailableReason} details={details} />
+      </>
+    );
+  }
 
   return (
     <>
@@ -569,7 +1114,6 @@ const WorkerSingle = (props) => {
         <meta name="theme-color" content="#b92a31" />
       </Head>
 
-      {/* JSON-LD (Property Listing + Breadcrumb + optional Agent) */}
       <Script
         id="jsonld-listing"
         type="application/ld+json"
@@ -591,85 +1135,172 @@ const WorkerSingle = (props) => {
         />
       )}
 
-      <div className={`${Styles["scroll-div"]} ${Styles["worker-single"]} worker-single-page`} style={{ margin: "10px 20px", minHeight: "100vh" }}>
-        <Breadcrumb persianCategory={details.category_name} englishCategory={details.category_eng_name} englishCity={details.city_slug} currentPage={details.name} />
-
-        {/* Visible H1 (important for SEO) 
-        <div style={{ marginTop: "10px", marginBottom: "10px", textAlign: "center" }}>
-          <h1 style={{ fontSize: "18px", color: "#222", margin: 0, lineHeight: 1.8, fontWeight: 700 }}>{details.name}</h1>
-          <p style={{ marginTop: "6px", marginBottom: 0, color: "#666", fontSize: "13px", lineHeight: 1.9 }}>
-            {details.category_name} {details.city ? `در ${details.city}` : ""}
-            {details.neighbourhood ? `، ${details.neighbourhood}` : ""}
-          </p>
-        </div>
-      */}
+      <div
+        className={`${Styles["scroll-div"]} ${Styles["worker-single"]} worker-single-page`}
+        style={{ margin: "10px 20px", minHeight: "100vh" }}
+      >
+        <Breadcrumb
+          persianCategory={details.category_name}
+          englishCategory={details.category_eng_name}
+          englishCity={details.city_slug}
+          currentPage={details.name}
+        />
 
         <Box sx={{ flexGrow: 1 }}>
           <Grid container spacing={{ xs: 2, md: 3 }}>
-            {/* Left Column - Media & Map */}
             <Grid item xs={12} md={5}>
-              <div className={Styles["media-wrapper"]}>
-                <WorkerMedia details={details} images={images} videos={videos} virtual_tours={virtual_tours} />
+              <div
+                ref={mediaWrapperRef}
+                className={Styles["media-wrapper"]}
+                style={{ position: "relative" }}
+              >
+                <WorkerMedia
+                  details={details}
+                  images={images}
+                  videos={videos}
+                  virtual_tours={virtual_tours}
+                />
 
-                <button
-                  className={Styles["favorite-icon"]}
-                  onClick={toggleFavorite}
-                  aria-label={isFavorite ? "حذف از علاقه‌مندی‌ها" : "افزودن به علاقه‌مندی‌ها"}
+                <div
+                  id="action-buttons-container"
                   style={{
-                    position: "absolute",
-                    top: 10,
-                    right: 10,
-                    background: "white",
-                    border: "none",
-                    borderRadius: "50%",
-                    width: 40,
-                    height: 40,
+                    position: isActionsPinned ? "fixed" : "absolute",
+                    top: isActionsPinned
+                      ? "calc(env(safe-area-inset-top, 0px) + 82px)"
+                      : 10,
+                    right: isActionsPinned ? 12 : 10,
                     display: "flex",
+                    flexDirection: "row",
                     alignItems: "center",
-                    justifyContent: "center",
-                    cursor: "pointer",
-                    boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
-                    zIndex: 10,
+                    gap: 8,
+                    zIndex: isActionsPinned ? 1000 : 10,
+                    pointerEvents: "auto",
+                    transition: "top 0.15s ease, right 0.15s ease",
                   }}
                 >
-                  {isFavorite ? <FavoriteIcon style={{ color: "#b92a31" }} /> : <FavoriteBorderIcon style={{ color: "#666" }} />}
-                </button>
-              </div>
+                  <button
+                    type="button"
+                    onClick={toggleFavorite}
+                    aria-label={
+                      isFavorite ? "حذف از علاقه‌مندی‌ها" : "افزودن به علاقه‌مندی‌ها"
+                    }
+                    title={isFavorite ? "حذف از علاقه‌مندی‌ها" : "افزودن به علاقه‌مندی‌ها"}
+                    style={{
+                      position: "static",
+                      top: "auto",
+                      right: "auto",
+                      left: "auto",
+                      bottom: "auto",
+                      background: "white",
+                      border: "none",
+                      borderRadius: "50%",
+                      width: 40,
+                      height: 40,
+                      minWidth: 40,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      cursor: "pointer",
+                      padding: 0,
+                      boxShadow: isActionsPinned
+                        ? "0 4px 14px rgba(0,0,0,0.18)"
+                        : "0 2px 8px rgba(0,0,0,0.15)",
+                      transition: "transform 0.2s, box-shadow 0.2s",
+                      WebkitTapHighlightColor: "transparent",
+                    }}
+                    onMouseEnter={(e) => (e.currentTarget.style.transform = "scale(1.1)")}
+                    onMouseLeave={(e) => (e.currentTarget.style.transform = "scale(1)")}
+                    onMouseDown={(e) => (e.currentTarget.style.transform = "scale(0.95)")}
+                    onMouseUp={(e) => (e.currentTarget.style.transform = "scale(1)")}
+                  >
+                    {isFavorite ? (
+                      <FavoriteIcon style={{ color: "#b92a31", fontSize: 22 }} />
+                    ) : (
+                      <FavoriteBorderIcon style={{ color: "#666", fontSize: 22 }} />
+                    )}
+                  </button>
 
-              <Box sx={{ display: { xs: "none", md: "block" }, mt: 3 }}>
-                <h2 className={Styles["title"]} style={{ fontSize: "18px", marginBottom: "12px" }}>
-                  موقعیت روی نقشه
-                </h2>
-                <button
-                  onClick={() => setMapModalOpen(true)}
-                  style={{
-                    cursor: "pointer",
-                    width: "100%",
-                    border: "none",
-                    padding: 0,
-                    background: "none",
-                    position: "relative",
-                    borderRadius: "8px",
-                    overflow: "hidden",
-                    border: "1px solid #e0e0e0",
-                  }}
-                  className="map-container"
-                  aria-label="نمایش موقعیت روی نقشه"
-                >
-                  <LocationNoSsr details={details} />
-                </button>
-              </Box>
+                  <button
+                    type="button"
+                    onClick={handleShare}
+                    aria-label="اشتراک‌گذاری این آگهی"
+                    title="اشتراک‌گذاری"
+                    style={{
+                      position: "static",
+                      top: "auto",
+                      right: "auto",
+                      left: "auto",
+                      bottom: "auto",
+                      background: "white",
+                      border: "none",
+                      borderRadius: "50%",
+                      width: 40,
+                      height: 40,
+                      minWidth: 40,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      cursor: "pointer",
+                      padding: 0,
+                      boxShadow: isActionsPinned
+                        ? "0 4px 14px rgba(0,0,0,0.18)"
+                        : "0 2px 8px rgba(0,0,0,0.15)",
+                      transition: "transform 0.2s, box-shadow 0.2s",
+                      WebkitTapHighlightColor: "transparent",
+                    }}
+                    onMouseEnter={(e) => (e.currentTarget.style.transform = "scale(1.1)")}
+                    onMouseLeave={(e) => (e.currentTarget.style.transform = "scale(1)")}
+                    onMouseDown={(e) => (e.currentTarget.style.transform = "scale(0.95)")}
+                    onMouseUp={(e) => (e.currentTarget.style.transform = "scale(1)")}
+                  >
+                    <ShareIcon style={{ color: "#666", fontSize: 22 }} />
+                  </button>
+                </div>
+
+                {shareFeedback && (
+                  <div
+                    role="status"
+                    aria-live="polite"
+                    style={{
+                      position: isActionsPinned ? "fixed" : "absolute",
+                      top: isActionsPinned
+                        ? "calc(env(safe-area-inset-top, 0px) + 62px)"
+                        : "auto",
+                      bottom: isActionsPinned ? "auto" : 12,
+                      right: isActionsPinned ? 12 : "auto",
+                      left: isActionsPinned ? "auto" : "50%",
+                      transform: isActionsPinned ? "none" : "translateX(-50%)",
+                      background: "rgba(0,0,0,0.8)",
+                      color: "#fff",
+                      padding: "8px 16px",
+                      borderRadius: 20,
+                      fontSize: 13,
+                      fontWeight: 600,
+                      zIndex: 1001,
+                      pointerEvents: "none",
+                      whiteSpace: "nowrap",
+                      transition: "opacity 0.2s",
+                    }}
+                  >
+                    {shareFeedback}
+                  </div>
+                )}
+              </div>
 
               {cleanRealstate.id && (
                 <Box sx={{ display: { xs: "none", md: "block" }, mt: 3 }}>
-                  <Link href={`/realestates/${cleanRealstate.id}?slug=${cleanRealstate.slug}`} passHref legacyBehavior prefetch={false}>
+                  <Link
+                    href={`/realestates/${cleanRealstate.id}?slug=${cleanRealstate.slug}`}
+                    passHref
+                    legacyBehavior
+                    prefetch={false}
+                  >
                     <MemoizedWorkerRealstateCard realstate={cleanRealstate} />
                   </Link>
                 </Box>
               )}
             </Grid>
 
-            {/* Right Column - Details */}
             <Grid item xs={12} md={7}>
               <div className={Styles["worker-single-details"]}>
                 <div style={{ display: "flex", gap: "8px", marginTop: "8px" }}>
@@ -703,36 +1334,23 @@ const WorkerSingle = (props) => {
                   )}
                 </div>
 
-                <WorkerDetails isFavorite={isFavorite} onFavoriteToggle={toggleFavorite} details={details} properties={properties} realstate={cleanRealstate} />
+                <WorkerDetails
+                  isFavorite={isFavorite}
+                  onFavoriteToggle={toggleFavorite}
+                  details={details}
+                  properties={properties}
+                  realstate={cleanRealstate}
+                />
               </div>
-
-              <Box sx={{ display: { xs: "block", md: "none" }, mt: 3 }}>
-                <h2 className={Styles["title"]} style={{ fontSize: "18px", marginBottom: "12px" }}>
-                  موقعیت روی نقشه
-                </h2>
-                <button
-                  onClick={() => setMapModalOpen(true)}
-                  style={{
-                    cursor: "pointer",
-                    width: "100%",
-                    border: "none",
-                    padding: 0,
-                    background: "none",
-                    position: "relative",
-                    borderRadius: "8px",
-                    overflow: "hidden",
-                    border: "1px solid #e0e0e0",
-                  }}
-                  className="map-container"
-                  aria-label="نمایش موقعیت روی نقشه"
-                >
-                  <LocationNoSsr details={details} />
-                </button>
-              </Box>
 
               {cleanRealstate.id && (
                 <Box sx={{ display: { xs: "block", md: "none" }, mt: 3 }}>
-                  <Link href={`/realestates/${cleanRealstate.id}?slug=${cleanRealstate.slug}`} passHref legacyBehavior prefetch={false}>
+                  <Link
+                    href={`/realestates/${cleanRealstate.id}?slug=${cleanRealstate.slug}`}
+                    passHref
+                    legacyBehavior
+                    prefetch={false}
+                  >
                     <MemoizedWorkerRealstateCard realstate={cleanRealstate} />
                   </Link>
                 </Box>
@@ -741,7 +1359,6 @@ const WorkerSingle = (props) => {
           </Grid>
         </Box>
 
-        {/* Sticky Call Button - Mobile Only */}
         {(cleanRealstate?.phone || details.cellphone) && (
           <Box
             sx={{
@@ -801,60 +1418,43 @@ const WorkerSingle = (props) => {
                 <CallIcon style={{ fontSize: "20px", color: "#fff" }} />
               </div>
 
-              <span style={{ lineHeight: 1 }}>تماس: {cleanRealstate?.phone || details.cellphone}</span>
+              <span style={{ lineHeight: 1 }}>
+                تماس: {cleanRealstate?.phone || details.cellphone}
+              </span>
             </div>
           </Box>
         )}
 
-        {/* Map Modal */}
-        <Dialog
-          open={mapModalOpen}
-          onClose={() => setMapModalOpen(false)}
-          maxWidth="lg"
-          fullWidth
-          sx={{
-            "& .MuiDialog-paper": {
-              height: "90vh",
-              maxHeight: "90vh",
-              margin: { xs: "10px", sm: "20px" },
-            },
-          }}
-          aria-labelledby="map-dialog-title"
-        >
-          <div
+        <div style={{ marginTop: "40px", marginBottom: "80px" }}>
+          <h2
+            className={Styles["title"]}
             style={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-              padding: "12px 16px",
-              backgroundColor: "#f5f5f5",
-              borderBottom: "1px solid #ddd",
+              fontSize: "22px",
+              marginBottom: "20px",
+              textAlign: "center",
             }}
           >
-            <IconButton onClick={openDirections} title="مسیریابی در Google Maps" aria-label="مسیریابی در Google Maps" sx={{ color: "#b92a31" }}>
-              <DirectionsIcon />
-            </IconButton>
-            <IconButton onClick={() => setMapModalOpen(false)} aria-label="بستن نقشه" sx={{ color: "#666" }}>
-              <CloseIcon />
-            </IconButton>
-          </div>
-          <DialogContent sx={{ padding: 0, height: "calc(100% - 64px)" }}>
-            <LocationNoSsr details={details} mapHeight="100%" />
-          </DialogContent>
-        </Dialog>
-
-        {/* Related Workers Section */}
-        <div style={{ marginTop: "40px", marginBottom: "20px" }}>
-          <h2 className={Styles["title"]} style={{ fontSize: "22px", marginBottom: "20px" }}>
             {details.category_name}های مشابه در {details.neighbourhood || details.city}
           </h2>
-          <Grid container spacing={{ xs: 2, md: 3 }} sx={{ marginTop: "10px" }}>
+          <div style={{ marginTop: "10px" }}>
             {renderRelatedWorkers()}
-          </Grid>
+          </div>
         </div>
       </div>
 
-      {/* Loading Overlay */}
+      <StaleListingModal
+        open={staleModalOpen}
+        onClose={() => setStaleModalOpen(false)}
+        onCall={
+          cleanRealstate?.phone || details.cellphone
+            ? () => {
+                setStaleModalOpen(false);
+                handlePropertyCall();
+              }
+            : null
+        }
+      />
+
       {isNavigating && (
         <div
           style={{
@@ -876,7 +1476,8 @@ const WorkerSingle = (props) => {
               width: 70,
               height: 70,
               borderRadius: "50%",
-              background: "linear-gradient(90deg, #b92a31 25%, #d84343 50%, #b92a31 75%)",
+              background:
+                "linear-gradient(90deg, #b92a31 25%, #d84343 50%, #b92a31 75%)",
               backgroundSize: "200% 100%",
               animation: "spin 1s infinite linear",
               boxShadow: "0 4px 20px rgba(185, 42, 49, 0.3)",
@@ -915,15 +1516,6 @@ const WorkerSingle = (props) => {
           outline: 2px solid #b92a31;
           outline-offset: 2px;
         }
-        .favorite-icon {
-          transition: transform 0.2s;
-        }
-        .favorite-icon:hover {
-          transform: scale(1.1);
-        }
-        .favorite-icon:active {
-          transform: scale(0.95);
-        }
         @media (max-width: 600px) {
           .worker-single-page {
             margin: 0 10px !important;
@@ -958,6 +1550,7 @@ WorkerSingle.propTypes = {
     seo_description: PropTypes.string,
     seo_keywords: PropTypes.string,
     price_range: PropTypes.string,
+    status: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
   }).isRequired,
   images: PropTypes.array,
   videos: PropTypes.array,
@@ -965,29 +1558,381 @@ WorkerSingle.propTypes = {
   properties: PropTypes.array,
   realstate: PropTypes.object,
   relateds: PropTypes.array,
+  unavailableReason: PropTypes.oneOf(["under_review", "removed", null]),
+  staleWarning: PropTypes.bool,
+  __clientIp: PropTypes.string,
+  __transientError: PropTypes.bool,
 };
 
-// SSR (already SSR) - keep and simplify a bit
+// =====================================================================
+// Server-side data fetching + analytics
+// =====================================================================
+
+const CACHE_TTL_MS = 60 * 1000;
+const API_TIMEOUT_MS = 6000;
+const API_RETRIES = 2;
+const CACHE_MAX_ENTRIES = 500;
+const PING_TIMEOUT_MS = 3000;
+const SSR_ANALYTICS_DEDUPE_MS = 60 * 1000;
+
+const globalCache =
+  globalThis.__workerPostCache ||
+  (globalThis.__workerPostCache = new Map());
+
+// Dedupe SSR listing_view analytics per (ip, listing) within a short window.
+const globalViewDedupe =
+  globalThis.__workerViewDedupe ||
+  (globalThis.__workerViewDedupe = new Map());
+
+function getCached(id) {
+  const hit = globalCache.get(String(id));
+  if (!hit) return null;
+  if (Date.now() - hit.t > CACHE_TTL_MS) {
+    globalCache.delete(String(id));
+    return null;
+  }
+  return hit.v;
+}
+
+function setCached(id, value) {
+  globalCache.set(String(id), { v: value, t: Date.now() });
+  if (globalCache.size > CACHE_MAX_ENTRIES) {
+    const oldestKey = globalCache.keys().next().value;
+    globalCache.delete(oldestKey);
+  }
+}
+
+// ─── Client-IP extraction ───
+function getClientIp(req) {
+  const headers = req.headers || {};
+
+  const candidates = [
+    headers["cf-connecting-ip"],
+    headers["true-client-ip"],
+    headers["x-real-ip"],
+    headers["x-client-ip"],
+    headers["x-forwarded-for"],
+    headers["forwarded"],
+    headers["x-forwarded"],
+    headers["forwarded-for"],
+    headers["x-cluster-client-ip"],
+    headers["fastly-client-ip"],
+  ];
+
+  for (const raw of candidates) {
+    if (!raw) continue;
+    const value = Array.isArray(raw) ? raw[0] : raw;
+    const first = String(value).split(",")[0].trim();
+    if (!first) continue;
+
+    if (first === "::1") continue;
+    if (first === "127.0.0.1") continue;
+    if (first === "localhost") continue;
+    if (first.startsWith("::ffff:127.")) continue;
+    if (first.startsWith("10.")) continue;
+    if (first.startsWith("192.168.")) continue;
+    if (/^172\.(1[6-9]|2\d|3[01])\./.test(first)) continue;
+
+    return first;
+  }
+
+  const sock = req.socket && req.socket.remoteAddress;
+  if (sock && sock !== "::1" && sock !== "127.0.0.1") {
+    return sock;
+  }
+
+  return null;
+}
+
+// ─── First-party cookie parser ───
+function parseCookies(cookieHeader) {
+  if (!cookieHeader) return {};
+  return Object.fromEntries(
+    cookieHeader.split(";").map((c) => {
+      const [k, ...v] = c.trim().split("=");
+      return [k, decodeURIComponent(v.join("=") || "")];
+    })
+  );
+}
+
+// ─── Build the analytics context from the incoming browser request ───
+function buildClientContext(context, listingId) {
+  const { req, query } = context;
+  const cookies = parseCookies(req.headers.cookie);
+
+  // Read attribution cookie (referrer / UTM)
+  let attribution = null;
+  const rawAttr = cookies["ajur_attribution"];
+  if (rawAttr) {
+    try {
+      attribution = JSON.parse(rawAttr);
+    } catch {
+      attribution = null;
+    }
+  }
+
+  return {
+    clientIp: getClientIp(req),
+    userAgent: req.headers["user-agent"] || null,
+    referer: req.headers["referer"] || req.headers["referrer"] || null,
+    acceptLanguage: req.headers["accept-language"] || null,
+    position: query?.position || null,
+    source: query?.source || "worker-page",
+    pageUrl: `https://ajur.app/worker/${listingId}`,
+    anonymousId: cookies["ajur_anonymous_id"] || null,
+    sessionId: cookies["ajur_session_id"] || null,
+    attribution,   // ← ADD
+  };
+}
+
+// ─── Generic SSR event helper ───
+async function fireSsrEvent(eventName, payload, ctx) {
+  const headers = {
+    Accept: "application/json",
+    "X-Client-From-Page": "1",
+    ...(ctx.clientIp ? { "X-Client-Ip": ctx.clientIp } : {}),
+    ...(ctx.userAgent ? { "X-Client-User-Agent": ctx.userAgent } : {}),
+    ...(ctx.referer ? { "X-Client-Referer": ctx.referer } : {}),
+    ...(ctx.acceptLanguage
+      ? { "X-Client-Accept-Language": ctx.acceptLanguage }
+      : {}),
+    ...(ctx.position ? { "X-Client-Position": String(ctx.position) } : {}),
+    ...(ctx.source ? { "X-Client-Source": ctx.source } : {}),
+    ...(ctx.pageUrl ? { "X-Client-Page-Url": ctx.pageUrl } : {}),
+    ...(ctx.anonymousId ? { "X-Client-Anonymous-Id": ctx.anonymousId } : {}),
+    ...(ctx.sessionId ? { "X-Client-Session-Id": ctx.sessionId } : {}),
+  };
+
+  // Enrich payload with attribution if available
+  const enrichedPayload = {
+    ...payload,
+    ...(ctx.attribution ? { attribution: ctx.attribution } : {}),
+  };
+
+  await axios.post(
+    "https://api.ajur.app/api/analytics/track",
+    {
+      event_name: eventName,
+      platform: "web",
+      payload: enrichedPayload,
+    },
+    {
+      timeout: PING_TIMEOUT_MS,
+      headers,
+    }
+  );
+}
+
+// ─── Data fetch with retry ───
+async function fetchPostWithRetry(id) {
+  let lastError = null;
+
+  for (let attempt = 0; attempt <= API_RETRIES; attempt++) {
+    try {
+      const response = await axios.get(
+        `https://api.ajur.app/api/posts/${id}`,
+        {
+          timeout: API_TIMEOUT_MS,
+          headers: { Accept: "application/json" },
+        }
+      );
+
+      if (response?.data?.details?.id) {
+        return response.data;
+      }
+
+      lastError = new Error("Malformed API payload");
+      break;
+    } catch (error) {
+      lastError = error;
+      const status = error?.response?.status;
+
+      const isRetryable =
+        !status || status >= 500 || error?.code === "ECONNABORTED";
+
+      if (!isRetryable || attempt === API_RETRIES) {
+        throw error;
+      }
+
+      const delay = 300 * Math.pow(3, attempt);
+      await new Promise((r) => setTimeout(r, delay));
+    }
+  }
+
+  throw lastError || new Error("API fetch failed");
+}
+
 export async function getServerSideProps(context) {
   const { params, res } = context;
   const id = params.id;
 
-  // caching headers
-  res.setHeader("Cache-Control", "public, s-maxage=300, stale-while-revalidate=600");
-  res.setHeader("X-Robots-Tag", "index, follow");
-  res.setHeader("X-Content-Type-Options", "nosniff");
+  const clientContext = buildClientContext(context, id);
 
+  // ─── DEBUG: SSR side ───
+  // eslint-disable-next-line no-console
+  console.log("[ssr] context resolved", {
+    id,
+    clientIp: clientContext.clientIp,
+    userAgent: clientContext.userAgent?.slice(0, 40),
+    xff: context.req.headers["x-forwarded-for"] || null,
+    cfConnectingIp: context.req.headers["cf-connecting-ip"] || null,
+    xRealIp: context.req.headers["x-real-ip"] || null,
+    arRealIp: context.req.headers["ar-real-ip"] || null,
+    socketRemote: (context.req.socket && context.req.socket.remoteAddress) || null,
+  });
+  // ─── END DEBUG ───
+
+  // Also set the legacy cookie (kept for backward compat, harmless if stripped).
+  if (clientContext.clientIp) {
+    res.setHeader(
+      "Set-Cookie",
+      `ajur_client_ip=${encodeURIComponent(clientContext.clientIp)}; Path=/; Max-Age=1800; SameSite=Lax`
+    );
+  }
+
+  // ─── Analytics: fire listing_view (deduped per ip+listing within a window) ───
+  if (clientContext.clientIp || clientContext.userAgent) {
+    const dedupeKey = `${clientContext.clientIp || "anon"}:${id}`;
+    const now = Date.now();
+    const last = globalViewDedupe.get(dedupeKey);
+
+    if (!last || now - last > SSR_ANALYTICS_DEDUPE_MS) {
+      globalViewDedupe.set(dedupeKey, now);
+      if (globalViewDedupe.size > 2000) {
+        globalViewDedupe.delete(globalViewDedupe.keys().next().value);
+      }
+
+      fireSsrEvent(
+        "listing_view",
+        { listing_id: Number(id) },
+        clientContext
+      ).catch((err) => {
+        // eslint-disable-next-line no-console
+        console.warn(
+          "[ssr] analytics ping failed:",
+          err?.response?.status || err?.message || err
+        );
+      });
+    }
+  }
+
+  // -------- Cache hit path --------
+  const cached = getCached(id);
+
+  if (cached) {
+    const status = Number(cached.details?.status ?? 1);
+
+    if (status === 4) {
+      res.setHeader("X-Robots-Tag", "noindex, nofollow");
+      res.setHeader("X-Content-Type-Options", "nosniff");
+      res.setHeader("Cache-Control", "public, s-maxage=60, stale-while-revalidate=120");
+      return {
+        props: {
+          unavailableReason: "removed",
+          details: cached.details || {},
+          images: [],
+          videos: [],
+          virtual_tours: [],
+          properties: [],
+          realstate: {},
+          relateds: [],
+          staleWarning: false,
+        },
+      };
+    }
+
+    if (status === 2) {
+      res.setHeader("X-Robots-Tag", "noindex, nofollow");
+      res.setHeader("X-Content-Type-Options", "nosniff");
+      res.setHeader("Cache-Control", "public, s-maxage=60, stale-while-revalidate=120");
+      return {
+        props: {
+          unavailableReason: "under_review",
+          details: cached.details || {},
+          images: [],
+          videos: [],
+          virtual_tours: [],
+          properties: [],
+          realstate: {},
+          relateds: [],
+          staleWarning: false,
+        },
+      };
+    }
+
+    res.setHeader("Cache-Control", "public, s-maxage=300, stale-while-revalidate=600");
+    res.setHeader("X-Robots-Tag", "index, follow");
+    res.setHeader("X-Content-Type-Options", "nosniff");
+
+    return {
+      props: {
+        details: cached.details || {},
+        images: cached.images || [],
+        videos: cached.videos || [],
+        virtual_tours: cached.virtual_tours || [],
+        properties: cached.properties || [],
+        realstate: cached.realstate || {},
+        relateds: cached.relateds || [],
+        unavailableReason: null,
+        staleWarning: status === 5,
+        __clientIp: clientContext.clientIp,   // ← passed to browser for click events
+      },
+    };
+  }
+
+  // -------- Cache miss path --------
   try {
-    const response = await axios.get(`https://api.ajur.app/api/posts/${id}`, {
-      timeout: 15000,
-      headers: { Accept: "application/json" },
-    });
-
-    const data = response.data;
+    const data = await fetchPostWithRetry(id);
 
     if (!data?.details?.id || !data?.details?.name) {
       return { notFound: true };
     }
+
+    setCached(id, data);
+
+    const status = Number(data.details.status ?? 1);
+
+    if (status === 4) {
+      res.setHeader("X-Robots-Tag", "noindex, nofollow");
+      res.setHeader("X-Content-Type-Options", "nosniff");
+      res.setHeader("Cache-Control", "public, s-maxage=60, stale-while-revalidate=120");
+      return {
+        props: {
+          unavailableReason: "removed",
+          details: data.details || {},
+          images: [],
+          videos: [],
+          virtual_tours: [],
+          properties: [],
+          realstate: {},
+          relateds: [],
+          staleWarning: false,
+        },
+      };
+    }
+
+    if (status === 2) {
+      res.setHeader("X-Robots-Tag", "noindex, nofollow");
+      res.setHeader("X-Content-Type-Options", "nosniff");
+      res.setHeader("Cache-Control", "public, s-maxage=60, stale-while-revalidate=120");
+      return {
+        props: {
+          unavailableReason: "under_review",
+          details: data.details || {},
+          images: [],
+          videos: [],
+          virtual_tours: [],
+          properties: [],
+          realstate: {},
+          relateds: [],
+          staleWarning: false,
+        },
+      };
+    }
+
+    res.setHeader("Cache-Control", "public, s-maxage=300, stale-while-revalidate=600");
+    res.setHeader("X-Robots-Tag", "index, follow");
+    res.setHeader("X-Content-Type-Options", "nosniff");
 
     return {
       props: {
@@ -998,11 +1943,42 @@ export async function getServerSideProps(context) {
         properties: data.properties || [],
         realstate: data.realstate || {},
         relateds: data.relateds || [],
+        unavailableReason: null,
+        staleWarning: status === 5,
+        __clientIp: clientContext.clientIp,   // ← passed to browser for click events
       },
     };
   } catch (error) {
     console.error("Error fetching worker data:", error?.message || error);
-    return { notFound: true };
+
+    const status = error?.response?.status;
+
+    // Real 404 — the listing truly doesn't exist.
+    if (status === 404) {
+      return { notFound: true };
+    }
+
+    // Transient failure (timeout, 5xx, network, rate limit) — do NOT
+    // fake a 404. Serve a no-store error page that lets the user retry.
+    res.setHeader("Cache-Control", "no-store, must-revalidate");
+    res.setHeader("X-Robots-Tag", "noindex, nofollow");
+    res.setHeader("X-Content-Type-Options", "nosniff");
+
+    return {
+      props: {
+        __transientError: true,
+        details: {},
+        images: [],
+        videos: [],
+        virtual_tours: [],
+        properties: [],
+        realstate: {},
+        relateds: [],
+        unavailableReason: null,
+        staleWarning: false,
+        __clientIp: clientContext.clientIp,
+      },
+    };
   }
 }
 

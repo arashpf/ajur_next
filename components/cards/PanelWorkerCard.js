@@ -1,565 +1,945 @@
-import React, { useState, useEffect } from "react";
+// components/cards/PanelWorkerCard.js
+// Ported from WorkerRealEstateCard (React Native) → Next.js + MUI
+// One card = one property. Click opens a bottom action sheet.
+
+import React, { useState } from "react";
 import { useRouter } from "next/router";
-import Card from "@mui/material/Card";
-import CardActions from "@mui/material/CardActions";
-import CardContent from "@mui/material/CardContent";
-import CardMedia from "@mui/material/CardMedia";
-import RocketLaunchIcon from '@mui/icons-material/RocketLaunch';
-import Button from "@mui/material/Button";
-import Typography from "@mui/material/Typography";
-import CameraIndoorIcon from "@mui/icons-material/CameraIndoor";
-import CollectionsIcon from "@mui/icons-material/Collections";
-import WorkerPanelDetails from "../workers/WorkerPanelDetails";
-import WorkerPanelActions from "../workers/WorkerPanelActions";
-import SpinnerModalLoader from "../panel/SpinnerModalLoader";
-import WorkerShare from "../workers/WorkerShare";
-import Modal from "@mui/material/Modal";
 import Box from "@mui/material/Box";
-import AppBar from "@mui/material/AppBar";
-import Toolbar from "@mui/material/Toolbar";
-import Grid from "@mui/material/Grid";
-import Tab from "react-bootstrap/Tab";
-import Tabs from "react-bootstrap/Tabs";
-import dynamic from "next/dynamic";
+import Typography from "@mui/material/Typography";
+import Drawer from "@mui/material/Drawer";
+import IconButton from "@mui/material/IconButton";
+import CircularProgress from "@mui/material/CircularProgress";
+import Dialog from "@mui/material/Dialog";
+import DialogContent from "@mui/material/DialogContent";
+import TextField from "@mui/material/TextField";
+import Snackbar from "@mui/material/Snackbar";
+import MuiAlert from "@mui/material/Alert";
+import Cookies from "js-cookie";
 import axios from "axios";
-import Link from "next/link";
+import dayjs from "dayjs";
+import relativeTime from "dayjs/plugin/relativeTime";
+import "dayjs/locale/fa";
 
+import RocketLaunchIcon from "@mui/icons-material/RocketLaunch";
+import EditIcon from "@mui/icons-material/Edit";
+import VisibilityIcon from "@mui/icons-material/Visibility";
+import BarChartIcon from "@mui/icons-material/BarChart";
+import ShareIcon from "@mui/icons-material/Share";
+import DeleteIcon from "@mui/icons-material/Delete";
+import CheckIcon from "@mui/icons-material/Check";
+import CheckBoxOutlineBlankIcon from "@mui/icons-material/CheckBoxOutlineBlank";
 
+dayjs.extend(relativeTime);
+dayjs.locale("fa");
 
-import ImageSlider from "../sliders/ImageSlider";
-import VideoSlider from "../sliders/VideoSlider";
+const Alert = React.forwardRef(function Alert(props, ref) {
+  return <MuiAlert elevation={6} ref={ref} variant="filled" {...props} />;
+});
 
-const LocationNoSsr = dynamic(() => import("../map/Location"), { ssr: false });
-
-
-// import Styles from "../styles/WorkerCard.module.css";
-// import Styles from "../styles/PanelWorkerCard.module.css";
-import Styles from "../styles/panel/PanelWorkerCard.module.css";
-
-export default function ImgMediaCard(props) {
-  const worker = props.worker;
-  const router = useRouter();
-  const [open, setOpen] = React.useState(false);
-  const [key, setKey] = React.useState("pics");
-  const [loading, set_loading] = React.useState(false);
-  const [images, set_images] = React.useState([]);
-  const [videos, set_videos] = React.useState([]);
-  const [details, set_details] = React.useState();
-  const [properties, set_properties] = React.useState([]);
-  const [modal_worker, set_modal_worker] = React.useState();
-
-  const onPopstateFuction = () => {
-    history.pushState(null, "/panel", router.asPath);
-    setOpen(false);
-  };
-
-  useEffect(() => {
-    // set_properties( JSON.stringify(worker.json_properties[0]));
-    set_properties(JSON.parse(worker.json_properties));
-  }, [worker.json_properties]);
-
-  useEffect(() => {
-    if (open) {
-      history.pushState(null, "/panel", router.asPath);
-      window.addEventListener("popstate", onPopstateFuction);
-    }
-    return () => {
-      window.removeEventListener("popstate", onPopstateFuction);
-    };
-  }, [open]);
-
-
-
-  const handleClose = () => {
-    setOpen(false);
-    set_modal_worker();
-  };
-
-
-
-  const imageorspinner = () => {
-    if (loading) {
-      return (
-        <div className={Styles["spinnerImageView"]}>
-          <Image
-            className={Styles["spinnerImageView"]}
-            height={256}
-            width={256}
-            src="/logo/ajour-gif.gif"
-            alt="ajour logo"
-          />
-        </div>
-      );
-    } else {
-      return <ImageSlider images={images} />;
-    }
-  };
-
-  const renderNeighborHoodRibbon = () => {
-    if (worker.neighbourhood) {
-      return (
-        <div className={Styles["card-inside-bottom"]}>
-          <p style={{ fontSize: 13, color: "#222", display: "flex" }}>{worker.neighbourhood}</p>
-        </div>
-
-      )
-    }
-  };
-
-  const renderUpdateRibbon = () => {
-    if (1) {
-      return (
-        <Link
-          href={`/panel/upgrade/${worker.id}`}
-          style={{ textDecoration: "none" }}
-        >
-          <div className={Styles["card-inside-bottom-right"]}>
-            <RocketLaunchIcon style={{ fontSize: 14, color: "white", marginLeft: 4 }} />
-            <span style={{ fontSize: 11, color: "white" }}>افزایش بازدید</span>
-          </div>
-        </Link>
-      )
-    }
-  };
-
-
-
-
-
-
-  const rednerPrice = () => {
-    var price_per_m2 = properties.filter((item) => item.name == "قیمت هر متر");
-    var price_item = properties.filter((item) => item.name == "قیمت");
-
-
-    var rent_front = properties.filter((item) => item.name == "پول پیش");
-    var rent_per_mounth = properties.filter(
-      (item) => item.name == "اجاره ماهیانه"
-    );
-
-
-
-    if (price_item[0]) {
-      var price_no_format = price_item[0].value;
-      var price_per_m2 = price_per_m2[0].value;
-
-      return (
-
-        <p style={{ direction: 'rtl' }}>
-          <strong style={{ fontSize: '17px' }}>
-            {" "}
-            {String(price_no_format).replace(/(.)(?=(\d{3})+$)/g, "$1,")}{" "}
-            {"تومان"}{" | "}
-          </strong>
-
-          {' متری '}
-          {String(price_per_m2).replace(/(.)(?=(\d{3})+$)/g, "$1,")}{" "}
-          {"تومان"}{" "}
-        </p>
-      );
-    } else if (rent_front[0]) {
-      var rent_front_no_format = rent_front[0].value;
-      var rent_per_mounth_no_format = rent_per_mounth[0].value;
-
-      return (
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "row",
-            justifyContent: "flex-end",
-          }}
-        >
-          {rent_per_mounth_no_format != 0 ? (
-            <p style={{ direction: "rtl", paddingRight: 4 }}>
-              <strong style={{ fontSize: '16px' }}>
-                {" "}
-                {String(rent_per_mounth_no_format).replace(
-                  /(.)(?=(\d{3})+$)/g,
-                  "$1,"
-                )}{" "}
-                {" اجاره "}{" "}
-              </strong>
-            </p>
-          ) : (
-              <p style={{ direction: "rtl", paddingRight: 4 }}> {"کامل"} </p>
-            )}
-
-          <p style={{ direction: "rtl" }}>
-            <strong style={{ fontSize: '16px' }}>
-              {" "}
-              {String(rent_front_no_format).replace(
-                /(.)(?=(\d{3})+$)/g,
-                "$1,"
-              )}{" "}
-              {" رهن  "}{" "}
-            </strong>
-          </p>
-        </div>
-      );
-    }
-  };
-
-  const renderPropertiesCustomized = (pr) => {
-
-    if (pr.name == "قیمت") return;
-    if (pr.name == "پول پیش") return;
-    if (pr.name == "اجاره ماهیانه") return;
-
-    if (pr.name == "قیمت هر متر") return;
-
-
-
-
-
-
-
-    // var norama = properties.filter((item) => item.name == "قیمت");
-    if (pr.kind == 1) {
-      return (
-        <>
-
-          <span>&nbsp; </span>
-          <p>
-            |   {pr.name}   {String(pr.value).replace(/(.)(?=(\d{3})+$)/g, "$1,")}
-          </p>
-          {'.'}
-        </>
-      )
-    }
+// ---------- helpers ----------
+const relativeFa = (dateString) => {
+  if (!dateString) return "";
+  try {
+    return dayjs(dateString).fromNow();
+  } catch (e) {
+    return "";
   }
+};
 
-  const rednerProperties = () => {
-    if (1) {
-      return properties.map((pr) => (
-        <>
-          {pr.special == "1" && (
-            renderPropertiesCustomized(pr)
-          )}
-        </>
-      ));
-    }
-  };
+const daysSince = (dateString) => {
+  if (!dateString) return 0;
+  try {
+    const diff = Date.now() - new Date(dateString).getTime();
+    return Math.floor(diff / (1000 * 60 * 60 * 24));
+  } catch {
+    return 0;
+  }
+};
 
-  const renderVideoOrImageIcon = () => {
+const getStatusBadge = (status) => {
+  switch (String(status)) {
+    case "1":
+      return { text: "تایید شده", color: "#4CAF50" };
+    case "2":
+      return { text: "در انتظار تایید", color: "#FF9800" };
+    case "3":
+      return { text: "نیاز به تغییرات", color: "#F44336" };
+    case "4":
+      return { text: "رد شده", color: "red" };
+    case "5":
+      return { text: "بایگانی شده", color: "#9E9E9E" };
+    default:
+      return { text: "نامشخص", color: "#9E9E9E" };
+  }
+};
 
-    return (
+const extractSpecials = (worker) => {
+  let name1 = worker.specialname1;
+  let value1 = worker.specialvalue1;
+  let name2 = worker.specialname2;
+  let value2 = worker.specialvalue2;
 
-      <>
-
-        { worker.video_count > 0 &&
-          <div className={Styles["card-top-icon-wrapper"]}>
-            <CameraIndoorIcon />
-          </div>
-        }
-
-        {worker.image_count > 0 &&
-          <div className={Styles["card-top-icon-wrapper"]}>
-            {worker.image_count} <CollectionsIcon />
-          </div>
-        }
-
-      </>
-
-    )
-
-
-
-    if (worker.video_count > 0) {
-      return (
-        <div className={Styles["card-top-icon-wrapper"]}>
-          <CameraIndoorIcon />
-        </div>
-      );
-    } else if (worker.image_count > 0) {
-      return (
-        <div className={Styles["card-top-icon-wrapper"]}>
-          {worker.image_count} <CollectionsIcon />
-        </div>
-      );
-    }
-  };
-
-  const daysSinceUpdate = (dateString) => {
+  if ((!name1 || !value1) && worker.json_properties) {
     try {
-      const updated = new Date(dateString);
-      const now = new Date();
-      const diff = now.getTime() - updated.getTime();
-      return Math.floor(diff / (1000 * 60 * 60 * 24));
+      const props =
+        typeof worker.json_properties === "string"
+          ? JSON.parse(worker.json_properties)
+          : worker.json_properties;
+      const specials = props
+        .filter((p) => p.special === "1" || p.special === 1)
+        .sort((a, b) => Number(a.order || 0) - Number(b.order || 0));
+      if (!name1 && specials[0]) {
+        name1 = specials[0].name;
+        value1 = specials[0].value;
+      }
+      if (!name2 && specials[1]) {
+        name2 = specials[1].name;
+        value2 = specials[1].value;
+      }
     } catch (e) {
-      return 0;
+      // ignore
     }
-  };
-
-  const renderNeedsUpdateBadge = () => {
-    const days = daysSinceUpdate(worker.updated_at);
-    if (days >= 22) {
-      return (
-        <div style={{ borderRadius: '20px' }} className={Styles['needs-update-badge']}>نیاز به بروزرسانی</div>
-      );
-    }
-    return null;
-  };
-
-  const renderWorkerStatus = () => {
-    if (worker.status == 1) {
-      return (
-        <p style={{ background: "green", padding: 5, margin: 10, textAlign: "center" }}>
-          فایل تایید شده
-        </p>
-      );
-    } else if (worker.status == 2) {
-      return (
-        <p style={{ background: "gray", padding: 5, margin: 10, textAlign: "center" }}>فایل در دست بررسی است</p>
-      );
-    } else if (worker.status == 5) {
-      return (
-        <p style={{ background: "gray", padding: 5, margin: 10, textAlign: "center" }}> فایل بایگانی شده </p>
-      );
-    } else {
-      return (
-        <p style={{ background: "gray", padding: 5, margin: 10, textAlign: "center" }}> وضعیت نامشخص </p>
-      );
-    }
-  };
-
-  const renderLocation = () => {
-    return <LocationNoSsr details={details} />;
-  };
-
-  const renderVideos = () => {
-    return <VideoSlider videos={videos} />;
-  };
-
-  const rednerModalContents = () => {
-    if (loading) {
-      return <SpinnerModalLoader />;
-    }
-
-    return (
-      <div>
-        <AppBar
-          position="sticky"
-          color="primary"
-          sx={{ top: -20, bottom: "auto" }}
-        >
-          <Toolbar>
-            <div className={Styles["modal-header-wrapper"]}>
-
-              <div>
-                {renderWorkerStatus()}
-
-              </div>
-
-              <div>
-                <WorkerPanelActions worker={worker} />
-              </div>
-
-
-            </div>
-          </Toolbar>
-        </AppBar>
-
-
-        <Grid container spacing={1}>
-          <Grid item xs={12} md={5} lg={5}>
-           
-         
-            <div className={Styles["image-slider-wrapper"]}>
-              <Tabs
-                fill
-                id="controlled-tab-example"
-                activeKey={key}
-                onSelect={(k) => setKey(k)}
-                className={Styles["media-tabs"]}
-              >
-                {images.length > 0 ? (
-                  <Tab
-                    eventKey="pics"
-                    title={<p>تصاویر</p>}
-                    className={Styles["media-tab"]}
-                  >
-                    {imageorspinner()}
-                  </Tab>
-                ) : null}
-
-                {videos.length > 0 ? (
-                  <Tab
-                    eventKey="videos"
-                    title={<p>ویدیو</p>}
-                    className={Styles["media-tab"]}
-                  >
-                    {renderVideos()}
-                  </Tab>
-                ) : null}
-              </Tabs>
-            </div>
-
-            
-            
-            <WorkerShare details={details} slug={worker.slug} />
-
-            
-
-                  
-            {worker.note ? (
-              <p
-                style={{
-                  textAlign: "center",
-                  padding: 5,
-                  borderWidth: 1,
-                  borderStyle: "dashed",
-                  color: "#444",
-                }}
-              >
-                {worker.note}
-              </p>
-            ) : (
-                <></>
-              )}
-          </Grid>
-          <Grid
-            item
-            xs={12}
-            md={5}
-            lg={7}
-            style={{ textAlign: "center", paddingTop: 50 }}
-          >
-            <div className={Styles["worker-single-details"]}>
-              <WorkerPanelDetails details={details} properties={properties} />
-            </div>
-            {renderLocation()}
-          </Grid>
-        </Grid>
-
-        <Grid item xs={12} md={12} lg={12}></Grid>
-      </div>
-    );
-  };
-
-  const fetchworker = (worker) => {
-    console.log("try to fetch worker with the id of " + worker.id);
-    axios({
-      method: "get",
-      url: `https://api.ajur.app/api/posts/${worker.id}`,
-    }).then(function (response) {
-      set_details(response.data.details);
-      set_images(response.data.images);
-      set_videos(response.data.videos);
-
-      if (response.data.images.length > 0) {
-        setKey('pics');
-      }
-      else if (response.data.videos.length > 0) {
-        setKey('videos');
-      }
-      set_properties(response.data.properties);
-      set_loading(false);
-    });
-  };
-
-
-  const onClickCard = (worker) => {
-
-
-    console.log("on click card , expect to open the modal");
-    set_modal_worker(worker);
-    console.log("the modal passed to worker is :-----------------");
-    console.log(worker);
-    setOpen(true);
-    set_loading(true);
-    fetchworker(worker);
-  };
-
-  const renderModal = () => {
-    return (
-      <Modal
-        open={open}
-        onClose={handleClose}
-        aria-labelledby="modal-modal-title"
-        aria-describedby="modal-modal-description"
-      >
-        {/* <Box sx={style} className={Styles['modal_wrapper']}> */}
-        <Box sx={Styles["modal_wrapper"]} className={Styles["modal_wrapper"]}>
-          {/* {renderModalContent()} */}
-
-          {rednerModalContents()}
-
-
-        </Box>
-      </Modal>
-    );
-  };
-
-
-  const short = (name, amount) => {
-    if (name.length > amount) {
-      var shortname = name.substring(0, amount) + " ...";
-      return shortname;
-    } else {
-      return name;
-    }
-  };
-
-  const renderAddress = () => {
-
-    if (worker.formatted) {
-      return (
-        // <div> {short(worker.neighbourhood ,40)}   </div>
-        <div style={{ direction: 'rtl' }}> {short(worker.formatted, 40)} </div>
-      );
-
-    }
-    else if (worker.neighbourhood) {
-      return (
-        // <div> {short(worker.neighbourhood ,40)}   </div>
-        <p > {short(worker.neighbourhood, 40)} </p>
-      );
-    } else if (worker.region) {
-      return <div> {short(worker.region, 40)} </div>;
-    }
-  };
-
-  const renderWorkercategory = () => {
-    if (worker.category_name) {
-      return (<p style={{ fontSize: 16 }}> {worker.category_name} </p>)
-    }
-
   }
+
+  return { name1, value1, name2, value2 };
+};
+
+// ---------- component ----------
+const PanelWorkerCard = ({
+  worker,
+  isSelected = false,
+  selectMode = false,
+  onPress,
+  onLongPress,
+  onDeleteSuccess,
+}) => {
+  const router = useRouter();
+  const [sheetOpen, setSheetOpen] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [faded, setFaded] = useState(false);
+  const [shareFallback, setShareFallback] = useState({
+    open: false,
+    url: "",
+  });
+  const [toast, setToast] = useState({
+    open: false,
+    message: "",
+    severity: "info",
+  });
+
+  const showToast = (message, severity = "info") =>
+    setToast({ open: true, message, severity });
+
+  const handleToastClose = (e, reason) => {
+    if (reason === "clickaway") return;
+    setToast((t) => ({ ...t, open: false }));
+  };
+
+  // -------- card click / long press --------
+  const handleCardClick = () => {
+    if (selectMode || isSelected) {
+      onPress && onPress();
+    } else {
+      setSheetOpen(true);
+    }
+  };
+
+  const handleCardLongPress = () => {
+    onLongPress && onLongPress();
+  };
+
+  // -------- sheet actions --------
+  const closeSheet = () => setSheetOpen(false);
+
+  const handleAction = (action) => {
+    closeSheet();
+    switch (action) {
+      case "boost":
+        router.push(`/panel/upgrade/${worker.id}`);
+        break;
+      case "edit":
+        router.push(`/panel/new?edit_id=${worker.id}`);
+        break;
+      case "preview":
+        router.push(`/worker/${worker.id}`);
+        break;
+      case "stats":
+        // TODO: replace with real chart route when ready
+        alert("its chart press");
+        break;
+      case "share":
+        handleShare();
+        break;
+      case "delete":
+        setConfirmOpen(true);
+        break;
+      default:
+        break;
+    }
+  };
+
+  // -------- share (native → clipboard → fallback dialog) --------
+  const handleShare = async () => {
+    const url = `https://ajur.app/worker/${worker.id}`;
+    const message = worker.description || "";
+
+    // 1. Native share sheet (mobile)
+    if (typeof navigator !== "undefined" && navigator.share) {
+      try {
+        await navigator.share({
+          title: "اشتراک گذاری ملک",
+          text: message,
+          url,
+        });
+        return;
+      } catch (err) {
+        // user cancelled — silent
+        if (err?.name === "AbortError") return;
+        // otherwise fall through to next option
+      }
+    }
+
+    // 2. Clipboard API (desktop, HTTPS or localhost)
+    if (
+      typeof navigator !== "undefined" &&
+      navigator.clipboard &&
+      typeof navigator.clipboard.writeText === "function"
+    ) {
+      try {
+        await navigator.clipboard.writeText(url);
+        showToast("لینک کپی شد", "success");
+        return;
+      } catch (err) {
+        // fall through
+      }
+    }
+
+    // 3. Fallback: show a dialog with the URL pre-selected
+    setShareFallback({ open: true, url });
+  };
+
+  // -------- delete --------
+  const performDelete = async () => {
+    setConfirmOpen(false);
+    setDeleting(true);
+
+    try {
+      const token = Cookies.get("id_token");
+      await axios({
+        method: "get",
+        url: "https://api.ajur.app/api/destroy-worker",
+        params: { token, workerid: worker.id },
+      });
+
+      setFaded(true);
+      setTimeout(() => {
+        if (onDeleteSuccess) onDeleteSuccess(worker.id);
+      }, 300);
+    } catch (err) {
+      console.error("destroy-worker error:", err);
+      setDeleting(false);
+      showToast("مشکلی پیش آمده!!", "error");
+    }
+  };
+
+  // -------- derived data --------
+  const statusInfo = getStatusBadge(worker.status);
+  const lastUpdate = worker.updated_at ? relativeFa(worker.updated_at) : "";
+  const needsUpdate = daysSince(worker.updated_at) >= 22;
+  const isSpecial = worker.is_special === true;
+  const isUrgent = worker.is_urgent === true;
+  const categoryName = worker.cat_name || worker.category_name || "";
+  const { name1, value1, name2, value2 } = extractSpecials(worker);
+
+  // -------- render --------
   return (
     <>
-      <Card
-        sx={{ maxHeight: 300, height: 180 }}
-        className={Styles["card-wrapper"]}
-        onClick={() => onClickCard(worker)}
+      <Box
+        onClick={handleCardClick}
+        onContextMenu={(e) => {
+          e.preventDefault();
+          handleCardLongPress();
+        }}
+        onTouchStart={() => {
+          window.__lpTimer = setTimeout(handleCardLongPress, 500);
+        }}
+        onTouchEnd={() => {
+          if (window.__lpTimer) {
+            clearTimeout(window.__lpTimer);
+            window.__lpTimer = null;
+          }
+        }}
+        sx={{
+          display: "flex",
+          flexDirection: "row",
+          height: 130,
+          backgroundColor: isSelected ? "#e3f2fd" : "#fff",
+          border: isSelected
+            ? "1px solid #007AFF"
+            : isSpecial || isUrgent
+            ? "1px solid #dadada"
+            : "1px solid transparent",
+          borderRadius: "12px",
+          overflow: "hidden",
+          boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+          cursor: "pointer",
+          opacity: faded ? 0 : 1,
+          transition: "opacity 0.3s ease",
+          position: "relative",
+          mb: 1.5,
+          "&:hover": {
+            boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+          },
+        }}
       >
-        {renderNeighborHoodRibbon()}
-        {renderUpdateRibbon()}
-        <CardMedia
-          component="img"
-          alt={worker.name}
-          height="180"
-          image={worker.thumb}
-        ></CardMedia>
-        <div className={Styles["card-inside-top"]}>
-          <p className={Styles["inside-top-left"]}>{renderVideoOrImageIcon()}</p>
-          <div className={Styles["inside-top-right"]}>
-            <p>{worker.name}</p>
-            {renderNeedsUpdateBadge()}
-          </div>
-        </div>
+        {/* ---- selection checkbox ---- */}
+        {(selectMode || isSelected) && (
+          <Box
+            sx={{
+              position: "absolute",
+              top: 8,
+              right: 8,
+              width: 22,
+              height: 22,
+              borderRadius: "50%",
+              border: "2px solid #007AFF",
+              backgroundColor: isSelected ? "#007AFF" : "white",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              zIndex: 20,
+            }}
+          >
+            {isSelected && <CheckIcon sx={{ fontSize: 14, color: "white" }} />}
+          </Box>
+        )}
 
-        <CardContent>
-          <div className={Styles["price-wrapper"]}> {rednerPrice()} </div>
-          <div className={Styles["properties-wrapper"]}>
-          
-            {rednerProperties()}
-          </div>
+        {/* ---- image ---- */}
+        <Box
+          sx={{
+            position: "relative",
+            width: 110,
+            height: 130,
+            flexShrink: 0,
+            overflow: "hidden",
+            backgroundColor: "#eee",
+          }}
+        >
+          <img
+            src={worker.thumb}
+            alt={worker.name}
+            style={{
+              width: "100%",
+              height: "100%",
+              objectFit: "cover",
+              display: "block",
+            }}
+          />
 
+          {/* فوری ribbon */}
+          {isUrgent && (
+            <Box
+              sx={{
+                position: "absolute",
+                top: 8,
+                left: -30,
+                backgroundColor: "#a92b31",
+                py: 0.5,
+                px: 5,
+                transform: "rotate(-45deg)",
+                zIndex: 10,
+              }}
+            >
+              <Typography
+                sx={{
+                  color: "#fff",
+                  fontSize: 11,
+                  fontWeight: "bold",
+                  fontFamily: "iransans, Arial, sans-serif",
+                }}
+              >
+                فوری
+              </Typography>
+            </Box>
+          )}
 
-        </CardContent>
-      </Card>
+          {/* نیاز به بروز رسانی ribbon */}
+          {needsUpdate && (
+            <Box
+              sx={{
+                position: "absolute",
+                bottom: 0,
+                left: 0,
+                backgroundColor: "#E53935",
+                py: 0.5,
+                px: 1,
+                borderTopRightRadius: "8px",
+              }}
+            >
+              <Typography
+                sx={{
+                  fontSize: 10,
+                  color: "#fff",
+                  fontFamily: "iransans, Arial, sans-serif",
+                }}
+              >
+                نیاز به بروز رسانی
+              </Typography>
+            </Box>
+          )}
+        </Box>
 
-      <Card>{renderModal()}</Card>
+        {/* ---- info ---- */}
+        <Box
+          sx={{
+            flex: 1,
+            p: 1.25,
+            display: "flex",
+            flexDirection: "column",
+            justifyContent: "space-between",
+            backgroundColor: isSpecial ? "#eee" : "#fff",
+            direction: "rtl",
+          }}
+        >
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "flex-start",
+              gap: 0.5,
+              mb: 0.75,
+              flexWrap: "wrap",
+            }}
+          >
+            <Typography
+              sx={{
+                fontSize: 12,
+                fontWeight: 600,
+                color: "#222",
+                fontFamily: "iransans, Arial, sans-serif",
+                textAlign: "right",
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+                whiteSpace: "nowrap",
+                maxWidth: "70%",
+              }}
+            >
+              {worker.name}
+            </Typography>
+
+            {isSpecial && (
+              <Box
+                sx={{
+                  backgroundColor: "#DAA520",
+                  px: 0.75,
+                  py: 0.25,
+                  borderRadius: "4px",
+                }}
+              >
+                <Typography
+                  sx={{
+                    color: "#fff",
+                    fontSize: 9,
+                    fontWeight: "bold",
+                    fontFamily: "iransans, Arial, sans-serif",
+                  }}
+                >
+                  ویژه
+                </Typography>
+              </Box>
+            )}
+          </Box>
+
+          {name1 && value1 && (
+            <Box
+              sx={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                mb: 0.5,
+                px: 0.5,
+              }}
+            >
+              <Typography
+                sx={{
+                  fontSize: 11,
+                  fontWeight: 500,
+                  color: "#333",
+                  fontFamily: "iransans, Arial, sans-serif",
+                  maxWidth: "60%",
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                  whiteSpace: "nowrap",
+                }}
+              >
+                {value1}
+              </Typography>
+              <Typography
+                sx={{
+                  fontSize: 10,
+                  color: "#888",
+                  fontFamily: "iransans, Arial, sans-serif",
+                }}
+              >
+                {name1}
+              </Typography>
+            </Box>
+          )}
+
+          {name2 && value2 && (
+            <Box
+              sx={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                mb: 0.5,
+                px: 0.5,
+              }}
+            >
+              <Typography
+                sx={{
+                  fontSize: 11,
+                  fontWeight: 500,
+                  color: "#333",
+                  fontFamily: "iransans, Arial, sans-serif",
+                  maxWidth: "60%",
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                  whiteSpace: "nowrap",
+                }}
+              >
+                {value2}
+              </Typography>
+              <Typography
+                sx={{
+                  fontSize: 10,
+                  color: "#888",
+                  fontFamily: "iransans, Arial, sans-serif",
+                }}
+              >
+                {name2}
+              </Typography>
+            </Box>
+          )}
+
+          <Box
+            sx={{
+              mt: 0.5,
+              pt: 0.5,
+              borderTop: "0.5px solid #e0e0e0",
+            }}
+          >
+            <Typography
+              sx={{
+                fontSize: 10,
+                color: "#666",
+                fontFamily: "iransans, Arial, sans-serif",
+                textAlign: "right",
+                mb: 0.5,
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+                whiteSpace: "nowrap",
+              }}
+            >
+              {categoryName} {worker.region} {worker.neighbourhood}
+            </Typography>
+            <Box sx={{ display: "flex", justifyContent: "flex-end" }}>
+              <Box
+                sx={{
+                  backgroundColor: statusInfo.color,
+                  px: 0.75,
+                  py: 0.25,
+                  borderRadius: "4px",
+                }}
+              >
+                <Typography
+                  sx={{
+                    fontSize: 9,
+                    color: "#fff",
+                    fontFamily: "iransans, Arial, sans-serif",
+                  }}
+                >
+                  {statusInfo.text}
+                  {lastUpdate ? ` | ${lastUpdate}` : ""}
+                </Typography>
+              </Box>
+            </Box>
+          </Box>
+        </Box>
+      </Box>
+
+      {/* ---- bottom action sheet ---- */}
+      <Drawer
+        anchor="bottom"
+        open={sheetOpen}
+        onClose={closeSheet}
+        PaperProps={{
+          sx: {
+            borderTopLeftRadius: "20px",
+            borderTopRightRadius: "20px",
+            p: 2.5,
+            pb: 3,
+            direction: "rtl",
+          },
+        }}
+      >
+        <Box
+          sx={{
+            width: 40,
+            height: 4,
+            borderRadius: 2,
+            backgroundColor: "#ddd",
+            mx: "auto",
+            mb: 2,
+          }}
+        />
+
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            mb: 2.5,
+            pb: 1.5,
+            borderBottom: "0.5px solid #e0e0e0",
+          }}
+        >
+          <Box
+            onClick={() => {
+              closeSheet();
+              onLongPress && onLongPress();
+            }}
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              gap: 0.5,
+              cursor: "pointer",
+            }}
+          >
+            {isSelected ? (
+              <CheckBoxOutlineBlankIcon
+                sx={{ fontSize: 24, color: "#007AFF" }}
+              />
+            ) : (
+              <>
+                <CheckBoxOutlineBlankIcon
+                  sx={{ fontSize: 24, color: "gray" }}
+                />
+                <Typography
+                  sx={{
+                    fontSize: 12,
+                    color: "#666",
+                    fontFamily: "iransans, Arial, sans-serif",
+                  }}
+                >
+                  انتخاب
+                </Typography>
+              </>
+            )}
+          </Box>
+
+          <Typography
+            sx={{
+              fontSize: 16,
+              fontWeight: "bold",
+              color: "#222",
+              fontFamily: "iransans, Arial, sans-serif",
+              flex: 1,
+              textAlign: "right",
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+              whiteSpace: "nowrap",
+            }}
+          >
+            {worker.name}
+          </Typography>
+        </Box>
+
+        <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+          <Box
+            sx={{
+              display: "flex",
+              justifyContent: "space-around",
+              gap: 1,
+            }}
+          >
+            <OptionButton
+              icon={<RocketLaunchIcon sx={{ fontSize: 28, color: "#f57c00" }} />}
+              label="افزایش بازدید"
+              onClick={() => handleAction("boost")}
+            />
+            <OptionButton
+              icon={<EditIcon sx={{ fontSize: 28, color: "#4CAF50" }} />}
+              label="ویرایش"
+              onClick={() => handleAction("edit")}
+            />
+            <OptionButton
+              icon={<VisibilityIcon sx={{ fontSize: 28, color: "#2196F3" }} />}
+              label="پیش نمایش"
+              onClick={() => handleAction("preview")}
+            />
+          </Box>
+
+          <Box
+            sx={{
+              display: "flex",
+              justifyContent: "space-around",
+              gap: 1,
+            }}
+          >
+            <OptionButton
+              icon={<BarChartIcon sx={{ fontSize: 28, color: "#9C27B0" }} />}
+              label="آمار بازدید"
+              onClick={() => handleAction("stats")}
+            />
+            <OptionButton
+              icon={<ShareIcon sx={{ fontSize: 28, color: "#FF9800" }} />}
+              label="اشتراک گذاری"
+              onClick={() => handleAction("share")}
+            />
+            <OptionButton
+              icon={<DeleteIcon sx={{ fontSize: 28, color: "#ff3b30" }} />}
+              label="حذف"
+              danger
+              onClick={() => handleAction("delete")}
+            />
+          </Box>
+        </Box>
+      </Drawer>
+
+      {/* ---- delete confirmation ---- */}
+      <Dialog
+        open={confirmOpen}
+        onClose={() => setConfirmOpen(false)}
+        maxWidth="xs"
+        fullWidth
+        PaperProps={{ sx: { borderRadius: "16px", direction: "rtl" } }}
+      >
+        <DialogContent sx={{ p: 3, textAlign: "center" }}>
+          <Typography
+            sx={{
+              fontSize: 18,
+              fontWeight: "bold",
+              fontFamily: "iransans, Arial, sans-serif",
+              color: "#333",
+              mb: 1.5,
+            }}
+          >
+            هشدار
+          </Typography>
+          <Typography
+            sx={{
+              fontSize: 14,
+              fontFamily: "iransans, Arial, sans-serif",
+              color: "#666",
+              mb: 3,
+            }}
+          >
+            آیا مطمئن هستید که می‌خواهید این فایل را حذف کنید؟
+          </Typography>
+
+          <Box sx={{ display: "flex", gap: 1 }}>
+            <Box
+              onClick={() => setConfirmOpen(false)}
+              sx={{
+                flex: 1,
+                py: 1.25,
+                borderRadius: "10px",
+                border: "1px solid #ccc",
+                textAlign: "center",
+                cursor: "pointer",
+                color: "#333",
+                fontFamily: "iransans, Arial, sans-serif",
+                fontSize: 14,
+                "&:hover": { backgroundColor: "#f5f5f5" },
+              }}
+            >
+              انصراف
+            </Box>
+            <Box
+              onClick={performDelete}
+              sx={{
+                flex: 1,
+                py: 1.25,
+                borderRadius: "10px",
+                backgroundColor: "#ff3b30",
+                textAlign: "center",
+                cursor: "pointer",
+                color: "white",
+                fontFamily: "iransans, Arial, sans-serif",
+                fontSize: 14,
+                "&:hover": { backgroundColor: "#e63529" },
+              }}
+            >
+              {deleting ? (
+                <CircularProgress size={18} sx={{ color: "white" }} />
+              ) : (
+                "حذف"
+              )}
+            </Box>
+          </Box>
+        </DialogContent>
+      </Dialog>
+
+      {/* ---- share fallback dialog ---- */}
+      <Dialog
+        open={shareFallback.open}
+        onClose={() => setShareFallback({ open: false, url: "" })}
+        maxWidth="sm"
+        fullWidth
+        PaperProps={{
+          sx: { borderRadius: "16px", direction: "rtl", p: 1 },
+        }}
+      >
+        <DialogContent sx={{ p: 3, textAlign: "center" }}>
+          <Typography
+            sx={{
+              fontSize: 16,
+              fontWeight: "bold",
+              fontFamily: "iransans, Arial, sans-serif",
+              color: "#333",
+              mb: 1,
+            }}
+          >
+            اشتراک گذاری
+          </Typography>
+
+          <Typography
+            sx={{
+              fontSize: 13,
+              fontFamily: "iransans, Arial, sans-serif",
+              color: "#666",
+              mb: 2,
+            }}
+          >
+            لینک زیر را کپی کنید
+          </Typography>
+
+          <TextField
+            fullWidth
+            value={shareFallback.url}
+            readOnly
+            onClick={(e) => e.target.select()}
+            variant="outlined"
+            size="small"
+            InputProps={{ sx: { direction: "ltr" } }}
+            sx={{
+              mb: 2,
+              "& .MuiOutlinedInput-root": {
+                borderRadius: "10px",
+                fontFamily: "monospace",
+                fontSize: 13,
+              },
+              "& .MuiInputBase-input": {
+                textAlign: "left",
+                direction: "ltr",
+              },
+            }}
+          />
+
+          <Box sx={{ display: "flex", gap: 1 }}>
+            <Box
+              onClick={() => {
+                // best-effort copy from the dialog too
+                try {
+                  const input = document.createElement("input");
+                  input.value = shareFallback.url;
+                  document.body.appendChild(input);
+                  input.select();
+                  document.execCommand("copy");
+                  document.body.removeChild(input);
+                  showToast("لینک کپی شد", "success");
+                  setShareFallback({ open: false, url: "" });
+                } catch (e) {
+                  // if copy still fails, just leave the dialog open
+                }
+              }}
+              sx={{
+                flex: 1,
+                py: 1.25,
+                borderRadius: "10px",
+                backgroundColor: "#1976d2",
+                textAlign: "center",
+                cursor: "pointer",
+                color: "white",
+                fontFamily: "iransans, Arial, sans-serif",
+                fontSize: 14,
+                "&:hover": { backgroundColor: "#1565c0" },
+              }}
+            >
+              کپی لینک
+            </Box>
+
+            <Box
+              onClick={() => setShareFallback({ open: false, url: "" })}
+              sx={{
+                flex: 1,
+                py: 1.25,
+                borderRadius: "10px",
+                border: "1px solid #ccc",
+                textAlign: "center",
+                cursor: "pointer",
+                color: "#333",
+                fontFamily: "iransans, Arial, sans-serif",
+                fontSize: 14,
+                "&:hover": { backgroundColor: "#f5f5f5" },
+              }}
+            >
+              بستن
+            </Box>
+          </Box>
+        </DialogContent>
+      </Dialog>
+
+      {/* ---- toast ---- */}
+      <Snackbar
+        open={toast.open}
+        autoHideDuration={4000}
+        onClose={handleToastClose}
+        anchorOrigin={{ vertical: "top", horizontal: "center" }}
+      >
+        <Alert onClose={handleToastClose} severity={toast.severity}>
+          {toast.message}
+        </Alert>
+      </Snackbar>
     </>
   );
-}
+};
+
+// ---------- small helper component for sheet options ----------
+const OptionButton = ({ icon, label, onClick, danger }) => (
+  <Box
+    onClick={onClick}
+    sx={{
+      display: "flex",
+      flexDirection: "column",
+      alignItems: "center",
+      gap: 0.75,
+      py: 1.5,
+      px: 1,
+      borderRadius: "12px",
+      backgroundColor: danger ? "#fff5f5" : "#f8f9fa",
+      minWidth: 80,
+      cursor: "pointer",
+      transition: "background-color 0.2s",
+      "&:hover": {
+        backgroundColor: danger ? "#ffe0e0" : "#eef0f3",
+      },
+    }}
+  >
+    {icon}
+    <Typography
+      sx={{
+        fontSize: 11,
+        fontFamily: "iransans, Arial, sans-serif",
+        color: danger ? "#ff3b30" : "#333",
+        textAlign: "center",
+      }}
+    >
+      {label}
+    </Typography>
+  </Box>
+);
+
+export default PanelWorkerCard;

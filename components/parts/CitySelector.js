@@ -5,18 +5,23 @@ import LocationOnIcon from "@mui/icons-material/LocationOn";
 import SearchIcon from "@mui/icons-material/Search";
 import { useRouter } from "next/router";
 import Cookies from "js-cookie";
+import { trackEvent } from "../../lib/track";
 
 // MUI components
 import Snackbar from "@mui/material/Snackbar";
 import Alert from "@mui/material/Alert";
 
-const CitySelector = ({ handleCitySelect }) => {
+const CitySelector = ({ handleCitySelect, clientIp = null }) => {
   const { currentCity, updateCity } = useContext(CityContext);
 
   const [showModal, setShowModal] = useState(false);
   const [cities, setCities] = useState([]);
   const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+
+  // Error state — replaces the old hardcoded fallback list
+  const [error, setError] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
 
   // Tooltip visibility
   const [showTooltip, setShowTooltip] = useState(false);
@@ -49,6 +54,8 @@ const CitySelector = ({ handleCitySelect }) => {
   const fetchCities = async () => {
     try {
       setLoading(true);
+      setError(false);
+      setErrorMessage("");
 
       const response = await axios.get(
         "https://api.ajur.app/api/search-cities",
@@ -58,31 +65,46 @@ const CitySelector = ({ handleCitySelect }) => {
         }
       );
 
-      setCities(response.data?.items || getDefaultCities());
-    } catch (error) {
-      console.error("Error fetching cities:", error);
-      setCities(getDefaultCities());
+      // ─── No fallback: only use API data ───
+      const items = response.data?.items;
+      if (!Array.isArray(items)) {
+        throw new Error("Invalid cities response");
+      }
+
+      setCities(items);
+    } catch (err) {
+      console.error("Error fetching cities:", err);
+
+      // ─── No fallback list. Show empty state + error message instead. ───
+      setCities([]);
+      setError(true);
+      setErrorMessage("خطا در دریافت لیست شهرها. لطفاً دوباره تلاش کنید.");
     } finally {
       setLoading(false);
     }
   };
 
-  const getDefaultCities = () => [
-    { id: 1, title: "تهران" },
-    { id: 2, title: "رباط کریم" },
-    { id: 3, title: "کرج" },
-    { id: 4, title: "اصفهان" },
-    { id: 5, title: "مشهد" },
-  ];
-
   const handleCitySelection = async (city) => {
+
+    
     try {
-     
       const success = await updateCity(city);
 
       if (success) {
-        Cookies.set("persian_city", city.title);
-        Cookies.set("city", city.slug);
+        Cookies.set("persian_city", city.title, { expires: 365 });
+        Cookies.set("city", city.slug, { expires: 365 });
+
+        // ─── Analytics: fire city_select before navigating away ───
+        trackEvent(
+          "city_select",
+          {
+            city_slug: city.slug,
+            city_id: city.id,
+            city_title: city.title,
+            search_query: searchQuery || null,
+          },
+          clientIp
+        );
 
         router.push(`/${city.slug}`).then(() => {
           // window.location.reload();
@@ -129,13 +151,9 @@ const CitySelector = ({ handleCitySelect }) => {
 
   return (
     <>
-      {/* Inject animation keyframes */}
       <style>{bounceAnimation}</style>
 
-      {/* Tooltip Wrapper */}
       <div className="relative inline-block">
-
-        {/* TOOLTIP BELOW BUTTON */}
         {showTooltip && (
           <div
             className="
@@ -147,7 +165,6 @@ const CitySelector = ({ handleCitySelect }) => {
               animation: "tooltipBounce 1.4s infinite ease-in-out",
             }}
           >
-            {/* Close button */}
             <button
               onClick={() => setShowTooltip(false)}
               className="absolute top-1 left-1 text-gray-300 hover:text-white text-lg leading-none"
@@ -155,12 +172,11 @@ const CitySelector = ({ handleCitySelect }) => {
               ×
             </button>
 
-              با انتخاب شهر از اینجا میتوانید آگهی های آن شهر را ببینید
+            با انتخاب شهر از اینجا میتوانید آگهی های آن شهر را ببینید
 
-            {/* Upward arrow */}
             <div
               className="
-                absolute -top-2 right-40 w-0 h-0 
+                absolute -top-2 right-40 w-0 h-0
                 border-l-8 border-r-8 border-b-8
                 border-b-gray-800 border-l-transparent border-r-transparent
               "
@@ -168,7 +184,6 @@ const CitySelector = ({ handleCitySelect }) => {
           </div>
         )}
 
-        {/* BUTTON */}
         <button
           className="
              py-2 px-3 rounded-lg bg-gray-50 border border-gray-300
@@ -187,10 +202,8 @@ const CitySelector = ({ handleCitySelect }) => {
             </span>
           </div>
         </button>
-
       </div>
 
-      {/* Modal */}
       {showModal && (
         <div className="fixed inset-0 z-50">
           <div
@@ -199,7 +212,6 @@ const CitySelector = ({ handleCitySelect }) => {
           />
 
           <div className="absolute bottom-0 left-0 right-0 bg-white p-5 h-full flex flex-col">
-            {/* Header */}
             <div className="flex flex-row-reverse items-center justify-between mb-3">
               <h2 className="text-xl text-gray-700 font-sans mr-2">
                 انتخاب شهر
@@ -215,7 +227,6 @@ const CitySelector = ({ handleCitySelect }) => {
               )}
             </div>
 
-            {/* Search */}
             <div className="flex flex-row-reverse items-center bg-gray-100 rounded-lg px-3 py-2 mb-4">
               <input
                 type="text"
@@ -227,46 +238,57 @@ const CitySelector = ({ handleCitySelect }) => {
               <SearchIcon style={{ color: "#9CA3AF" }} />
             </div>
 
-            {/* List */}
             <div className="flex-1 overflow-y-auto">
               {loading ? (
                 <div className="flex justify-center items-center py-8">
                   <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
                 </div>
+              ) : error ? (
+                // ─── Error state (replaces the fallback list) ───
+                <div className="text-center py-8 px-4">
+                  <Alert severity="error" sx={{ mb: 2 }}>
+                    {errorMessage}
+                  </Alert>
+                  <button
+                    onClick={fetchCities}
+                    className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors font-sans"
+                  >
+                    تلاش مجدد
+                  </button>
+                </div>
               ) : (
-                  <div className="space-y-0">
-                    {cities.map((item) => (
-                      <button
-                        key={item.id}
-                        className="
+                <div className="space-y-0">
+                  {cities.map((item) => (
+                    <button
+                      key={item.id}
+                      className="
                         w-full flex flex-row-reverse items-center justify-between
                         py-4 border-b border-gray-200 hover:bg-gray-50 transition-colors
                       "
-                        onClick={() => handleCitySelection(item)}
-                      >
-                        <span className="text-base text-gray-700 font-sans pr-5">
-                          {item.title}
-                        </span>
+                      onClick={() => handleCitySelection(item)}
+                    >
+                      <span className="text-base text-gray-700 font-sans pr-5">
+                        {item.title}
+                      </span>
 
-                        {currentCity?.id === item.id && (
-                          <span className="text-blue-500 text-lg">✓</span>
-                        )}
-                      </button>
-                    ))}
+                      {currentCity?.id === item.id && (
+                        <span className="text-blue-500 text-lg">✓</span>
+                      )}
+                    </button>
+                  ))}
 
-                    {cities.length === 0 && (
-                      <div className="text-center text-gray-500 py-8 font-sans">
-                        شهری یافت نشد
-                      </div>
-                    )}
-                  </div>
-                )}
+                  {cities.length === 0 && (
+                    <div className="text-center text-gray-500 py-8 font-sans">
+                      شهری یافت نشد
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           </div>
         </div>
       )}
 
-      {/* Snackbar */}
       <Snackbar
         open={snackbarOpen}
         autoHideDuration={4000}

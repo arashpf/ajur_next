@@ -6,6 +6,7 @@ import FilterSlider from './components/FilterSlider';
 import { useServerFilterLogic } from './hooks/useServerFilterLogic';
 import { filterApi } from './services/filterApi';
 import { useRouter } from 'next/router';
+import { trackEvent } from '../../lib/track';
 
 // Dynamically import modal
 const FilterModal = dynamic(() => import('./components/FilterModal'), {
@@ -17,7 +18,7 @@ const FilterModal = dynamic(() => import('./components/FilterModal'), {
   )
 });
 
-const FilterComponent = forwardRef(({ 
+const FilterComponent = forwardRef(({
   onFilteredDataChange,
   onLoadingChange,
   availableCategories = [],
@@ -30,6 +31,10 @@ const FilterComponent = forwardRef(({
   initialServerData = [],
   forceCategory = null,
   onBackToCategories = null,
+  // ─── Analytics props ───
+  clientIp = null,
+  currentCategorySlug = null,
+  currentCitySlug = null,
 }, ref) => {
   const router = useRouter();
   const [isClient, setIsClient] = useState(false);
@@ -55,6 +60,14 @@ const FilterComponent = forwardRef(({
   const isInitializedRef = useRef(false);
   const apiCallTimeoutRef = useRef(null);
 
+
+  useEffect(() => {
+    console.log("[FILTER-1] component mounted, router ready:", router.isReady);
+    console.log("[FILTER-1] router.query:", router.query);
+    console.log("[FILTER-1] initialCategory prop:", initialCategory);
+    console.log("[FILTER-1] categoryFields:", categoryFields);
+  }, []);
+
   // Update refs
   useEffect(() => {
     selectedCategoryRef.current = initialCategory;
@@ -74,7 +87,7 @@ const FilterComponent = forwardRef(({
 
   useEffect(() => {
     setIsClient(true);
-    
+
     // Set initial data from props (already loaded from server)
     if (initialServerData && initialServerData.length > 0 && !hasInitialDataLoaded) {
       console.log('📦 Setting initial server data:', initialServerData.length, 'workers');
@@ -87,7 +100,7 @@ const FilterComponent = forwardRef(({
         has_next: initialServerData.length > 10,
         per_page: 10
       });
-      
+
       // Notify parent about initial data
       if (onFilteredDataChange) {
         onFilteredDataChange(initialServerData, {
@@ -102,175 +115,226 @@ const FilterComponent = forwardRef(({
   }, [initialServerData, hasInitialDataLoaded, onFilteredDataChange]);
 
   // Main API call function - ONLY called on user interactions
- // Main API call function - ONLY called on user interactions
-const handleServerFilterChange = useCallback(async (filters, page = 1, options = {}) => {
-  // Clear any pending timeout
-  if (apiCallTimeoutRef.current) {
-    clearTimeout(apiCallTimeoutRef.current);
-  }
-
-  // Set loading state only if NOT initializing
-  if (!options.isInitializing) {
-    setIsLoading(true);
-    onLoadingChange?.(true);
-  }
-
-  const makeApiCall = async () => {
-    let workersData = [];
-    let apiResponse = null;
+  const handleServerFilterChange = useCallback(async (filters, page = 1, options = {}) => {
+    console.log("[FILTER-2] handleServerFilterChange CALLED");
+  console.log("[FILTER-2]   filters:", filters);
+  console.log("[FILTER-2]   page:", page);
+  console.log("[FILTER-2]   options:", options);
     
-    try {
-      const allFilters = {
-        lat: userLocationRef.current?.lat,
-        long: userLocationRef.current?.long,
-        page: page,
-        per_page: 10,
-        ...filters,
-      };
-
-      // CRITICAL FIX: Always include catname if we have category name
-      // This matches what SSR uses and what the backend expects
-      if (selectedCategoryRef.current?.name) {
-        const categoryName = selectedCategoryRef.current.name.toLowerCase();
-        // Convert spaces to hyphens for URL
-        const catnameParam = categoryName.replace(/\s+/g, '-');
-        allFilters.catname = catnameParam;
-        console.log('📝 Adding catname parameter:', catnameParam);
-      }
-      
-      // Also include category_id as fallback
-      if (selectedCategoryRef.current?.id) {
-        allFilters.category_id = selectedCategoryRef.current.id;
-      }
-
-      // Add city if available - ensure it's the slug format
-      if (selectedCityRef.current?.name) {
-        const cityName = selectedCityRef.current.name.toLowerCase();
-        const cityParam = cityName.replace(/\s+/g, '-');
-        allFilters.city = cityParam;
-        console.log('📍 Adding city parameter:', cityParam);
-      }
-
-      // Add field values
-      Object.entries(fieldValuesRef.current).forEach(([fieldSlug, value]) => {
-        if (typeof value === 'object') {
-          if (value.min && value.min !== '' && value.min !== '0') {
-            allFilters[`${fieldSlug}_min`] = value.min;
-          }
-          if (value.max && value.max !== '' && value.max !== '0') {
-            allFilters[`${fieldSlug}_max`] = value.max;
-          }
-        } else if (value !== '' && value !== null && value !== undefined && value !== '0') {
-          allFilters[fieldSlug] = value;
-        }
-      });
-
-      console.log('📤 Making API call with filters:', allFilters);
-      console.log('🌐 Full API URL will be: catname=', allFilters.catname, '&city=', allFilters.city);
-
-      // ⚠️ CRITICAL FIX: Only update URL if NOT initializing and it's a user interaction
-      if (!options.isInitializing && !options.skipUrlUpdate) {
-        const queryParams = new URLSearchParams();
-        Object.entries(allFilters).forEach(([key, value]) => {
-          if (value !== null && value !== undefined && value !== '' && key !== 'page' && key !== 'per_page') {
-            queryParams.append(key, value);
-          }
-        });
-
-        // Preserve catname in URL if we have it
-        if (allFilters.catname) {
-          queryParams.set('catname', allFilters.catname);
-        }
-
-        router.replace(
-          {
-            pathname: router.pathname,
-            query: Object.fromEntries(queryParams)
-          },
-          undefined,
-          { shallow: true, scroll: false }
-        );
-      }
-
-      // Call API with error handling
-      try {
-        apiResponse = await filterApi.getFilteredWorkers(allFilters);
-        workersData = apiResponse?.workers || [];
-        
-        console.log('📥 API Response received:', {
-          status: 'success',
-          workersCount: workersData.length,
-          hasPagination: !!apiResponse?.pagination,
-          pagination: apiResponse?.pagination,
-          responseKeys: Object.keys(apiResponse || {})
-        });
-        
-      } catch (apiError) {
-        console.error('🚨 API call failed:', apiError);
-        // Fallback to empty data
-        workersData = [];
-      }
-
-      // SAFE PAGINATION HANDLING
-      const newPagination = {
-        current_page: page,
-        // total_count: apiResponse?.pagination?.total_count || workersData.length || 0,
-        total_count: apiResponse?.pagination?.total_count ?? workersData?.length ?? 0,
-        has_next: apiResponse?.pagination?.has_next || false,
-        total_pages: apiResponse?.pagination?.total_pages || 0,
-        per_page: apiResponse?.pagination?.per_page || 10
-      };
-
-      console.log('📊 Setting pagination:', newPagination);
-
-      if (page === 1) {
-        setServerData(workersData);
-      } else {
-        setServerData(prev => [...prev, ...workersData]);
-      }
-      
-      setPagination(newPagination);
-      
-      // Notify parent with safe data
-      if (onFilteredDataChange) {
-        onFilteredDataChange(workersData, newPagination);
-      }
-      
-    } catch (error) {
-      console.error('❌ Filter API error in makeApiCall:', error);
-      
-      // Create safe fallback pagination
-      const errorPagination = {
-        current_page: 1,
-        total_count: 0,
-        has_next: false,
-        total_pages: 0,
-        per_page: 10
-      };
-      
-      setServerData([]);
-      setPagination(errorPagination);
-      
-      if (onFilteredDataChange) {
-        onFilteredDataChange([], errorPagination);
-      }
-      
-    } finally {
-      if (!options.isInitializing) {
-        setIsLoading(false);
-        onLoadingChange?.(false);
-      }
+    // Clear any pending timeout
+    if (apiCallTimeoutRef.current) {
+      clearTimeout(apiCallTimeoutRef.current);
     }
-  };
 
-  // If we need debouncing (for rapid filter changes), use timeout
-  if (options.debounce) {
-    apiCallTimeoutRef.current = setTimeout(makeApiCall, 300);
-  } else {
-    // Otherwise make the call immediately
-    makeApiCall();
-  }
-}, [onFilteredDataChange, onLoadingChange, router]);
+    // Set loading state only if NOT initializing
+    if (!options.isInitializing) {
+      setIsLoading(true);
+      onLoadingChange?.(true);
+    }
+
+    const makeApiCall = async () => {
+      console.log("[FILTER-3] makeApiCall EXECUTING");
+      let workersData = [];
+      let apiResponse = null;
+
+      try {
+        const allFilters = {
+          lat: userLocationRef.current?.lat,
+          long: userLocationRef.current?.long,
+          page: page,
+          per_page: 10,
+          ...filters,
+        };
+
+        // CRITICAL FIX: Always include catname if we have category name
+        // This matches what SSR uses and what the backend expects
+        if (selectedCategoryRef.current?.name) {
+          const categoryName = selectedCategoryRef.current.name.toLowerCase();
+          // Convert spaces to hyphens for URL
+          const catnameParam = categoryName.replace(/\s+/g, '-');
+          allFilters.catname = catnameParam;
+          console.log('📝 Adding catname parameter:', catnameParam);
+        }
+
+        // Also include category_id as fallback
+        if (selectedCategoryRef.current?.id) {
+          allFilters.category_id = selectedCategoryRef.current.id;
+        }
+
+        // Add city if available - ensure it's the slug format
+        if (selectedCityRef.current?.name) {
+          const cityName = selectedCityRef.current.name.toLowerCase();
+          const cityParam = cityName.replace(/\s+/g, '-');
+          allFilters.city = cityParam;
+          console.log('📍 Adding city parameter:', cityParam);
+        }
+
+        // Add field values
+        Object.entries(fieldValuesRef.current).forEach(([fieldSlug, value]) => {
+          if (typeof value === 'object') {
+            if (value.min && value.min !== '' && value.min !== '0') {
+              allFilters[`${fieldSlug}_min`] = value.min;
+            }
+            if (value.max && value.max !== '' && value.max !== '0') {
+              allFilters[`${fieldSlug}_max`] = value.max;
+            }
+          } else if (value !== '' && value !== null && value !== undefined && value !== '0') {
+            allFilters[fieldSlug] = value;
+          }
+        });
+
+        console.log('📤 Making API call with filters:', allFilters);
+        console.log('🌐 Full API URL will be: catname=', allFilters.catname, '&city=', allFilters.city);
+
+        // ─── Analytics: filter_apply ───
+        // Skip the initial server-driven load — that's a page view, not a user action.
+        // Fires on every user-triggered filter change (category, feature, range, sort, reset).
+        // ─── Analytics: filter_apply ───
+// Skip the initial server-driven load — that's a page view, not a user action.
+if (!options.isInitializing) {
+  const analyticsFilters = {};
+  Object.entries(allFilters).forEach(([k, v]) => {
+    if (["lat", "long", "page", "per_page"].includes(k)) return;
+    if (v === null || v === undefined || v === "" || v === "0") return;
+    analyticsFilters[k] = v;
+  });
+
+  console.log("[FILTER-4] firing filter_apply", {
+    analyticsFilters,
+    clientIp,
+    currentCategorySlug,
+    currentCitySlug,
+  });
+
+  trackEvent(
+    "filter_apply",
+    {
+      city_slug:
+        currentCitySlug ||
+        selectedCityRef.current?.slug ||
+        selectedCityRef.current?.name?.toLowerCase().replace(/\s+/g, "-") ||
+        null,
+      category_slug:
+        currentCategorySlug ||
+        selectedCategoryRef.current?.eng_name ||
+        selectedCategoryRef.current?.name?.toLowerCase().replace(/\s+/g, "-") ||
+        null,
+      filters: analyticsFilters,
+      has_category: !!analyticsFilters.category_id,
+      has_price_range:
+        !!(analyticsFilters.price_min || analyticsFilters.price_max),
+      has_features: !!analyticsFilters.features,
+      has_neighborhoods: !!analyticsFilters.neighborhoods,
+      is_reset: options.isReset === true,
+    },
+    clientIp
+  );
+
+  console.log("[FILTER-4] filter_apply trackEvent CALLED");
+}
+
+        // ⚠️ CRITICAL FIX: Only update URL if NOT initializing and it's a user interaction
+        if (!options.isInitializing && !options.skipUrlUpdate) {
+          const queryParams = new URLSearchParams();
+          Object.entries(allFilters).forEach(([key, value]) => {
+            if (value !== null && value !== undefined && value !== '' && key !== 'page' && key !== 'per_page') {
+              queryParams.append(key, value);
+            }
+          });
+
+          // Preserve catname in URL if we have it
+          if (allFilters.catname) {
+            queryParams.set('catname', allFilters.catname);
+          }
+
+          router.replace(
+            {
+              pathname: router.pathname,
+              query: Object.fromEntries(queryParams)
+            },
+            undefined,
+            { shallow: true, scroll: false }
+          );
+        }
+
+        // Call API with error handling
+        try {
+          apiResponse = await filterApi.getFilteredWorkers(allFilters);
+          workersData = apiResponse?.workers || [];
+
+          console.log('📥 API Response received:', {
+            status: 'success',
+            workersCount: workersData.length,
+            hasPagination: !!apiResponse?.pagination,
+            pagination: apiResponse?.pagination,
+            responseKeys: Object.keys(apiResponse || {})
+          });
+
+        } catch (apiError) {
+          console.error('🚨 API call failed:', apiError);
+          // Fallback to empty data
+          workersData = [];
+        }
+
+        // SAFE PAGINATION HANDLING
+        const newPagination = {
+          current_page: page,
+          total_count: apiResponse?.pagination?.total_count ?? workersData?.length ?? 0,
+          has_next: apiResponse?.pagination?.has_next || false,
+          total_pages: apiResponse?.pagination?.total_pages || 0,
+          per_page: apiResponse?.pagination?.per_page || 10
+        };
+
+        console.log('📊 Setting pagination:', newPagination);
+
+        if (page === 1) {
+          setServerData(workersData);
+        } else {
+          setServerData(prev => [...prev, ...workersData]);
+        }
+
+        setPagination(newPagination);
+
+        // Notify parent with safe data
+        if (onFilteredDataChange) {
+          onFilteredDataChange(workersData, newPagination);
+        }
+
+      } catch (error) {
+        console.error('❌ Filter API error in makeApiCall:', error);
+
+        // Create safe fallback pagination
+        const errorPagination = {
+          current_page: 1,
+          total_count: 0,
+          has_next: false,
+          total_pages: 0,
+          per_page: 10
+        };
+
+        setServerData([]);
+        setPagination(errorPagination);
+
+        if (onFilteredDataChange) {
+          onFilteredDataChange([], errorPagination);
+        }
+
+      } finally {
+        if (!options.isInitializing) {
+          setIsLoading(false);
+          onLoadingChange?.(false);
+        }
+      }
+    };
+
+    // If we need debouncing (for rapid filter changes), use timeout
+    if (options.debounce) {
+      apiCallTimeoutRef.current = setTimeout(makeApiCall, 300);
+    } else {
+      // Otherwise make the call immediately
+      makeApiCall();
+    }
+  }, [onFilteredDataChange, onLoadingChange, router, clientIp, currentCategorySlug, currentCitySlug]);
 
   // Initialize field values from URL - NO API CALL HERE
   useEffect(() => {
@@ -278,24 +342,24 @@ const handleServerFilterChange = useCallback(async (filters, page = 1, options =
 
     const initializeFromURL = () => {
       console.log('🔄 Initializing field values from URL (no API call)');
-      
+
       // Parse field values from URL
       const newFieldValues = {};
       const { query } = router;
-      
+
       Object.entries(query).forEach(([key, value]) => {
         // Skip standard parameters
         if (['category_id', 'city_id', 'sort_by', 'sort_order', 'page', 'per_page', 'lat', 'lng', 'long'].includes(key)) {
           return;
         }
-        
+
         // Handle range filters
         if (key.endsWith('_min') || key.endsWith('_max')) {
           const baseKey = key.replace(/(_min|_max)$/, '');
           if (!newFieldValues[baseKey]) {
             newFieldValues[baseKey] = { min: '', max: '' };
           }
-          
+
           if (key.endsWith('_min')) {
             newFieldValues[baseKey].min = value;
           } else {
@@ -306,18 +370,18 @@ const handleServerFilterChange = useCallback(async (filters, page = 1, options =
           newFieldValues[key] = value;
         }
       });
-      
+
       if (Object.keys(newFieldValues).length > 0) {
         console.log('📋 Setting field values from URL:', newFieldValues);
         setFieldValues(newFieldValues);
         fieldValuesRef.current = newFieldValues;
-        
+
         // Update active filters display (but don't call API yet)
         Object.entries(newFieldValues).forEach(([fieldSlug, value]) => {
           if (typeof value === 'object') {
-            const hasValue = (value.min && value.min !== '' && value.min !== '0') || 
+            const hasValue = (value.min && value.min !== '' && value.min !== '0') ||
                             (value.max && value.max !== '' && value.max !== '0');
-            
+
             if (hasValue) {
               let displayText = '';
               if (value.min && value.min !== '' && value.min !== '0') {
@@ -327,20 +391,20 @@ const handleServerFilterChange = useCallback(async (filters, page = 1, options =
                 if (displayText) displayText += ' ';
                 displayText += `تا ${value.max}`;
               }
-              
+
               setActiveFieldFilters(prev => {
                 const existingIndex = prev.findIndex(f => f.slug === fieldSlug);
-                
+
                 const fieldObj = {
                   slug: fieldSlug,
-                  name: fieldSlug, // We'll update this later when categoryFields are loaded
+                  name: fieldSlug,
                   value: value,
                   displayValue: displayText,
                   type: 'normal_range',
                   unit: '',
                   isRange: true
                 };
-                
+
                 if (existingIndex >= 0) {
                   const updated = [...prev];
                   updated[existingIndex] = fieldObj;
@@ -353,23 +417,23 @@ const handleServerFilterChange = useCallback(async (filters, page = 1, options =
           } else if (value !== '' && value !== null && value !== undefined && value !== '0') {
             setActiveFieldFilters(prev => {
               const existingIndex = prev.findIndex(f => f.slug === fieldSlug);
-              
+
               if (existingIndex >= 0) {
                 const updated = [...prev];
-                updated[existingIndex] = { 
-                  slug: fieldSlug, 
-                  name: fieldSlug, // We'll update this later
-                  value, 
+                updated[existingIndex] = {
+                  slug: fieldSlug,
+                  name: fieldSlug,
+                  value,
                   type: 'predefine',
                   unit: '',
                   isRange: false
                 };
                 return updated;
               } else {
-                return [...prev, { 
-                  slug: fieldSlug, 
+                return [...prev, {
+                  slug: fieldSlug,
                   name: fieldSlug,
-                  value, 
+                  value,
                   type: 'predefine',
                   unit: '',
                   isRange: false
@@ -379,7 +443,7 @@ const handleServerFilterChange = useCallback(async (filters, page = 1, options =
           }
         });
       }
-      
+
       // Mark as initialized
       isInitializedRef.current = true;
       console.log('✅ Filter component initialized from URL (no API call made)');
@@ -425,7 +489,7 @@ const handleServerFilterChange = useCallback(async (filters, page = 1, options =
     console.log('🎯 User selected category:', category?.name);
     handleCategorySelect(category);
     if (onCategoryChange) onCategoryChange(category);
-    
+
     // Only call API if it's a different category
     if (category?.id !== selectedCategoryRef.current?.id) {
       const filters = {};
@@ -438,7 +502,7 @@ const handleServerFilterChange = useCallback(async (filters, page = 1, options =
   const handleSortChangeWithApiCall = useCallback((newSort) => {
     console.log('🎯 User changed sort to:', newSort);
     handleSortChange(newSort);
-    
+
     const filters = { sort_by: newSort };
     handleServerFilterChange(filters, 1, { debounce: false });
   }, [handleSortChange, handleServerFilterChange]);
@@ -450,7 +514,7 @@ const handleServerFilterChange = useCallback(async (filters, page = 1, options =
       tick: categoryFields.tick || [],
       predefine: categoryFields.predefine || []
     }[type] || [];
-    
+
     const field = fields.find(f => f.slug === slug);
     return field?.name || field?.value || slug;
   }, [categoryFields]);
@@ -462,7 +526,7 @@ const handleServerFilterChange = useCallback(async (filters, page = 1, options =
       tick: categoryFields.tick || [],
       predefine: categoryFields.predefine || []
     }[type] || [];
-    
+
     const field = fields.find(f => f.slug === slug);
     return field?.unit || '';
   }, [categoryFields]);
@@ -474,23 +538,23 @@ const handleServerFilterChange = useCallback(async (filters, page = 1, options =
       value: value,
       type: fieldType
     });
-    
-    setFieldValues(prev => ({ 
-      ...prev, 
-      [fieldSlug]: value 
+
+    setFieldValues(prev => ({
+      ...prev,
+      [fieldSlug]: value
     }));
 
     // Update active filters display
     const isRangeValue = fieldType === 'normal_range' || (typeof value === 'object' && (value.min !== undefined || value.max !== undefined));
-    
+
     if (isRangeValue) {
-      const hasValue = (value.min && value.min !== '' && value.min !== '0') || 
+      const hasValue = (value.min && value.min !== '' && value.min !== '0') ||
                        (value.max && value.max !== '' && value.max !== '0');
-      
+
       if (hasValue) {
         setActiveFieldFilters(prev => {
           const existingIndex = prev.findIndex(f => f.slug === fieldSlug);
-          
+
           let displayText = '';
           if (value.min && value.min !== '' && value.min !== '0') {
             displayText += `از ${value.min}`;
@@ -499,7 +563,7 @@ const handleServerFilterChange = useCallback(async (filters, page = 1, options =
             if (displayText) displayText += ' ';
             displayText += `تا ${value.max}`;
           }
-          
+
           const fieldObj = {
             slug: fieldSlug,
             name: fieldName || findFieldNameBySlug(fieldSlug, fieldType),
@@ -509,7 +573,7 @@ const handleServerFilterChange = useCallback(async (filters, page = 1, options =
             unit: findFieldUnitBySlug(fieldSlug, fieldType),
             isRange: true
           };
-          
+
           if (existingIndex >= 0) {
             const updated = [...prev];
             updated[existingIndex] = fieldObj;
@@ -519,31 +583,31 @@ const handleServerFilterChange = useCallback(async (filters, page = 1, options =
           }
         });
       } else {
-        setActiveFieldFilters(prev => 
+        setActiveFieldFilters(prev =>
           prev.filter(f => f.slug !== fieldSlug)
         );
       }
-    } 
+    }
     else if (value !== '' && value !== null && value !== undefined && value !== '0') {
       setActiveFieldFilters(prev => {
         const existingIndex = prev.findIndex(f => f.slug === fieldSlug);
-        
+
         if (existingIndex >= 0) {
           const updated = [...prev];
-          updated[existingIndex] = { 
-            slug: fieldSlug, 
+          updated[existingIndex] = {
+            slug: fieldSlug,
             name: fieldName || findFieldNameBySlug(fieldSlug, fieldType),
-            value, 
+            value,
             type: fieldType,
             unit: findFieldUnitBySlug(fieldSlug, fieldType),
             isRange: false
           };
           return updated;
         } else {
-          return [...prev, { 
-            slug: fieldSlug, 
+          return [...prev, {
+            slug: fieldSlug,
             name: fieldName || findFieldNameBySlug(fieldSlug, fieldType),
-            value, 
+            value,
             type: fieldType,
             unit: findFieldUnitBySlug(fieldSlug, fieldType),
             isRange: false
@@ -551,14 +615,14 @@ const handleServerFilterChange = useCallback(async (filters, page = 1, options =
         }
       });
     } else {
-      setActiveFieldFilters(prev => 
+      setActiveFieldFilters(prev =>
         prev.filter(f => f.slug !== fieldSlug)
       );
     }
-    
+
     // Update ref immediately
     fieldValuesRef.current = { ...fieldValuesRef.current, [fieldSlug]: value };
-    
+
     // Trigger API call with debouncing for rapid changes
     const filters = {};
     if (selectedCategoryRef.current?.id) {
@@ -570,20 +634,20 @@ const handleServerFilterChange = useCallback(async (filters, page = 1, options =
   // Remove field filter - ONLY when user interacts
   const handleFieldFilterRemove = useCallback((fieldSlug) => {
     console.log('🎯 User removed field filter:', fieldSlug);
-    
+
     setFieldValues(prev => {
       const updated = { ...prev };
       delete updated[fieldSlug];
       return updated;
     });
-    
+
     // Update ref
     delete fieldValuesRef.current[fieldSlug];
-    
-    setActiveFieldFilters(prev => 
+
+    setActiveFieldFilters(prev =>
       prev.filter(f => f.slug !== fieldSlug)
     );
-    
+
     // Apply filter after removal
     const filters = {};
     if (selectedCategoryRef.current?.id) {
@@ -599,16 +663,16 @@ const handleServerFilterChange = useCallback(async (filters, page = 1, options =
       page: pagination.current_page,
       per_page: 10
     };
-    
+
     if (sortBy && sortBy !== 'newest') {
       allFilters.sort_by = sortBy;
     }
-    
+
     if (userLocation?.lat && userLocation?.long) {
       allFilters.lat = userLocation.lat;
       allFilters.long = userLocation.long;
     }
-    
+
     Object.entries(fieldValuesRef.current).forEach(([fieldSlug, value]) => {
       if (typeof value === 'object') {
         if (value.min && value.min !== '' && value.min !== '0') {
@@ -621,31 +685,31 @@ const handleServerFilterChange = useCallback(async (filters, page = 1, options =
         allFilters[fieldSlug] = value;
       }
     });
-    
+
     // Clean empty values
     Object.keys(allFilters).forEach(key => {
-      if (allFilters[key] === null || 
-          allFilters[key] === undefined || 
+      if (allFilters[key] === null ||
+          allFilters[key] === undefined ||
           allFilters[key] === '' ||
           (Array.isArray(allFilters[key]) && allFilters[key].length === 0)) {
         delete allFilters[key];
       }
     });
-    
+
     return allFilters;
   }, [selectedCategory, userLocation, sortBy, pagination.current_page]);
 
   // Calculate active filters count
   const calculateActiveFiltersCount = useCallback(() => {
     let count = 0;
-    
+
     if (selectedCategory) count += 1;
     if (selectedNeighborhoods?.length) count += selectedNeighborhoods.length;
     if (selectedFeatures?.length) count += selectedFeatures.length;
-    
-    Object.entries(fieldValuesRef.current).forEach(([slug, value]) => { 
+
+    Object.entries(fieldValuesRef.current).forEach(([slug, value]) => {
       if (typeof value === 'object') {
-        if ((value.min && value.min !== '' && value.min !== '0') || 
+        if ((value.min && value.min !== '' && value.min !== '0') ||
             (value.max && value.max !== '' && value.max !== '0')) {
           count += 1;
         }
@@ -653,9 +717,9 @@ const handleServerFilterChange = useCallback(async (filters, page = 1, options =
         count += 1;
       }
     });
-    
+
     if (sortBy && sortBy !== 'newest') count += 1;
-    
+
     return count;
   }, [selectedCategory, selectedNeighborhoods, selectedFeatures, sortBy]);
 
@@ -666,15 +730,15 @@ const handleServerFilterChange = useCallback(async (filters, page = 1, options =
       const currentFilters = compileAllFilters();
       return handleServerFilterChange(currentFilters, page, { debounce: false });
     },
-    
+
     getCurrentFilters: () => {
       return compileAllFilters();
     },
-    
+
     getPagination: () => {
       return pagination;
     },
-    
+
     loadMoreData: () => {
       if (pagination.has_next && !isLoading) {
         const currentFilters = compileAllFilters();
@@ -682,7 +746,7 @@ const handleServerFilterChange = useCallback(async (filters, page = 1, options =
       }
       return Promise.resolve();
     },
-    
+
     hasActiveFilters: hasActiveFilters,
   }));
 
@@ -695,13 +759,13 @@ const handleServerFilterChange = useCallback(async (filters, page = 1, options =
   // Reset all filters - ONLY when user clicks reset
   const handleReset = useCallback(() => {
     console.log('🎯 User clicked reset all filters');
-    
+
     // Clear timeout
     if (apiCallTimeoutRef.current) {
       clearTimeout(apiCallTimeoutRef.current);
       apiCallTimeoutRef.current = null;
     }
-    
+
     // Reset states
     setServerData([]);
     setPagination({ current_page: 1, total_count: 0, has_next: false, total_pages: 0 });
@@ -709,7 +773,7 @@ const handleServerFilterChange = useCallback(async (filters, page = 1, options =
     fieldValuesRef.current = {};
     setActiveFieldFilters([]);
     handleResetAll();
-    
+
     // Clear URL parameters
     router.replace(
       {
@@ -719,11 +783,11 @@ const handleServerFilterChange = useCallback(async (filters, page = 1, options =
       undefined,
       { shallow: true, scroll: false }
     );
-    
+
     // Make API call with reset filters
     if (selectedCategoryRef.current?.id) {
       const filters = { category_id: selectedCategoryRef.current.id };
-      handleServerFilterChange(filters, 1, { debounce: false });
+      handleServerFilterChange(filters, 1, { debounce: false, isReset: true });
     }
   }, [handleResetAll, router, handleServerFilterChange]);
 
@@ -744,7 +808,7 @@ const handleServerFilterChange = useCallback(async (filters, page = 1, options =
   // Apply filters after closing modal
   const handleApplyFilters = useCallback(() => {
     console.log('🎯 User applied filters from modal');
-    
+
     setFilterModalVisible(false);
     const filters = {};
     if (selectedCategory?.id) {
@@ -776,10 +840,10 @@ const handleServerFilterChange = useCallback(async (filters, page = 1, options =
   return (
     <Box sx={{ position: 'relative' }}>
       {onBackToCategories && (
-        <Box 
-          sx={{ 
-            display: 'flex', 
-            alignItems: 'center', 
+        <Box
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
             justifyContent: 'center',
             bgcolor: '#f8f9fa',
             p: 1.5,
@@ -810,7 +874,7 @@ const handleServerFilterChange = useCallback(async (filters, page = 1, options =
         getSortDisplayText={getSortDisplayText}
         isCategoryLocked={!!forceCategory}
         activeFiltersCount={calculateActiveFiltersCount()}
-        
+
         // Field-related props
         fieldValues={fieldValues}
         activeFieldFilters={activeFieldFilters}

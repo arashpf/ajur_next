@@ -30,7 +30,7 @@ export default function Success() {
         </div>
 
         <div style={{marginTop:25, backgroundColor:'lightgreen'}}>
-          <Link href="/">بازگشت به صفحه اصلی</Link>
+          <Link href="/panel">بازگشت به پنل</Link>
         </div>
 
       </div>

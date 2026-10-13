@@ -14,6 +14,7 @@ import {
     createTheme,
     ThemeProvider,
 } from '@mui/material';
+import { trackEvent } from '../lib/track';
 
 const theme = createTheme({
     direction: 'rtl',
@@ -26,7 +27,6 @@ const options = [
     'میخواهم اجاره کنم',
 ];
 
-// تابع تبدیل اعداد فارسی و عربی به انگلیسی
 const toEnglishDigits = (str) => {
     const persianDigits = [/۰/g, /۱/g, /۲/g, /۳/g, /۴/g, /۵/g, /۶/g, /۷/g, /۸/g, /۹/g];
     const arabicDigits = [/٠/g, /١/g, /٢/g, /٣/g, /٤/g, /٥/g, /٦/g, /٧/g, /٨/g, /٩/g];
@@ -39,7 +39,6 @@ const toEnglishDigits = (str) => {
 };
 
 export default function FileRequestForm() {
-    // Per-field error state and refs
     const [fieldErrors, setFieldErrors] = useState({});
     const [submitAttempted, setSubmitAttempted] = useState(false);
     const nameRef = useRef(null);
@@ -49,6 +48,12 @@ export default function FileRequestForm() {
     const phoneRef = useRef(null);
     const depositRef = useRef(null);
     const rentRef = useRef(null);
+
+    // ─── Analytics: funnel tracking refs ───
+    // Guards so we don't double-fire on re-renders.
+    const startedTrackedRef = useRef(false);
+    const submittedTrackedRef = useRef(false);
+    const verifiedTrackedRef = useRef(false);
 
     const validateFields = () => {
         const errors = {};
@@ -78,7 +83,6 @@ export default function FileRequestForm() {
         else if (errors.rent && rentRef.current) rentRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
     };
 
-    // Helper to update a single field error on change
     const updateFieldError = (field, value) => {
         if (!submitAttempted) return;
         let error = undefined;
@@ -133,7 +137,7 @@ export default function FileRequestForm() {
     const [areaRange, setAreaRange] = useState([0, 500]);
     const [phone, setPhone] = useState('');
     const [description, setDescription] = useState('');
-    const [propertyType, setPropertyType] = useState(null); 
+    const [propertyType, setPropertyType] = useState(null);
     const propertyOptions = ['زمین', 'ویلایی', 'آپارتمان', 'تجاری', 'صنعتی'];
     const [codeSent, setCodeSent] = useState(false);
     const [smsCode, setSmsCode] = useState('');
@@ -166,6 +170,16 @@ export default function FileRequestForm() {
     }
 
     const requestType = convertOptionToType(selectedOption);
+
+    // ─── Analytics: contact_form_started fires once on mount ───
+    useEffect(() => {
+        if (startedTrackedRef.current) return;
+        startedTrackedRef.current = true;
+
+        trackEvent("contact_form_started", {
+            source: "file-request-page",
+        });
+    }, []);
 
     useEffect(() => {
         const cachedCities = localStorage.getItem('ajur_cities');
@@ -235,7 +249,7 @@ export default function FileRequestForm() {
     };
 
     const generatePayload = () => ({
-        phone: toEnglishDigits(phone), // ارسال حتمی شماره تلفن با کاراکتر انگلیسی به API
+        phone: toEnglishDigits(phone),
         name,
         city_id: selectedCity?.id || 0,
         request_type_value: propertyType,
@@ -271,6 +285,10 @@ export default function FileRequestForm() {
         setRequestId(null);
         setSubmitAttempted(false);
         setFieldErrors({});
+
+        // Reset funnel guards so a fresh submission is tracked.
+        submittedTrackedRef.current = false;
+        verifiedTrackedRef.current = false;
     };
 
     const handleSendVerification = () => {
@@ -280,10 +298,10 @@ export default function FileRequestForm() {
         if (!selectedCity) errors.push("لطفا شهر را انتخاب کنید.");
         if (!propertyType) errors.push("لطفا نوع ملک را انتخاب کنید.");
         if (description.trim().length === 0) errors.push("توضیحات نمی‌تواند خالی باشد.");
-        
+
         const normalizedPhone = toEnglishDigits(phone);
         if (!/^09\d{9}$/.test(normalizedPhone)) errors.push("شماره موبایل را صحیح وارد کنید.");
-        
+
         if (requestType === 'for_rent' || requestType === 'need_rent') {
             const cleanDeposit = toEnglishDigits(deposit);
             const cleanRent = toEnglishDigits(rent);
@@ -304,6 +322,32 @@ export default function FileRequestForm() {
             setRequestId(res.data.property_request_id);
             setCodeSent(true);
             setVerifying(false);
+
+            // ─── Analytics: contact_form_submitted ───
+            if (!submittedTrackedRef.current) {
+                submittedTrackedRef.current = true;
+
+                const payload = generatePayload();
+                trackEvent("contact_form_submitted", {
+                    source: "file-request-page",
+                    request_type: payload.type,
+                    persian_type: payload.persian_type,
+                    city_id: payload.city_id,
+                    property_type: payload.request_type_value,
+                    area_min: payload.area_min,
+                    area_max: payload.area_max,
+                    budget_min: payload.budget_min ?? null,
+                    budget_max: payload.budget_max ?? null,
+                    deposit: payload.deposit ?? null,
+                    rent: payload.rent ?? null,
+                    has_description: !!(payload.description || "").trim(),
+                    description_length: (payload.description || "").length,
+                    has_name: !!payload.name,
+                    // Do NOT log the raw phone number (privacy)
+                    phone_prefix: (payload.phone || "").slice(0, 4) || null,
+                    property_request_id: res.data.property_request_id,
+                });
+            }
         })
         .catch((err) => {
             console.error("Error sending verification code:", err);
@@ -349,6 +393,16 @@ export default function FileRequestForm() {
         })
         .then((res) => {
             if (res.data.status === "success") {
+                // ─── Analytics: contact_form_verified ───
+                if (!verifiedTrackedRef.current) {
+                    verifiedTrackedRef.current = true;
+                    trackEvent("contact_form_verified", {
+                        source: "file-request-page",
+                        property_request_id: requestId,
+                        // The response body may carry useful IDs — log if present.
+                        user_id: res.data.user_id ?? null,
+                    });
+                }
                 handleSuccess(res.data);
             } else {
                 alert("کد وارد شده معتبر نیست.");
@@ -360,6 +414,14 @@ export default function FileRequestForm() {
     const handleSuccess = (data) => {
         setConfirmedPhone(toEnglishDigits(phone));
         setShowSuccessModal(true);
+
+        // ─── Analytics: contact_success ───
+        // Fired when the success modal is shown (the terminal state).
+        trackEvent("contact_success", {
+            source: "file-request-page",
+            property_request_id: requestId,
+        });
+
         resetForm();
     };
 
@@ -387,7 +449,6 @@ export default function FileRequestForm() {
                     borderRadius: 2,
                 }}
             >
-                {/* Back Button */}
                 <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 2 }}>
                     <Button
                         onClick={() => {
@@ -411,15 +472,14 @@ export default function FileRequestForm() {
                     </Button>
                 </Box>
 
-                {/* راهنمای شروع فرآیند */}
                 {!codeSent && (
-                    <Typography 
-                        variant="body2" 
-                        sx={{ 
-                            mb: 3, 
-                            p: 2, 
-                            borderRadius: 1.5, 
-                            backgroundColor: '#fff8f8', 
+                    <Typography
+                        variant="body2"
+                        sx={{
+                            mb: 3,
+                            p: 2,
+                            borderRadius: 1.5,
+                            backgroundColor: '#fff8f8',
                             borderRight: '4px solid #bc323a',
                             color: '#555',
                             fontWeight: 500,
@@ -432,7 +492,6 @@ export default function FileRequestForm() {
 
                 {!codeSent ? (
                     <>
-                        {/* Option Buttons */}
                         <Grid container spacing={2} sx={{ mb: 3 }}>
                             {options.map((option) => (
                                 <Grid item xs={6} sm={3} key={option}>
@@ -457,7 +516,6 @@ export default function FileRequestForm() {
                             ))}
                         </Grid>
 
-                        {/* Name Input */}
                         <div ref={nameRef} />
                         {submitAttempted && fieldErrors.name && (
                             <Typography color="error" variant="body2" sx={{ mb: 1, fontWeight: 500 }}>{fieldErrors.name}</Typography>
@@ -473,7 +531,6 @@ export default function FileRequestForm() {
                             sx={{ mb: 2 }}
                         />
 
-                        {/* City Selector */}
                         <div ref={cityRef} />
                         {submitAttempted && fieldErrors.city && (
                             <Typography color="error" variant="body2" sx={{ mb: 1, fontWeight: 500 }}>{fieldErrors.city}</Typography>
@@ -517,7 +574,6 @@ export default function FileRequestForm() {
                             noOptionsText="گزینه‌ای پیدا نشد"
                         />
 
-                        {/* Budget/Rent Fields */}
                         {(requestType === 'for_rent' || requestType === 'need_rent') ? (
                             <Box sx={{ mb: 3, display: 'flex', gap: 2 }}>
                                 <Box sx={{ flex: 1 }}>
@@ -563,27 +619,25 @@ export default function FileRequestForm() {
                             </Box>
                         ) : (
                             <Box sx={{ mb: 4 }}>
-  <Typography variant="body2" sx={{ mb: 1, fontWeight: 500 }}>
-    بودجه (اختیاری): از {formatToman(budgetRange[0])} تا{" "}
-    {budgetRange[1] >= 50000000000
-      ? "۵۰ میلیارد یا بیشتر"
-      : formatToman(budgetRange[1])}
-  </Typography>
+                                <Typography variant="body2" sx={{ mb: 1, fontWeight: 500 }}>
+                                    بودجه (اختیاری): از {formatToman(budgetRange[0])} تا{" "}
+                                    {budgetRange[1] >= 50000000000
+                                        ? "۵۰ میلیارد یا بیشتر"
+                                        : formatToman(budgetRange[1])}
+                                </Typography>
 
-  <Slider
-    value={budgetRange}
-    onChange={(e, newValue) => setBudgetRange(newValue)}
-    valueLabelDisplay="off"
-    min={0}
-    max={50000000000}
-    step={500000000}
-    sx={{ color: '#bc323a', width: '95%', mx: 'auto', display: 'block' }}
-  />
-</Box>
-
+                                <Slider
+                                    value={budgetRange}
+                                    onChange={(e, newValue) => setBudgetRange(newValue)}
+                                    valueLabelDisplay="off"
+                                    min={0}
+                                    max={50000000000}
+                                    step={500000000}
+                                    sx={{ color: '#bc323a', width: '95%', mx: 'auto', display: 'block' }}
+                                />
+                            </Box>
                         )}
 
-                        {/* Area Range Slider */}
                         <Box sx={{ mb: 4 }}>
                             <Typography variant="body2" sx={{ mb: 1, fontWeight: 500 }}>
                                 متراژ (اختیاری): از {areaRange[0].toLocaleString('fa')} متر تا{" "}
@@ -600,7 +654,6 @@ export default function FileRequestForm() {
                             />
                         </Box>
 
-                        {/* Description */}
                         <div ref={descriptionRef} />
                         {submitAttempted && fieldErrors.description && (
                             <Typography color="error" variant="body2" sx={{ mb: 1, fontWeight: 500 }}>{fieldErrors.description}</Typography>
@@ -620,7 +673,6 @@ export default function FileRequestForm() {
                             }}
                         />
 
-                        {/* Phone */}
                         <div ref={phoneRef} />
                         {submitAttempted && fieldErrors.phone && (
                             <Typography color="error" variant="body2" sx={{ mb: 1, fontWeight: 500 }}>{fieldErrors.phone}</Typography>
@@ -652,17 +704,16 @@ export default function FileRequestForm() {
                         </Box>
                     </>
                 ) : (
-                    /* باکس وسط‌چین و متمرکز برای تایید کد پیامک */
-                    <Box 
-                        sx={{ 
-                            maxWidth: 450, 
-                            mx: 'auto', 
-                            textAlign: 'center', 
-                            py: 4, 
-                            px: 2, 
-                            border: '1px solid #f0f0f0', 
-                            borderRadius: 3, 
-                            boxShadow: '0 8px 24px rgba(0,0,0,0.04)' 
+                    <Box
+                        sx={{
+                            maxWidth: 450,
+                            mx: 'auto',
+                            textAlign: 'center',
+                            py: 4,
+                            px: 2,
+                            border: '1px solid #f0f0f0',
+                            borderRadius: 3,
+                            boxShadow: '0 8px 24px rgba(0,0,0,0.04)'
                         }}
                     >
                         <Typography variant="h6" sx={{ fontWeight: 700, mb: 1, color: '#333' }}>
@@ -678,9 +729,9 @@ export default function FileRequestForm() {
                             value={smsCode}
                             onChange={(e) => setSmsCode(toEnglishDigits(e.target.value))}
                             placeholder='- - - - -'
-                            inputProps={{ 
-                                maxLength: 5, 
-                                style: { textAlign: 'center', letterSpacing: '0.5rem', fontWeight: 'bold', fontSize: '1.2rem' } 
+                            inputProps={{
+                                maxLength: 5,
+                                style: { textAlign: 'center', letterSpacing: '0.5rem', fontWeight: 'bold', fontSize: '1.2rem' }
                             }}
                             sx={{ mb: 3 }}
                         />
@@ -692,12 +743,12 @@ export default function FileRequestForm() {
                                     variant="outlined"
                                     onClick={handleResendCode}
                                     disabled={verifying}
-                                    sx={{ 
-                                        py: 1.2, 
-                                        fontWeight: 600, 
-                                        color: '#bc323a', 
-                                        borderColor: '#bc323a', 
-                                        '&:hover': { backgroundColor: '#fef0f1', borderColor: '#a72b32', color: '#a72b32' } 
+                                    sx={{
+                                        py: 1.2,
+                                        fontWeight: 600,
+                                        color: '#bc323a',
+                                        borderColor: '#bc323a',
+                                        '&:hover': { backgroundColor: '#fef0f1', borderColor: '#a72b32', color: '#a72b32' }
                                     }}
                                 >
                                     ارسال مجدد کد
@@ -708,12 +759,12 @@ export default function FileRequestForm() {
                                     fullWidth
                                     variant="outlined"
                                     onClick={() => setCodeSent(false)}
-                                    sx={{ 
-                                        py: 1.2, 
-                                        fontWeight: 600, 
-                                        color: '#666', 
-                                        borderColor: '#ccc', 
-                                        '&:hover': { backgroundColor: '#f9f9f9', borderColor: '#999' } 
+                                    sx={{
+                                        py: 1.2,
+                                        fontWeight: 600,
+                                        color: '#666',
+                                        borderColor: '#ccc',
+                                        '&:hover': { backgroundColor: '#f9f9f9', borderColor: '#999' }
                                     }}
                                 >
                                     ویرایش شماره
@@ -725,12 +776,12 @@ export default function FileRequestForm() {
                             fullWidth
                             variant="contained"
                             onClick={handleVerifyCode}
-                            sx={{ 
-                                py: 1.5, 
-                                fontWeight: 700, 
-                                fontSize: 16, 
-                                backgroundColor: '#4caf50', 
-                                '&:hover': { backgroundColor: '#388e3c' } 
+                            sx={{
+                                py: 1.5,
+                                fontWeight: 700,
+                                fontSize: 16,
+                                backgroundColor: '#4caf50',
+                                '&:hover': { backgroundColor: '#388e3c' }
                             }}
                         >
                             تایید کد و ثبت نهایی
@@ -739,7 +790,6 @@ export default function FileRequestForm() {
                 )}
             </Box>
 
-            {/* Modal موفقیت ثبت */}
             <Modal open={showSuccessModal} onClose={resetFormAndCloseModal}>
                 <Box sx={{ maxWidth: 600, bgcolor: 'background.paper', p: 4, mx: 'auto', mt: 10, borderRadius: 2, direction: 'rtl' }}>
                     <Grid container spacing={3}>

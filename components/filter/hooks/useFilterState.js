@@ -9,6 +9,7 @@ import {
   buildQueryFromFilters,
   countActiveFilters,
 } from "../utils/filterQuery";
+import { isTrackingParam } from "../../../lib/skipTrackingParams";
 
 export default function useFilterState({
   fieldSlugs = null,
@@ -52,8 +53,11 @@ export default function useFilterState({
         fieldTypes,
       });
 
-      // Preserve non-filter keys that buildQueryFromFilters may have wiped
+      // Preserve non-filter keys that buildQueryFromFilters may have wiped.
+      // Skip tracking params (r, utm_*, gclid, ...) so they don't leak back
+      // into the URL and confuse the backend filter API.
       Object.keys(router.query).forEach((k) => {
+        if (isTrackingParam(k)) return;   // ← ADDED: never carry tracking params
         if (
           !k.endsWith("_min") &&
           !k.endsWith("_max") &&
@@ -64,6 +68,14 @@ export default function useFilterState({
           !Object.prototype.hasOwnProperty.call(fieldTypes, k)
         ) {
           q[k] = router.query[k];
+        }
+      });
+
+      // Safety net: strip any tracking param that might have slipped through
+      // (e.g., from buildQueryFromFilters' own logic).
+      Object.keys(q).forEach((k) => {
+        if (isTrackingParam(k)) {
+          delete q[k];
         }
       });
 

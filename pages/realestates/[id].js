@@ -1851,80 +1851,56 @@ const RealestateSingle = ({
 
       return (
         <Container
-          maxWidth="lg"
-          sx={{
-            mt: 3,
-            mb: 1,
-            paddingTop: 2,
-            textAlign:
-              "center",
-          }}
-        >
-          <Box
-            sx={{
-              display: "flex",
-              gap: 1,
-              overflowX: "auto",
-              paddingBottom: 1,
-              direction: "rtl",
-            }}
-          >
-            <Button
-              variant={
-                !selectedCategoryId ||
-                selectedCategoryId ===
-                  "all"
-                  ? "contained"
-                  : "outlined"
-              }
-              onClick={() =>
-                handleCategorySelect(
-                  "all"
-                )
-              }
-              sx={{
-                whiteSpace:
-                  "nowrap",
-              }}
-            >
-              همه فایل‌ها
-            </Button>
+  maxWidth="lg"
+  sx={{
+    mt: 3,
+    mb: 1,
+    paddingTop: 2,
+    textAlign: "center",
+    paddingX: { xs: 1, sm: 2 },
+  }}
+>
+  <Box
+    sx={{
+      display: "flex",
+      gap: 1,
+      overflowX: "auto",
+      overflowY: "hidden",
+      paddingBottom: 1,
+      direction: "rtl",
+      // prevent buttons from shrinking
+      "& > *": { flexShrink: 0 },
+      // hide the scrollbar visually (mobile scroll still works)
+      "&::-webkit-scrollbar": { display: "none" },
+      scrollbarWidth: "none",
+      msOverflowStyle: "none",
+      // give the row a fixed height so it doesn't collapse
+      minHeight: 48,
+      alignItems: "center",
+    }}
+  >
+    <Button
+      variant={!selectedCategoryId || selectedCategoryId === "all" ? "contained" : "outlined"}
+      onClick={() => handleCategorySelect("all")}
+      sx={{ whiteSpace: "nowrap", flexShrink: 0 }}
+    >
+      همه فایل‌ها
+    </Button>
 
-            {categories.map(
-              (category) => (
-                <Button
-                  key={
-                    category.id
-                  }
-                  variant={
-                    String(
-                      selectedCategoryId
-                    ) ===
-                    String(
-                      category.id
-                    )
-                      ? "contained"
-                      : "outlined"
-                  }
-                  onClick={() =>
-                    handleCategorySelect(
-                      category
-                    )
-                  }
-                  sx={{
-                    whiteSpace:
-                      "nowrap",
-                  }}
-                >
-                  {category.name ||
-                    category.title}
-                </Button>
-              )
-            )}
-          </Box>
+    {categories.map((category) => (
+      <Button
+        key={category.id}
+        variant={String(selectedCategoryId) === String(category.id) ? "contained" : "outlined"}
+        onClick={() => handleCategorySelect(category)}
+        sx={{ whiteSpace: "nowrap", flexShrink: 0 }}
+      >
+        {category.name || category.title}
+      </Button>
+    ))}
+  </Box>
 
-          {renderFiltersButton()}
-        </Container>
+  {renderFiltersButton()}
+</Container>
       );
     };
 
@@ -2338,91 +2314,7 @@ const RealestateSingle = ({
               Keep only one H1 on the page. If RealstateCard currently
               renders another H1, change that internal heading to H2/div.
             */}
-            <header
-              style={{
-                display: "flex",
-                alignItems:
-                  "center",
-                gap: 16,
-                textAlign:
-                  "right",
-                maxWidth: 1200,
-                margin:
-                  "20px auto 10px",
-                padding:
-                  "0 16px",
-              }}
-            >
-              {/*
-                The actual agent photo is rendered as a normal <img>,
-                making it directly discoverable by search engines.
-
-                If RealstateCard displays the same image, you may remove
-                the duplicate image from RealstateCard.
-              */}
-              {agentProfileImage && (
-                <img
-                  src={
-                    agentProfileImage
-                  }
-                  alt={agentImageAlt}
-                  title={
-                    agentImageAlt
-                  }
-                  width="112"
-                  height="112"
-                  loading="eager"
-                  decoding="async"
-                  itemProp="image"
-                  style={{
-                    width: 112,
-                    height: 112,
-                    flexShrink: 0,
-                    objectFit:
-                      "cover",
-                    borderRadius:
-                      "50%",
-                    border:
-                      "1px solid #e5e5e5",
-                    backgroundColor:
-                      "#f7f7f7",
-                  }}
-                />
-              )}
-
-              <div>
-                <h1
-                  itemProp="headline"
-                  style={{
-                    fontSize: 22,
-                    fontWeight: 700,
-                    margin:
-                      "0 0 8px",
-                    lineHeight: 1.8,
-                  }}
-                >
-                  {pageHeading}
-                </h1>
-
-                <p
-                  style={{
-                    color: "#666",
-                    fontSize: 14,
-                    lineHeight: 2,
-                    margin: 0,
-                  }}
-                >
-                  {agencyName &&
-                  cityName
-                    ? `اطلاعات تماس، معرفی و فایل‌های ملکی ${agentName}، مشاور فعال در ${agencyName} در ${cityName}`
-                    : agencyName
-                      ? `اطلاعات تماس، معرفی و فایل‌های ملکی ${agentName}، مشاور فعال در ${agencyName}`
-                      : cityName
-                        ? `اطلاعات تماس، معرفی و فایل‌های ملکی ${agentName} در ${cityName}`
-                        : `اطلاعات تماس، معرفی و فایل‌های ملکی ${agentName}`}
-                </p>
-              </div>
-            </header>
+            
 
             <div>
               <Box

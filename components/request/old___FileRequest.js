@@ -21,11 +21,12 @@ import Form from "react-bootstrap/Form";
 import axios from "axios";
 import FileRequestAnimation from "../animations/FileRequestAnimation";
 import { useRouter } from "next/router";
-
+import { trackEvent } from "../../lib/track";
 
 const Alert = React.forwardRef(function Alert(props, ref) {
   return <MuiAlert elevation={6} ref={ref} variant="filled" {...props} />;
 });
+
 const FileRequest = (props) => {
   const [modal_show, set_modal_show] = useState(false);
   const [modal_level, set_modal_level] = useState(1);
@@ -47,9 +48,50 @@ const FileRequest = (props) => {
 
   const router = useRouter();
 
+  // ─── Analytics: source and client IP come from the caller ───
+  const source = props.source || "unknown";
+  const clientIp = props.clientIp || null;
+
+  // ─── Analytics: guards to prevent double-fires on re-renders ───
+  const submittedTrackedRef = React.useRef(false);
+  const verifiedTrackedRef = React.useRef(false);
+
+  // ─── Analytics: helpers ───
+  const logCallClick = () => {
+    trackEvent(
+      "contact_call_click",
+      {
+        source,
+        phone: "+989382740488",
+      },
+      clientIp
+    );
+  };
+
+  const logContactIntent = () => {
+    trackEvent(
+      "contact_intent",
+      {
+        source,
+        intent: "form",
+      },
+      clientIp
+    );
+  };
+
   const onClickRequestPage = () => {
+    logContactIntent();
     router.push("/file-request");
-  }
+  };
+
+  const onClickCallButton = () => {
+    logCallClick();
+    // The <Button href="tel:..."> already navigates via href — but
+    // since we want the click handler too, we replace href with onClick.
+    if (typeof window !== "undefined") {
+      window.location.href = "tel:+989382740488";
+    }
+  };
 
   useEffect(() => {
     axios({
@@ -198,24 +240,19 @@ const FileRequest = (props) => {
   const onClickSendCode = () => {
     if (!phone) {
       setProblem("شماره موبایل را وارد کنید");
-
       setOpenSnackBar(true);
       return;
     } else if (phone.length !== 11) {
       setProblem("شماره موبایل را صحیح و یازده رقتی وارد کنید");
-
       setOpenSnackBar(true);
       return;
     }
-
 
     set_loading(true);
 
     axios({
       method: "post",
-      // url:'https://irabist.ir/api/register-login',
       url: "https://api.ajur.app/webauth/property-request-register",
-
       params: {
         phone: phone,
         name: name,
@@ -223,7 +260,7 @@ const FileRequest = (props) => {
         request_type_value: request_type_value,
         description: description,
         type: request_type,
-        persian_type: request_persian_type
+        persian_type: request_persian_type,
       },
     }).then(function (response) {
       console.log("sms sended ");
@@ -232,6 +269,29 @@ const FileRequest = (props) => {
       set_property_request_id(response.data.property_request_id);
       if (response.status == 200) {
         console.log("sms sended successfully");
+
+        // ─── Analytics: contact_form_submitted ───
+        if (!submittedTrackedRef.current) {
+          submittedTrackedRef.current = true;
+          trackEvent(
+            "contact_form_submitted",
+            {
+              source,
+              channel: "modal", // modal vs. /file-request page
+              request_type: request_type,
+              persian_type: request_persian_type,
+              city_id: selected_city,
+              property_type: request_type_value,
+              has_description: !!description,
+              description_length: (description || "").length,
+              has_name: !!name,
+              phone_prefix: (phone || "").slice(0, 4) || null,
+              property_request_id: response.data.property_request_id,
+            },
+            clientIp
+          );
+        }
+
         set_modal_level(4);
       } else {
         console.log("something wrong with sms sending");
@@ -248,17 +308,13 @@ const FileRequest = (props) => {
     if (!digits) {
       console.log("the digits must be 5 number");
       setProblem("ابتدا کد دریافتی از اس ام اس را وارد کنید");
-
-      setOpenSnackBar(true)
+      setOpenSnackBar(true);
       return;
     } else if (digits.length != 5) {
       console.log("the digits must be 5 number");
       setProblem("کد تایید باید ۵ رقم باشد");
-
       setOpenSnackBar(true);
     } else {
-
-
       axios({
         method: "post",
         url: "https://api.ajur.app/webauth/property-request-verify",
@@ -266,16 +322,40 @@ const FileRequest = (props) => {
           phone: phone,
           code: code,
           password: "ddr007",
-          property_request_id: property_request_id
+          property_request_id: property_request_id,
         },
       }).then(function (response) {
-        console.log('testing response');
+        console.log("testing response");
         console.log(response.data.status);
 
-
         if (response.data.status == "success") {
-
           console.log("code is right and thanks");
+
+          // ─── Analytics: contact_form_verified + contact_success ───
+          if (!verifiedTrackedRef.current) {
+            verifiedTrackedRef.current = true;
+
+            trackEvent(
+              "contact_form_verified",
+              {
+                source,
+                channel: "modal",
+                property_request_id: property_request_id,
+              },
+              clientIp
+            );
+
+            trackEvent(
+              "contact_success",
+              {
+                source,
+                channel: "modal",
+                property_request_id: property_request_id,
+              },
+              clientIp
+            );
+          }
+
           set_modal_level(5);
         } else if (response.data.status == "useless") {
           console.log("your code is useless");
@@ -293,20 +373,21 @@ const FileRequest = (props) => {
   const resetFormAndCloseModal = () => {
     set_modal_level(1);
     set_modal_show(false);
-  }
+
+    // Reset guards for a fresh submission later
+    submittedTrackedRef.current = false;
+    verifiedTrackedRef.current = false;
+  };
 
   const renderModalBody = () => {
     if (modal_level == 1) {
       return (
-
         <Grid container spacing={3}>
           <Grid item xs={0} md={3} lg={3}></Grid>
           <Grid item xs={12} md={6} lg={6}>
             <img
               src="/img/marketing/invite_realestate.jpg"
               alt="دعوت مشاورین املاک به آجر"
-              // width={1000}
-              // height={667}
               style={{ width: "100%" }}
             />
           </Grid>
@@ -428,14 +509,9 @@ const FileRequest = (props) => {
                 label="شهر"
                 onChange={(ct) => handleChangeCity(ct)}
               >
-                {/* <MenuItem value="">
-                  <em>همه شهرها</em>
-                </MenuItem> */}
                 {renderTheCities()}
-
                 <MenuItem value={0}>سایر شهرها</MenuItem>
               </Select>
-              {/* <FormHelperText>With label + helper text</FormHelperText> */}
             </FormControl>
           </Grid>
 
@@ -486,7 +562,6 @@ const FileRequest = (props) => {
                 placeholder="09********"
                 onChange={handleChangeInput}
                 style={{ marginBottom: 20 }}
-              // value= {phone}
               />
               <Form.Text className="text-muted">
                 با وارد کردن شماره شما اجازه تماس از سمت همکاران آجر را خواهید
@@ -502,18 +577,16 @@ const FileRequest = (props) => {
     } else if (modal_level == 4) {
       return (
         <div>
-
           <Form.Group className="mb-3" controlId="formvalidationCode">
             <Form.Label>
-              <p>   کد تایید ۵ رقمی ارسال شده به شماره  {phone}  خود را وارد کنید</p>
-
+              <p>
+                کد تایید ۵ رقمی ارسال شده به شماره {phone} خود را وارد کنید
+              </p>
             </Form.Label>
             <Form.Control
               type="number"
               placeholder="- - - - -"
-
               onChange={handleChangeInput2}
-
               style={{ marginBottom: 20 }}
             />
             <Form.Text className="text-muted"></Form.Text>
@@ -521,39 +594,47 @@ const FileRequest = (props) => {
               تایید و ثبت نهایی
             </Button>
           </Form.Group>
-
         </div>
       );
     } else if (modal_level == 5) {
       return (
         <div>
-
           <Grid container spacing={3}>
             <Grid item xs={0} md={3} lg={3}></Grid>
             <Grid item xs={12} md={6} lg={6}>
               <img
                 src="/img/marketing/invite_realestate.jpg"
                 alt="دعوت به مشارکت در بازاریابی آجر"
-                // width={1000}
-                // height={667}
                 style={{ width: "100%" }}
               />
-              <p style={{ textAlign: "center", color: 'green', paddingTop: 20 }}>درخواست شما با موفقیت ثبت شد</p>
+              <p
+                style={{
+                  textAlign: "center",
+                  color: "green",
+                  paddingTop: 20,
+                }}
+              >
+                درخواست شما با موفقیت ثبت شد
+              </p>
               <p style={{ textAlign: "right", fontSize: 12, color: "gray" }}>
-                در بعضی موارد به خاطر حجم بالای درخواست ها ممکن است تا ۴۸ ساعت زمان نیاز داشته باشیم
-                تا درخواست شما را برسی کنیم ،لطفا شماره
-                {' '}  {phone}  {' '}
-
-                را روشن و در دسترس داشته باشید
+                در بعضی موارد به خاطر حجم بالای درخواست ها ممکن است تا ۴۸ ساعت
+                زمان نیاز داشته باشیم تا درخواست شما را برسی کنیم ،لطفا شماره{" "}
+                {phone} را روشن و در دسترس داشته باشید
               </p>
 
-              <p style={{ textAlign: 'center' }}>با تشکر از اعتماد شما ، تیم برسی فایل آجر</p>
+              <p style={{ textAlign: "center" }}>
+                با تشکر از اعتماد شما ، تیم برسی فایل آجر
+              </p>
             </Grid>
 
-            <Button onClick={resetFormAndCloseModal} fullWidth variant="contained">بستن این صفحه</Button>
+            <Button
+              onClick={resetFormAndCloseModal}
+              fullWidth
+              variant="contained"
+            >
+              بستن این صفحه
+            </Button>
           </Grid>
-
-
         </div>
       );
     }
@@ -563,7 +644,7 @@ const FileRequest = (props) => {
     if (1) {
       return (
         <div>
-          {renderModalBredcrumb()}
+          {renderModalBreadcrumb()}
           {renderModalBody()}
         </div>
       );
@@ -600,8 +681,7 @@ const FileRequest = (props) => {
           boxShadow: "0 4px 16px rgba(0,0,0,0.04)",
         }}
       >
-        <h2 style={{fontFamily:'iransans',textAlign:'center'}}  
-        >
+        <h2 style={{ fontFamily: "iransans", textAlign: "center" }}>
           فایل موردنظر خود را پیدا نکردید؟
         </h2>
 
@@ -609,12 +689,10 @@ const FileRequest = (props) => {
           <InViewAnimationWrapper />
         </Box>
 
-        <p style={{textAlign:'right',padding:12}} >
-          هنوز فایل دلخواهتان را نیافتید یا موردی برای سپردن دارید؟
-           فقط کافیه درخواست خودتون رو اینجا ثبت کنید  از اینجا به بعدش با آجر
+        <p style={{ textAlign: "right", padding: 12 }}>
+          هنوز فایل دلخواهتان را نیافتید یا موردی برای سپردن دارید؟ فقط کافیه
+          درخواست خودتون رو اینجا ثبت کنید از اینجا به بعدش با آجر
         </p>
-
-        
 
         <Grid container spacing={2} justifyContent="center">
           <Grid item xs={12} sm={6}>
@@ -629,7 +707,7 @@ const FileRequest = (props) => {
                 py: 1.4,
                 fontWeight: 600,
                 fontSize: 17,
-                fontFamily:'iransans',
+                fontFamily: "iransans",
                 "&:hover": {
                   backgroundColor: "#a72b32",
                 },
@@ -642,7 +720,7 @@ const FileRequest = (props) => {
           <Grid item xs={12} sm={6}>
             <Button
               fullWidth
-              href="tel:+989382740488"
+              onClick={onClickCallButton}
               variant="outlined"
               startIcon={<CallIcon />}
               sx={{
@@ -658,14 +736,11 @@ const FileRequest = (props) => {
                 },
               }}
             >
-              {/* ۰۹۱۲۴۱۶۱۹۷۰ */}
               09382740488
             </Button>
           </Grid>
         </Grid>
       </Box>
-
-
 
       {renderModal()}
 
@@ -682,10 +757,9 @@ const FileRequest = (props) => {
           {problem}
         </Alert>
       </Snackbar>
-    </div >
+    </div>
   );
 };
-
 
 export default FileRequest;
 
@@ -713,57 +787,55 @@ function InViewAnimationWrapper() {
     };
   }, []);
 
-  // Reserve an explicit height that matches the animation and surrounding
-  // text/buttons to avoid layout jumps when swapping skeleton -> animation.
-  const reservedHeight = 260; // animation (180) + text/buttons spacing
+  const reservedHeight = 260;
 
-  // Outer container always reserves the same height to avoid any jump.
-  // Inside, we absolutely layer the skeleton and animation and toggle
-  // opacity. This prevents any reflow when switching visuals and should
-  // eliminate even 1px jumps.
   return (
     <div ref={ref}>
-      <Box sx={{ width: '100%', minHeight: reservedHeight, position: 'relative' }}>
-        {/* Skeleton layer (visible when not in view) */}
+      <Box
+        sx={{
+          width: "100%",
+          minHeight: reservedHeight,
+          position: "relative",
+        }}
+      >
         <Box
           sx={{
-            position: 'absolute',
+            position: "absolute",
             inset: 0,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            transition: 'opacity 200ms ease',
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            transition: "opacity 200ms ease",
             opacity: inView ? 0 : 1,
-            pointerEvents: inView ? 'none' : 'auto',
+            pointerEvents: inView ? "none" : "auto",
           }}
         >
           <Stack spacing={1} alignItems="center">
             <Skeleton variant="rectangular" width={180} height={180} />
             <Skeleton variant="text" width={180} height={28} />
-            <Stack direction="row" spacing={1} sx={{ width: '100%', justifyContent: 'center', mt: 1 }}>
+            <Stack
+              direction="row"
+              spacing={1}
+              sx={{ width: "100%", justifyContent: "center", mt: 1 }}
+            >
               <Skeleton variant="rectangular" width={140} height={40} />
               <Skeleton variant="rectangular" width={140} height={40} />
             </Stack>
           </Stack>
         </Box>
 
-        {/* Animation layer (visible when in view). We only mount the
-            Lottie component after the element becomes visible so autoplay
-            happens at the right moment. When not mounted we render an
-            empty same-size container to avoid layout shifts. */}
         <Box
           sx={{
-            position: 'absolute',
+            position: "absolute",
             inset: 0,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            transition: 'opacity 200ms ease',
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            transition: "opacity 200ms ease",
             opacity: inView ? 1 : 0,
-            pointerEvents: inView ? 'auto' : 'none',
+            pointerEvents: inView ? "auto" : "none",
           }}
         >
-          {/* Constrain animation to same size as skeleton */}
           {inView ? (
             <Box sx={{ width: 180, height: 180 }}>
               <FileRequestAnimation />
@@ -779,7 +851,6 @@ function InViewAnimationWrapper() {
 
 const style = {
   position: "absolute",
-
   top: "50%",
   left: "50%",
   transform: "translate(-50%, -50%)",

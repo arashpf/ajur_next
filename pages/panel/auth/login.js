@@ -15,7 +15,7 @@ import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import axios from 'axios';
 import Cookies from 'js-cookie';
 import MarketLayout from '../../../components/layouts/MarketLayout';
-
+import { trackEvent } from '../../../lib/track';
 
 function Login() {
     const router = useRouter();
@@ -32,7 +32,6 @@ function Login() {
     }, []);
 
     const RESEND_INTERVAL = 60; // seconds
-
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -73,6 +72,19 @@ function Login() {
             localStorage.setItem('code_requested_at', now.toString());
 
             Cookies.set('phone', phoneNumber);
+
+            // ─── Analytics: auth — SMS requested ───
+            // Fires when the SMS code was successfully sent.
+            // Note: we do NOT know yet if this is a new user or an existing
+            // one — that will be determined at the verify step. Here we
+            // just log the intent to authenticate.
+            trackEvent("auth", {
+                action: "sms_requested",
+                method: "phone",
+                // Do NOT log the raw phone number (privacy)
+                phone_prefix: phoneNumber.slice(0, 4),
+            });
+
             // Pass next param to verify page if present
             if (next) {
                 router.push(`/panel/auth/verify?next=${encodeURIComponent(next)}`);
@@ -86,6 +98,7 @@ function Login() {
             setLoading(false);
         }
     };
+
     return (
         <Container
             maxWidth="xs"

@@ -1,17 +1,47 @@
 import React from "react";
+import { trackEvent } from "../../lib/track";
 
-export default function FileRequest({ onCallClick, onActionClick }) {
-  const handleCallClick =
-    onCallClick ||
-    (() => {
+export default function FileRequest({
+  onCallClick,
+  onActionClick,
+  source = "unknown",
+  clientIp = null,
+}) {
+  const handleCallClick = () => {
+    // ─── Analytics: contact_call_click ───
+    trackEvent(
+      "contact_call_click",
+      {
+        source,
+        phone: "+989382740488",
+      },
+      clientIp
+    );
+
+    if (onCallClick) {
+      onCallClick();
+    } else {
       window.location.href = "tel:+989382740488";
-    });
+    }
+  };
 
-  const handleActionClick =
-    onActionClick ||
-    (() => {
+  const handleActionClick = () => {
+    // ─── Analytics: contact_intent ───
+    trackEvent(
+      "contact_intent",
+      {
+        source,
+        intent: "form",
+      },
+      clientIp
+    );
+
+    if (onActionClick) {
+      onActionClick();
+    } else {
       console.log("ثبت درخواست فایل clicked");
-    });
+    }
+  };
 
   return (
     <section className="fr-wrapper" dir="rtl">

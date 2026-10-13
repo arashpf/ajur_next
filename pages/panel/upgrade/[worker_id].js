@@ -41,7 +41,6 @@ export default function BoostPage() {
   const [activeTab, setActiveTab] = useState(0);
   const [showFreeModal, setShowFreeModal] = useState(false);
 
-
   // Independent selections
   const [selectedUrgent, setSelectedUrgent] = useState(null);
   const [selectedSpecial, setSelectedSpecial] = useState(null);
@@ -55,8 +54,6 @@ export default function BoostPage() {
           params: { worker_id },
         });
 
-        console.log('------------------------000000-------------------------');
-        console.log(JSON.stringify(res.data.data));
         setWorker(res.data.data);
       } catch (err) {
         setError("Cannot load worker info.");
@@ -67,75 +64,89 @@ export default function BoostPage() {
     loadData();
   }, [worker_id]);
 
+  // ---------------------------------------------------------------
+  // Plans — hardcoded to match the React Native app
+  // ---------------------------------------------------------------
   const urgentPlans = [
     {
-      id: "urgent_7",
+      id: "urgent_3",
       type: "urgent",
-      days: 7,
-      price: 29000,
+      days: 3,
+      price: 39000,
       color: "#f57c00",
       label: "فوری",
       desc: "نمایش بالای آگهی‌های عادی",
       modalDesc:
-        "با انتخاب پلن فوری ۷ روزه، آگهی شما به مدت ۷ روز در بالای تمام آگهی‌های عادی نمایش داده می‌شود. این پلن برای جذب سریع مشتری مناسب است.",
+        "با انتخاب پلن فوری ۳ روزه، آگهی شما به مدت ۳ روز در بالای تمام آگهی‌های عادی نمایش داده می‌شود.",
+      modalDesc2:
+        "متمایز شدن رنگ آگهی و ریبون فوری باعث می‌شود تا چند برابر آگهی عادی بازدید بگیرید.",
     },
     {
-      id: "urgent_14",
+      id: "urgent_7",
       type: "urgent",
-      days: 14,
-      price: 49000,
+      days: 7,
+      price: 69000,
       color: "#f57c00",
       label: "فوری",
-      desc: "افزایش بازدید برای ۱۴ روز",
+      desc: "افزایش بازدید برای ۷ روز",
       modalDesc:
-        "پلن فوری ۱۴ روزه به شما امکان می‌دهد آگهی‌تان را برای دو هفته در صدر نتایج نگه دارید و بازدید بیشتری دریافت کنید.",
+        "پلن فوری ۷ روزه به شما امکان می‌دهد آگهی‌تان را برای یک هفته متمایز در رنگ و با ریبون فوری نگه دارید.",
+      modalDesc2:
+        "متمایز شدن رنگ آگهی و ریبون فوری باعث می‌شود تا چند برابر آگهی عادی بازدید بگیرید.",
     },
     {
       id: "urgent_30",
       type: "urgent",
       days: 30,
-      price: 89000,
+      price: 169000,
       color: "#f57c00",
       label: "فوری",
       desc: "بیشترین نمایش برای ۳۰ روز",
       modalDesc:
-        "بهترین گزینه برای نمایش طولانی‌مدت. آگهی شما یک ماه کامل در بالای لیست فوری‌ها قرار می‌گیرد و بیشترین دیده شدن را خواهید داشت.",
+        "بهترین گزینه برای نمایش طولانی‌مدت. آگهی شما یک ماه کامل در بالای لیست فوری‌ها قرار می‌گیرد.",
+      modalDesc2:
+        "متمایز شدن رنگ آگهی و ریبون فوری باعث می‌شود تا چند برابر آگهی عادی بازدید بگیرید.",
     },
   ];
 
   const specialPlans = [
     {
-      id: "special_7",
+      id: "special_3",
       type: "special",
-      days: 7,
+      days: 3,
       price: 49000,
       color: "#8e24aa",
       label: "ویژه",
       desc: "نمایش در بالای لیست",
       modalDesc:
-        "آگهی ویژه ۷ روزه آگهی شما را با برچسب ویژه در بالاترین موقعیت لیست نمایش می‌دهد و توجه کاربران را بیشتر جلب می‌کند.",
+        "آگهی ویژه ۳ روزه آگهی شما را با برچسب ویژه در بالاترین موقعیت لیست نمایش می‌دهد.",
+      modalDesc2:
+        "در این پلن تعداد تماس‌های دریافتی تأثیری ندارد و فقط در صورت پایان مدت زمان خریداری‌شده آگهی به حالت عادی برمی‌گردد.",
     },
     {
-      id: "special_14",
+      id: "special_7",
       type: "special",
-      days: 14,
-      price: 89000,
+      days: 7,
+      price: 79000,
       color: "#8e24aa",
       label: "ویژه",
       desc: "نمایش در بالای لیست",
       modalDesc:
-        "با پلن ویژه ۱۴ روزه، آگهی شما دو هفته در جایگاه ویژه قرار می‌گیرد. مناسب برای کسانی که به دنبال نتیجه پایدارتر هستند.",
+        "با پلن ویژه ۷ روزه، آگهی شما یک هفته در جایگاه ویژه قرار می‌گیرد.",
+      modalDesc2:
+        "در این پلن تعداد تماس‌های دریافتی تأثیری ندارد و فقط در صورت پایان مدت زمان خریداری‌شده آگهی به حالت عادی برمی‌گردد.",
     },
     {
       id: "special_30",
       type: "special",
       days: 30,
-      price: 169000,
+      price: 210000,
       color: "#8e24aa",
       label: "ویژه",
       desc: "نمایش در بالای لیست",
-      modalDesc:
-        "پلن ویژه ۳۰ روزه کامل‌ترین گزینه برای نمایش ویژه است. یک ماه حضور مداوم در صدر لیست با بیشترین نرخ تبدیل.",
+      modalDesc: "پلن ویژه ۳۰ روزه کامل‌ترین گزینه برای نمایش ویژه است.",
+      modalDesc2:
+        "در این پلن تعداد تماس‌های دریافتی تأثیری ندارد و فقط در صورت پایان مدت زمان خریداری‌شده آگهی به حالت عادی برمی‌گردد.",
     },
   ];
 
@@ -144,34 +155,39 @@ export default function BoostPage() {
       id: "calls_10",
       type: "calls",
       calls: 10,
-      price: 99000,
+      price: 150000,
       color: "#1565c0",
       label: "تماسی",
-      desc: "10 تماس بیشتر",
+      desc: "۱۰ تماس بیشتر",
+      modalDesc: "با این بسته ۱۰ تماس اضافه به حساب شما افزوده می‌شود.",
+      modalDesc2:
+        "در این پلن شما فقط زمانی هزینه پرداخت می‌کنید که مشتری با شماره تماس متصل به آگهی شما تماس برقرار کند.",
+    },
+    {
+      id: "calls_20",
+      type: "calls",
+      calls: 20,
+      price: 250000,
+      color: "#1565c0",
+      label: "تماسی",
+      desc: "۲۰ تماس بیشتر",
       modalDesc:
-        "با این بسته ۱۰ تماس اضافه به حساب شما افزوده می‌شود. مناسب برای آگهی‌هایی که تازه منتشر شده‌اند.",
+        "بسته ۲۰ تماسی برای آگهی‌هایی که بازدید متوسطی دارند ایده‌آل است.",
+      modalDesc2:
+        "در این پلن شما فقط زمانی هزینه پرداخت می‌کنید که مشتری با شماره تماس متصل به آگهی شما تماس برقرار کند.",
     },
     {
       id: "calls_30",
       type: "calls",
       calls: 30,
-      price: 219000,
+      price: 350000,
       color: "#1565c0",
       label: "تماسی",
-      desc: "30 تماس بیشتر",
+      desc: "۳۰ تماس بیشتر",
       modalDesc:
-        "بسته ۳۰ تماسی برای آگهی‌هایی که بازدید بالایی دارند ایده‌آل است. با این بسته می‌توانید پاسخگوی تماس‌های بیشتری باشید.",
-    },
-    {
-      id: "calls_50",
-      type: "calls",
-      calls: 50,
-      price: 299000,
-      color: "#1565c0",
-      label: "تماسی",
-      desc: "50 تماس بیشتر",
-      modalDesc:
-        "بهترین ارزش برای پرتقاضاترین آگهی‌ها. ۵۰ تماس اضافه با کمترین هزینه به ازای هر تماس.",
+        "بهترین ارزش برای پرتقاضاترین آگهی‌ها. ۳۰ تماس اضافه با کمترین هزینه.",
+      modalDesc2:
+        "در این پلن شما فقط زمانی هزینه پرداخت می‌کنید که مشتری با شماره تماس متصل به آگهی شما تماس برقرار کند.",
     },
   ];
 
@@ -329,7 +345,6 @@ export default function BoostPage() {
     </Box>
   );
 
-
   const renderFreePlanSection = () => (
     <Box mt={3} mb={2} textAlign="center">
       <Button
@@ -345,7 +360,7 @@ export default function BoostPage() {
       >
         ادامه رایگان بدون خرید اشتراک
       </Button>
-  
+
       <Dialog
         open={showFreeModal}
         onClose={() => setShowFreeModal(false)}
@@ -363,7 +378,7 @@ export default function BoostPage() {
             ادامه رایگان
           </Typography>
         </DialogTitle>
-  
+
         <DialogContent>
           <Typography fontSize={14} color="text.secondary" lineHeight={2}>
             تمام امکانات پایه آجر به صورت رایگان برای آگهی شما فعال میشود ، هر
@@ -371,7 +386,7 @@ export default function BoostPage() {
             تماس و بازدید بیشتر اقدام کنید
           </Typography>
         </DialogContent>
-  
+
         <DialogActions sx={{ px: 3, pb: 2 }}>
           <Button
             onClick={() => router.push("/panel")}
@@ -391,8 +406,6 @@ export default function BoostPage() {
       </Dialog>
     </Box>
   );
-  
-
 
   // Urgent section
   const renderUrgentSection = () => (
@@ -962,4 +975,3 @@ export default function BoostPage() {
      
     );
   }
-  

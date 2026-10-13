@@ -14,6 +14,8 @@ import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import axios from 'axios';
 import Cookies from 'js-cookie';
 import MarketLayout from '../../../components/layouts/MarketLayout';
+import { trackEvent } from '../../../lib/track';
+import { getAttribution } from '../../../lib/utm';
 
 const RESEND_INTERVAL = 60; // seconds
 
@@ -42,7 +44,7 @@ function Verify() {
         } else {
             setCooldown(0);
         }
-        
+
         // Autofocus the input field
         if (inputRef.current) {
             inputRef.current.focus();
@@ -76,14 +78,21 @@ function Verify() {
         setLoading(true);
 
         try {
-            const res = await axios.post('https://api.ajur.app/webauth/verify', null, {
-                params: {
-                    phone: number,
-                    code,
-                    ref,
-                    password: 'ddr007',
-                },
-            });
+            // Read referrer_code from cookie as a fallback (in case cross-subdomain
+// cookie is blocked by the browser)
+const attribution = getAttribution();
+const referrerCode = attribution?.referrer_code || null;
+
+const res = await axios.post('https://api.ajur.app/webauth/verify', null, {
+    params: {
+        phone: number,
+        code,
+        ref,
+        password: 'ddr007',
+        // Only include if we actually have a code — keeps URL clean otherwise
+        ...(referrerCode ? { referrer_code: referrerCode } : {}),
+    },
+});
 
             if (res.data.status === 'success') {
                 const { token } = res.data.result;
@@ -93,6 +102,19 @@ function Verify() {
                 }
                 Cookies.set('user_name', res.data.user.name);
 
+                // ─── Analytics: auth — signup vs login ───
+                // The backend tells us whether this phone number existed
+                // before the verify call. `is_new_user: true` means we just
+                // created the account; otherwise it's a returning user.
+                const isNewUser = res.data.is_new_user === true;
+                trackEvent("auth", {
+                    action: isNewUser ? "signup" : "login",
+                    method: "otp",
+                    // Do NOT log the raw phone number (privacy)
+                    phone_prefix: (number || '').slice(0, 4),
+                    has_next_redirect: !!next,
+                });
+
                 // Clear cooldown so user can re-register cleanly later
                 localStorage.removeItem('code_requested_at');
 
@@ -101,12 +123,12 @@ function Verify() {
                 if (pendingDownload) {
                     const downloadData = JSON.parse(pendingDownload);
                     localStorage.removeItem('pendingDownload');
-                    
+
                     if (downloadData.url) {
                         // Redirect to the intended download URL
                         window.open(downloadData.url, '_blank');
                     }
-                    
+
                     // Always redirect to panel after successful verification
                     router.push('/panel');
                 } else if (next) {
@@ -143,10 +165,10 @@ function Verify() {
             localStorage.setItem('code_requested_at', now.toString());
             setCooldown(RESEND_INTERVAL);
             setError('');
-            
+
             // Clear the code field when resending
             setCode('');
-            
+
             // Refocus the input
             if (inputRef.current) {
                 inputRef.current.focus();

@@ -297,7 +297,7 @@
 @media (max-width: 600px) {
   .card-wrapper {
     margin: 3px auto; /* Center the card horizontally */
-    width: calc(100% - 16px); /* Control left/right spacing - adjust this value */
+    width: calc(100% - 1px); /* Control left/right spacing - adjust this value */
     max-width: 100%;
   }
 

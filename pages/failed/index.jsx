@@ -16,7 +16,7 @@ export default function Failed() {
         </p>
 
         <div style={{marginTop:25,backgroundColor:'lightgray'}}>
-          <Link href="/">بازگشت به صفحه اصلی</Link>
+          <Link href="/panel">بازگشت به پنل</Link>
         </div>
 
       </div>

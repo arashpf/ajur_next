@@ -4,39 +4,39 @@ import React, {
   useMemo,
   useCallback,
   useRef,
+  useLayoutEffect,
 } from "react";
 import PropTypes from "prop-types";
 import { useRouter } from "next/router";
 import Head from "next/head";
 import Script from "next/script";
+import Image from "next/image";
 import Styles from "../../styles/CategoriesWorkersIndex.module.css";
 import Grid from "@mui/material/Grid";
 import Box from "@mui/material/Box";
 import WorkerCard from "../../components/cards/WorkerCard";
 import Link from "next/link";
-// import WorkerFilter from "../../components/WorkerFilter";
 import FilterComponent from "../../components/filter/FilterComponent";
 import { useMediaQuery, useTheme } from "@mui/material";
 import Breadcrumbs from "@mui/material/Breadcrumbs";
 import HomeIcon from "@mui/icons-material/Home";
 import LocationOnIcon from "@mui/icons-material/LocationOn";
 import CategoryIcon from "@mui/icons-material/Category";
-import Button from "@mui/material/Button";
-import CircularProgress from "@mui/material/CircularProgress";
 import Alert from "@mui/material/Alert";
 import Skeleton from "@mui/material/Skeleton";
 import axios from "axios";
 import dynamic from "next/dynamic";
 import { getPersianCityName } from "../../components/util/cityNames";
+import { buildClientContext, fireSsrEvent } from "../../lib/ssrTrack";
+import { trackEvent } from "../../lib/track";
+import { isTrackingParam } from "../../lib/skipTrackingParams";
 
 const FileRequest = dynamic(() => import("../../components/request/FileRequest"), {
   ssr: false,
   loading: () => <div className="section-skeleton" />,
 });
 
-const MemoizedWorkerCard = React.memo(WorkerCard, (prevProps, nextProps) => {
-  return prevProps.worker.id === nextProps.worker.id;
-});
+const MemoizedWorkerCard = React.memo(WorkerCard);
 
 const CardSkeleton = () => (
   <Grid item xs={12} sm={6} md={4}>
@@ -53,7 +53,6 @@ const CardSkeleton = () => (
 function normalizePriceToIRR(price) {
   if (!price) return null;
   const n = String(price).replace(/[^0-9]/g, "");
-  // API sends Toman; schema.org expects IRR (Rial). 1 Toman = 10 Rial.
   return n ? String(Number(n) * 10) : null;
 }
 
@@ -129,6 +128,7 @@ function buildWorkersApiUrl({
   }
 
   Object.keys(query).forEach((key) => {
+    if (isTrackingParam(key)) return; 
     if (key.includes("_min") || key.includes("_max")) {
       apiUrl += `&${key}=${encodeURIComponent(getSingleParam(query[key]))}`;
     }
@@ -149,8 +149,6 @@ function buildWorkersApiUrl({
     apiUrl += `&sort_by=${field}&sort_order=${order}`;
   }
 
-  // Forward every remaining filter param to the API
-  // (predefine, tick, dynamic fields). Routing / UI-only keys are excluded.
   const skipKeys = new Set([
     "categories",
     "slug",
@@ -169,6 +167,7 @@ function buildWorkersApiUrl({
 
   Object.keys(query).forEach((key) => {
     if (skipKeys.has(key)) return;
+    if (isTrackingParam(key)) return; 
     const rawValue = query[key];
     const value = Array.isArray(rawValue) ? rawValue[0] : rawValue;
     if (value === undefined || value === null || value === "") return;
@@ -176,6 +175,62 @@ function buildWorkersApiUrl({
   });
 
   return apiUrl;
+}
+
+// ─── NEW: build a clean filters object from URL query for analytics ───
+function buildFiltersFromQuery(query = {}, finalNeighborhoodId = "") {
+  const filters = {};
+
+  // Neighborhoods
+  const neighborhoodSource = finalNeighborhoodId || query.neighborhoods;
+  if (neighborhoodSource) {
+    const ids = String(neighborhoodSource)
+      .split(",")
+      .map((s) => s.trim())
+      .filter(Boolean);
+    if (ids.length > 0) filters.neighborhoods = ids;
+  }
+
+  // Features
+  if (query.features) {
+    const features = Array.isArray(query.features)
+      ? query.features
+      : [query.features];
+    if (features.length > 0) filters.features = features;
+  }
+
+  // Sort
+  if (query.sortBy && query.sortBy !== "newest") {
+    filters.sort_by = query.sortBy;
+  }
+
+  // Range and field values
+  const skipKeys = new Set([
+    "categories",
+    "slug",
+    "city",
+    "catname",
+    "page",
+    "per_page",
+    "categoryId",
+    "category_id",
+    "features",
+    "neighborhoods",
+    "sortBy",
+    "sort_by",
+    "sort_order",
+  ]);
+
+  Object.keys(query).forEach((key) => {
+    if (skipKeys.has(key)) return;
+    if (isTrackingParam(key)) return; 
+    const raw = query[key];
+    const value = Array.isArray(raw) ? raw[0] : raw;
+    if (value === undefined || value === null || value === "") return;
+    filters[key] = value;
+  });
+
+  return filters;
 }
 
 function stripTrailingSlash(url) {
@@ -240,8 +295,6 @@ function buildOrganizationJsonLd() {
   };
 }
 
-// Any query param other than `categories` / `slug` makes the URL non-canonical.
-// Used both on the server (SSR) and on the client (after filter changes).
 function hasNonCanonicalQuery(query) {
   if (!query) return false;
   return Object.keys(query).some(
@@ -269,6 +322,7 @@ const SingleCategory = ({
   cityFromServer,
   nameFromServer,
   neighborhoodFromServer,
+  __clientIp = null,
 }) => {
   const router = useRouter();
   const routerSlugArray = getSlugArray(router.query?.slug);
@@ -293,9 +347,6 @@ const SingleCategory = ({
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
 
-  const firstClientFetchSkippedRef = useRef(false);
-  const hasRestoredScrollRef = useRef(false);
-
   const [workersState, set_workers] = useState(initialWorkers);
   const [SpecialworkersState, set_special_workers] = useState(initialSpecialWorkers);
   const [pagination, setPagination] = useState(initialPagination);
@@ -311,13 +362,27 @@ const SingleCategory = ({
   const [neighborhoods] = useState(initialNeighborhoods);
   const [seoNeighborhoods, setSeoNeighborhoods] = useState(initialSeoNeighborhoods);
 
-  const [activeFilterCount, setActiveFilterCount] = useState(0);
-  const [y_scroll, set_y_scroll] = useState(0);
+  const [activeFilterCount] = useState(0);
 
-  // ---- Fix 1: robots meta.
-  // SSR decides the initial value from context.query. After hydration, if the
-  // URL gains/loses query params (user applies a filter, clicks a page link),
-  // recompute on the client so Google sees the correct meta even when it runs JS.
+  const [pendingNeighborhood, setPendingNeighborhood] = useState(null);
+  const [routeChanging, setRouteChanging] = useState(false);
+  const [showSpinner, setShowSpinner] = useState(false);
+
+  const [isClient, setIsClient] = useState(false);
+
+  const [hydratedKey, setHydratedKey] = useState("ssr");
+
+  const isFirstRender = useRef(true);
+
+  // AbortController ref — used to cancel in-flight filter fetches
+  // when the component unmounts or a new fetch supersedes the old one.
+  const filterAbortRef = useRef(null);
+
+  useEffect(() => {
+    setIsClient(true);
+    setHydratedKey("csr");
+  }, []);
+
   const isNonCanonical = useMemo(() => {
     if (router.isReady) {
       return hasNonCanonicalQuery(router.query);
@@ -402,22 +467,6 @@ const SingleCategory = ({
     hasQueryNeighborhood,
   ]);
 
-  const scrollStorageKey = useMemo(() => {
-    return `category_scroll:${city}:${slugName}:${routeNeighborhoodSlug}:${JSON.stringify(
-      cleanRouterQuery(router.query || {})
-    )}`;
-  }, [city, slugName, routeNeighborhoodSlug, router.query]);
-
-  const appliedFiltersForWorkerFilter = useMemo(() => {
-    if (neighborhoodId) {
-      return {
-        ...(router.query || {}),
-        neighborhoods: String(neighborhoodId),
-      };
-    }
-    return router.query || {};
-  }, [router.query, neighborhoodId]);
-
   const finalSeoNeighborhoods = useMemo(() => {
     if (seoNeighborhoods && seoNeighborhoods.length > 0) {
       return seoNeighborhoods;
@@ -433,61 +482,40 @@ const SingleCategory = ({
     }));
   }, [seoNeighborhoods, neighborhoods, city, slugName, persian_category_name]);
 
-  const saveCurrentScroll = useCallback(() => {
-    if (typeof window === "undefined") return;
-    try {
-      sessionStorage.setItem(scrollStorageKey, String(window.scrollY || 0));
-    } catch (e) {
-      console.error("Scroll save error:", e);
-    }
-  }, [scrollStorageKey]);
-
   const handleCardClick = () => {
     saveCurrentScroll();
   };
 
   useEffect(() => {
-    if (!router.isReady) return;
-
-    const onRouteChangeStart = () => {
-      saveCurrentScroll();
+    const handleStart = () => setRouteChanging(true);
+    const handleComplete = () => {
+      setRouteChanging(false);
+      setPendingNeighborhood(null);
+    };
+    const handleError = () => {
+      setRouteChanging(false);
+      setPendingNeighborhood(null);
     };
 
-    router.events.on("routeChangeStart", onRouteChangeStart);
-    window.addEventListener("beforeunload", saveCurrentScroll);
+    router.events.on("routeChangeStart", handleStart);
+    router.events.on("routeChangeComplete", handleComplete);
+    router.events.on("routeChangeError", handleError);
 
     return () => {
-      router.events.off("routeChangeStart", onRouteChangeStart);
-      window.removeEventListener("beforeunload", saveCurrentScroll);
+      router.events.off("routeChangeStart", handleStart);
+      router.events.off("routeChangeComplete", handleComplete);
+      router.events.off("routeChangeError", handleError);
     };
-  }, [router.isReady, router.events, saveCurrentScroll]);
+  }, [router]);
 
   useEffect(() => {
-    if (!router.isReady) return;
-    if (hasRestoredScrollRef.current) return;
-    if (filterLoading) return;
-
-    const workersReady = (workersState && workersState.length > 0) || error;
-    if (!workersReady) return;
-
-    const savedScroll = sessionStorage.getItem(scrollStorageKey);
-    if (!savedScroll) return;
-
-    const scrollY = parseInt(savedScroll, 10);
-    if (!Number.isFinite(scrollY)) return;
-
-    hasRestoredScrollRef.current = true;
-
-    requestAnimationFrame(() => {
-      requestAnimationFrame(() => {
-        window.scrollTo(0, scrollY);
-      });
-    });
-  }, [router.isReady, filterLoading, workersState, error, scrollStorageKey]);
-
-  useEffect(() => {
-    hasRestoredScrollRef.current = false;
-  }, [scrollStorageKey]);
+    if (!routeChanging) {
+      setShowSpinner(false);
+      return;
+    }
+    const t = setTimeout(() => setShowSpinner(true), 150);
+    return () => clearTimeout(t);
+  }, [routeChanging]);
 
   useEffect(() => {
     if (!router.isReady) return;
@@ -520,16 +548,24 @@ const SingleCategory = ({
     router,
   ]);
 
+  // ---- Data Fetching ----
   useEffect(() => {
     if (!router.isReady) return;
     if (!slugName || !city) return;
 
-    if (!firstClientFetchSkippedRef.current) {
-      firstClientFetchSkippedRef.current = true;
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
       return;
     }
 
     if (routeNeighborhoodSlug && hasMultipleNeighborhoods) return;
+
+    // Cancel any previous in-flight filter fetch before starting a new one.
+    if (filterAbortRef.current) {
+      filterAbortRef.current.abort();
+    }
+    const controller = new AbortController();
+    filterAbortRef.current = controller;
 
     const fetchFilteredWorkers = async () => {
       try {
@@ -554,10 +590,16 @@ const SingleCategory = ({
 
         const response = await axios.get(apiUrl, {
           timeout: 10000,
+          signal: controller.signal,
           headers: { Accept: "application/json" },
         });
 
         const data = response.data;
+
+        // ─── Compute result counts for analytics ───
+        const resultCount =
+          data.pagination?.total_count ?? (data.workers || []).length;
+        const returnedCount = (data.workers || []).length;
 
         set_workers(data.workers || []);
         set_special_workers(data.special_workers || []);
@@ -580,16 +622,53 @@ const SingleCategory = ({
             id: data.filters_applied.category_id,
           });
         }
+
+        // ─── Analytics: filter_apply (with result counts) ───
+        // Fire AFTER the API responds, so we know how many properties matched.
+        // Fires on every router.asPath change (after the first render) — i.e.,
+        // every user-triggered filter change.
+        const filtersForAnalytics = buildFiltersFromQuery(query, finalNeighborhoodId);
+        const isReset = Object.keys(filtersForAnalytics).length === 0;
+
+        trackEvent(
+          "filter_apply",
+          {
+            city_slug: city,
+            category_slug: slugName,
+            filters: filtersForAnalytics,
+            filters_count: Object.keys(filtersForAnalytics).length,
+            results_count: resultCount,
+            returned_count: returnedCount,
+            has_neighborhoods: !!filtersForAnalytics.neighborhoods,
+            has_features: !!filtersForAnalytics.features,
+            has_sort: !!filtersForAnalytics.sort_by,
+            is_reset: isReset,
+          },
+          __clientIp
+        );
       } catch (e) {
+        // Aborted fetches are not errors — ignore them silently.
+        if (axios.isCancel?.(e) || e?.name === "CanceledError" || e?.code === "ERR_CANCELED") {
+          return;
+        }
         console.error("Client filter fetch error:", e);
         setError(true);
         setErrorMessage("خطا در دریافت اطلاعات. لطفا بعدا تلاش کنید.");
       } finally {
-        setFilterLoading(false);
+        // Only flip the loading flag if this is still the active fetch.
+        if (filterAbortRef.current === controller) {
+          setFilterLoading(false);
+        }
       }
     };
 
     fetchFilteredWorkers();
+
+    return () => {
+      // On unmount or dependency change, abort the in-flight request so
+      // it doesn't keep the API connection open while we navigate away.
+      controller.abort();
+    };
   }, [
     router.isReady,
     router.asPath,
@@ -600,34 +679,9 @@ const SingleCategory = ({
     queryNeighborhood,
     neighborhoodId,
     pagination.per_page,
+    __clientIp,
   ]);
 
-  useEffect(() => {
-    const handleScroll = () => {
-      set_y_scroll(window.scrollY);
-    };
-
-    window.addEventListener("scroll", handleScroll, { passive: true });
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
-
-  const handleCategoryChange = (newCategory) => {
-    if (newCategory) {
-      router.push(
-        {
-          pathname: `/${city}/${newCategory.eng_name}`,
-        },
-        undefined,
-        { scroll: false }
-      );
-    } else {
-      router.push(`/${city}`, undefined, { scroll: false });
-    }
-  };
-
-  // ---- Fix 2: pagination.
-  // Given a page number, return the shallow router query (page=1 removes the
-  // param so the clean URL is preserved). Also builds the href for the <a>.
   const buildPageHref = useCallback(
     (pageNum) => {
       const basePath = routeNeighborhoodSlug
@@ -649,7 +703,6 @@ const SingleCategory = ({
     [city, slugName, routeNeighborhoodSlug, router.query]
   );
 
-  // Go to a specific page via AJAX, then sync URL shallowly.
   const goToPage = useCallback(
     async (pageNum) => {
       if (pageNum < 1) return;
@@ -695,11 +748,9 @@ const SingleCategory = ({
           }
         );
 
-        // Sync URL so it's shareable + back/forward works.
         const href = buildPageHref(pageNum);
         router.push(href, undefined, { shallow: true, scroll: false });
 
-        // Scroll back to top of grid for UX.
         if (typeof window !== "undefined") {
           window.scrollTo({ top: 0, behavior: "smooth" });
         }
@@ -936,6 +987,38 @@ const SingleCategory = ({
 
   const orgJsonLd = useMemo(() => buildOrganizationJsonLd(), []);
 
+  const renderSpinner = () => (
+    <div
+      className="spinnerImageView"
+      style={{
+        minHeight: "60vh",
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
+        backgroundColor: "white",
+      }}
+    >
+      <div
+        style={{
+          position: "relative",
+          width: "400px",
+          height: "400px",
+          marginBottom: "20px",
+        }}
+      >
+        <Image
+          src="/logo/ajour-gif.gif"
+          alt="در حال بارگذاری"
+          fill
+          sizes="400px"
+          style={{ objectFit: "contain" }}
+          priority
+        />
+      </div>
+    </div>
+  );
+
   const renderBreadcrumb = () => {
     const displayName = persian_category_name || slugName || "آگهی";
     const cityName = persian_city || city || "تهران";
@@ -1045,6 +1128,9 @@ const SingleCategory = ({
           availableNeighborhoods={neighborhoods}
           availableFeatures={initialFeatures}
           top={70}
+          clientIp={__clientIp}
+          currentCategorySlug={slugName}
+          currentCitySlug={city}
         />
       </div>
     );
@@ -1078,7 +1164,7 @@ const SingleCategory = ({
               xs={12}
               sm={6}
               md={4}
-              key={`worker-${worker.id}`}
+              key={`special-${hydratedKey}-${worker.id}`}
               sx={{ display: "flex", justifyContent: "center" }}
             >
               <Link
@@ -1086,7 +1172,6 @@ const SingleCategory = ({
                 passHref
                 scroll={false}
                 style={{ width: "100%", textDecoration: "none" }}
-                onClick={handleCardClick}
                 prefetch={false}
               >
                 <MemoizedWorkerCard worker={worker} />
@@ -1128,7 +1213,7 @@ const SingleCategory = ({
               xs={12}
               sm={6}
               md={4}
-              key={`worker-${worker.id}`}
+              key={`worker-${hydratedKey}-${worker.id}`}
               sx={{ display: "flex", justifyContent: "center" }}
             >
               <Link
@@ -1136,7 +1221,6 @@ const SingleCategory = ({
                 passHref
                 scroll={false}
                 style={{ width: "100%", textDecoration: "none" }}
-                onClick={handleCardClick}
                 prefetch={false}
               >
                 <MemoizedWorkerCard worker={worker} />
@@ -1181,9 +1265,6 @@ const SingleCategory = ({
     );
   };
 
-  // ---- Fix 2: pagination strip.
-  // Real <a href> links so crawlers can walk every page. Clicks do an AJAX
-  // fetch and sync the URL shallowly for UX + shareability.
   const renderPagination = () => {
     const current = pagination.current_page || 1;
     const total = pagination.total_pages || 1;
@@ -1243,7 +1324,6 @@ const SingleCategory = ({
           px: { xs: 2, sm: 3 },
         }}
       >
-        {/* Prev */}
         <Link href={buildPageHref(Math.max(1, current - 1))} passHref legacyBehavior>
           <Box
             component="a"
@@ -1266,7 +1346,6 @@ const SingleCategory = ({
           </Link>
         ))}
 
-        {/* Next */}
         <Link
           href={buildPageHref(Math.min(total, current + 1))}
           passHref
@@ -1302,7 +1381,6 @@ const SingleCategory = ({
         <title>{seoTitle}</title>
         <meta name="description" content={seoDescription} />
 
-        {/* Fix 1: index only clean URLs; noindex whenever a query param is present. */}
         <meta name="robots" content={robotsMeta} />
         <meta name="googlebot" content={robotsMeta} />
 
@@ -1411,28 +1489,33 @@ const SingleCategory = ({
             )}
           </Box>
 
-          <Box sx={{ flexGrow: 1, py: 3, px: { xs: 2, sm: 3 } }}>
-            <Grid
-              container
-              spacing={{ xs: 2, sm: 3 }}
-              justifyContent={{ xs: "center", sm: "flex-start" }}
-            >
-              {renderSpecialWorkers()}
-            </Grid>
-          </Box>
+          {showSpinner ? (
+            renderSpinner()
+          ) : (
+            <>
+              <Box sx={{ flexGrow: 1, py: 3, px: { xs: 2, sm: 3 } }}>
+                <Grid
+                  container
+                  spacing={{ xs: 2, sm: 3 }}
+                  justifyContent={{ xs: "center", sm: "flex-start" }}
+                >
+                  {renderSpecialWorkers()}
+                </Grid>
+              </Box>
 
-          <Box sx={{ flexGrow: 1, py: 3, px: { xs: 2, sm: 3 } }}>
-            <Grid
-              container
-              spacing={{ xs: 2, sm: 3 }}
-              justifyContent={{ xs: "center", sm: "flex-start" }}
-            >
-              {renderWorkers()}
-            </Grid>
-          </Box>
+              <Box sx={{ flexGrow: 1, py: 3, px: { xs: 2, sm: 3 } }}>
+                <Grid
+                  container
+                  spacing={{ xs: 2, sm: 3 }}
+                  justifyContent={{ xs: "center", sm: "flex-start" }}
+                >
+                  {renderWorkers()}
+                </Grid>
+              </Box>
 
-          {/* Fix 2: pagination strip below the grid */}
-          {!filterLoading && !error && workersState.length > 0 && renderPagination()}
+              {!filterLoading && !error && workersState.length > 0 && renderPagination()}
+            </>
+          )}
 
           <Box
             sx={{
@@ -1441,35 +1524,46 @@ const SingleCategory = ({
               gap: 1.5,
               mt: 2,
               direction: "rtl",
+              opacity: routeChanging ? 0.5 : 1,
+              pointerEvents: routeChanging ? "none" : "auto",
+              transition: "opacity 0.2s ease",
             }}
           >
-            {finalSeoNeighborhoods.map((item, index) => (
-              <Link
-                key={index}
-                href={`/${item.city_slug}/${item.cat_slug}/${item.neighborhood_slug}`}
-                style={{ textDecoration: "none" }}
-              >
-                <Box
-                  sx={{
-                    px: 2,
-                    py: 1,
-                    borderRadius: "8px",
-                    backgroundColor: "#f5f5f5",
-                    border: "1px solid #e0e0e0",
-                    fontSize: "13.5px",
-                    color: "#333",
-                    transition: "all 0.2s ease",
-                    "&:hover": {
-                      backgroundColor: "#b92a31",
-                      color: "#fff",
-                      borderColor: "#b92a31",
-                    },
-                  }}
+            {finalSeoNeighborhoods.map((item, index) => {
+              const isPending =
+                routeChanging &&
+                pendingNeighborhood === item.neighborhood_slug;
+
+              return (
+                <Link
+                  key={index}
+                  href={`/${item.city_slug}/${item.cat_slug}/${item.neighborhood_slug}`}
+                  style={{ textDecoration: "none" }}
+                  onClick={() => setPendingNeighborhood(item.neighborhood_slug)}
                 >
-                  {item.cat_name} در {item.neighborhood_name}
-                </Box>
-              </Link>
-            ))}
+                  <Box
+                    sx={{
+                      px: 2,
+                      py: 1,
+                      borderRadius: "8px",
+                      backgroundColor: isPending ? "#b92a31" : "#f5f5f5",
+                      border: "1px solid",
+                      borderColor: isPending ? "#b92a31" : "#e0e0e0",
+                      fontSize: "13.5px",
+                      color: isPending ? "#fff" : "#333",
+                      transition: "all 0.2s ease",
+                      "&:hover": {
+                        backgroundColor: "#b92a31",
+                        color: "#fff",
+                        borderColor: "#b92a31",
+                      },
+                    }}
+                  >
+                    {item.cat_name} در {item.neighborhood_name}
+                  </Box>
+                </Link>
+              );
+            })}
           </Box>
         </div>
       </div>
@@ -1494,6 +1588,7 @@ SingleCategory.propTypes = {
   cityFromServer: PropTypes.string,
   nameFromServer: PropTypes.string,
   neighborhoodFromServer: PropTypes.string,
+  __clientIp: PropTypes.string,
 };
 
 export async function getServerSideProps(context) {
@@ -1515,7 +1610,16 @@ export async function getServerSideProps(context) {
     };
   }
 
-  // Fix 1: compute once on the server so the initial HTML is correct.
+  context.res.setHeader(
+    'Cache-Control',
+    'public, s-maxage=60, stale-while-revalidate=120'
+  );
+
+  const pageUrl = `https://ajur.app/${city}/${catname}${
+    neighborhoodSlug ? `/${neighborhoodSlug}` : ""
+  }`;
+  const clientContext = buildClientContext(context, pageUrl);
+
   const initialNonCanonical = hasNonCanonicalQuery(query);
 
   let baseData = null;
@@ -1609,6 +1713,27 @@ export async function getServerSideProps(context) {
         }
       : {};
 
+    // ─── Analytics: fire category_view (fire-and-forget) ───
+    if (clientContext.clientIp || clientContext.userAgent) {
+      fireSsrEvent(
+        "category_view",
+        {
+          city_slug: city,
+          category_slug: catname,
+          neighborhood_slug: neighborhoodSlug || null,
+          page,
+          results_count: initialPagination.total_count || 0,
+        },
+        clientContext
+      ).catch((err) => {
+        // eslint-disable-next-line no-console
+        console.warn(
+          "[ssr] category_view failed:",
+          err?.response?.status || err?.message || err
+        );
+      });
+    }
+
     return {
       props: {
         initialWorkers,
@@ -1625,6 +1750,7 @@ export async function getServerSideProps(context) {
         cityFromServer: city,
         nameFromServer: catname,
         neighborhoodFromServer: neighborhoodSlug,
+        __clientIp: clientContext.clientIp,
       },
     };
   } catch (e) {
@@ -1651,6 +1777,7 @@ export async function getServerSideProps(context) {
         cityFromServer: city,
         nameFromServer: catname,
         neighborhoodFromServer: neighborhoodSlug,
+        __clientIp: clientContext.clientIp,
       },
     };
   }

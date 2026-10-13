@@ -1,7 +1,26 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
-  
+
+  experimental: {
+    optimizePackageImports: [
+      'lucide-react',
+      '@mui/material',
+      '@mui/icons-material',
+      '@mui/lab',
+      '@mui/system',
+      '@mui/styles',
+      '@mui/x-date-pickers',
+      'react-icons',
+      'date-fns',
+      'recharts',
+      'react-spinners',
+      'react-spinners-kit',
+      'react-bootstrap',
+      '@react-three/drei',
+    ],
+  },
+
   images: {
     remotePatterns: [
       {
@@ -38,9 +57,9 @@ const nextConfig = {
       },
     ],
   },
-  
+
   trailingSlash: false,
-  
+
   async headers() {
     return [
       {
@@ -62,7 +81,7 @@ const nextConfig = {
       },
     ];
   },
-  
+
   async redirects() {
     return [];
   },

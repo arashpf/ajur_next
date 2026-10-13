@@ -142,54 +142,55 @@ const Card = React.memo(({ card, index }) => {
 
 Card.displayName = "Card";
 
-export default function BestSection({ englishCity }) {
+export default function BestSection({ englishCity,persianCity }) {
   const cards = useMemo(
     () => [
-      {
-        id: 1,
-        title: "بهترین املاک",
-        description: "برترین آژانس های املاک شهر شما.",
-        icon: "estate",
-        link: "",
-      },
+      // ⚠️ Temporarily commented out — keep for later
+      // {
+      //   id: 1,
+      //   title: "بهترین املاک",
+      //   description: "برترین آژانس های املاک شهر شما.",
+      //   icon: "estate",
+      //   link: "",
+      // },
       {
         id: 2,
-        title: "بهترین مشاوران",
-        description: "مشاوران برتر و باتجربه آجر",
+        title: " بهترین مشاوران "+persianCity,
+        description: "مشاوران برتر و باتجربه آجر در شهر "+persianCity,
         icon: "agent",
         link: englishCity ? `/agents/${englishCity}` : "/agents",
       },
-      {
-        id: 3,
-        title: "بهترین دپارتمان‌ها",
-        description: "دسترسی به بهترین دپارتمان‌های املاک",
-        icon: "department",
-        link: "",
-      },
-      {
-        id: 4,
-        title: "برترین سازنده ها",
-        description: "برترین سازنده های حوزه املاک",
-        icon: "clock",
-        disabled: true,
-        soonLabel: "به زودی !",
-      },
-      {
-        id: 5,
-        title: "بهترین مشاغل",
-        description: "بهترین کسب‌وکارهای مرتبط با املاک",
-        icon: "clock",
-        disabled: true,
-        soonLabel: "به زودی !",
-      },
-      {
-        id: 6,
-        title: "برترین کارشناسان",
-        description: "مشاوران و کارشناسان خبره",
-        icon: "clock",
-        disabled: true,
-        soonLabel: "به زودی !",
-      },
+      // {
+      //   id: 3,
+      //   title: "بهترین دپارتمان‌ها",
+      //   description: "دسترسی به بهترین دپارتمان‌های املاک",
+      //   icon: "department",
+      //   link: "",
+      // },
+      // {
+      //   id: 4,
+      //   title: "برترین سازنده ها",
+      //   description: "برترین سازنده های حوزه املاک",
+      //   icon: "clock",
+      //   disabled: true,
+      //   soonLabel: "به زودی !",
+      // },
+      // {
+      //   id: 5,
+      //   title: "بهترین مشاغل",
+      //   description: "بهترین کسب‌وکارهای مرتبط با املاک",
+      //   icon: "clock",
+      //   disabled: true,
+      //   soonLabel: "به زودی !",
+      // },
+      // {
+      //   id: 6,
+      //   title: "برترین کارشناسان",
+      //   description: "مشاوران و کارشناسان خبره",
+      //   icon: "clock",
+      //   disabled: true,
+      //   soonLabel: "به زودی !",
+      // },
     ],
     [englishCity]
   );
@@ -205,7 +206,7 @@ export default function BestSection({ englishCity }) {
     >
       <div className="max-w-7xl mx-auto">
         <div className="flex justify-center">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 justify-items-center">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 justify-items-center w-full">
             {cards.map((card, index) => (
               <Card key={card.id} card={card} index={index} />
             ))}

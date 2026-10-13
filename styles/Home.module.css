@@ -11,13 +11,13 @@
   width: 100%;
   max-width: 1400px;
   margin: 0 auto;
-  padding: 0 20px;
+  padding: 0 3px;              /* ← mobile only: was 20px */
   box-sizing: border-box;
 }
 
 @media (min-width: 768px) {
   .container {
-    padding: 0 32px;
+    padding: 0 20px;            /* ← tablet keeps the original look */
   }
 }
 
@@ -675,5 +675,19 @@
   .neiSwiper :global(.swiper-button-prev),
   .neiSwiper :global(.swiper-button-next) {
     display: none;
+  }
+}
+
+
+.heroHeading {
+  padding-left: 24px;
+  padding-right: 24px;
+  margin: 0 auto;
+}
+
+@media (min-width: 768px) {
+  .heroHeading {
+    padding-left: 32px;
+    padding-right: 32px;
   }
 }

@@ -11,7 +11,7 @@ const CertificatesFooter = (props) => {
         gap: "8px",                  // space between text and logo
       }}
     >
-      <p>this section for certifications</p>
+      <p>مجوز ها و نماد ها</p>
 
       <a
         referrerPolicy="origin"

@@ -12,22 +12,23 @@
  * The main landing section with:
  * - Red gradient background
  * - App title and tagline (Persian text)
- * - Download buttons for Android (direct, Myket, Bazaar) and iOS (PWA)
+ * - Download button for Bazaar (Android) — direct/Myket/PWA disabled
  * - Phone mockup showing the app
  * - Scroll-down indicator
  *
  * PROPS:
  * - scrollToSection: function(id) - Scrolls to a section by ID
- *
- * CUSTOMIZATION:
- * - Update download button links in the href attributes
- * - Modify colors in the gradient classes
+ * - onDirectDownload: function(url, type) - Handles download clicks
+ * - onDownloadAction: function(type) - Handles PWA/install actions
+ * - isIOS: boolean
+ * - isStandalone: boolean
+ * - hasRef: boolean
  *
  * =============================================================================
  */
 
 import PhoneMockup from "./PhoneMockup"
-import { Apple, Smartphone, Download, ChevronDown } from "./Icons"
+import { Smartphone, ChevronDown } from "./Icons"
 
 export default function HeroSection({ scrollToSection, onDirectDownload, onDownloadAction, isIOS, isStandalone, hasRef }) {
   return (
@@ -61,23 +62,33 @@ export default function HeroSection({ scrollToSection, onDirectDownload, onDownl
               <div className="h-[1px] bg-white/30 flex-1"></div>
             </div>
 
-            {/* Download buttons grid */}
-            <div className="grid grid-cols-3 gap-3">
-              <DownloadButton icon={<Download className="w-5 h-5" />} text="لینک مستقیم" onClick={() => onDirectDownload && onDirectDownload("https://api.ajur.app/download/ajur.apk", "direct")} />
+            {/* Download buttons - only Bazaar is active */}
+            <div className="grid grid-cols-1 gap-3">
+              {/* --- لینک مستقیم (APK) - غیرفعال --- */}
+              {/* <DownloadButton icon={<Download className="w-5 h-5" />} text="لینک مستقیم" onClick={() => onDirectDownload && onDirectDownload("https://api.ajur.app/download/ajur.apk", "direct")} /> */}
+
+              {/* --- مایکت - غیرفعال --- */}
               {/* <DownloadButton icon={<Smartphone className="w-5 h-5" />} text="مایکت" highlight onClick={() => onDirectDownload && onDirectDownload("https://myket.ir/app/com.Ajour", "myket")} /> */}
-              <DownloadButton icon={<Smartphone className="w-5 h-5" />} text="بازار" highlight green onClick={() => onDirectDownload && onDirectDownload("https://cafebazaar.ir/app/com.Ajour", "bazaar")} />
+
+              {/* --- بازار - فعال --- */}
+              <DownloadButton
+                icon={<Smartphone className="w-5 h-5" />}
+                text="دانلود از کافه بازار"
+                highlight
+                green
+                onClick={() => onDirectDownload && onDirectDownload("https://cafebazaar.ir/app/com.Ajour", "bazaar")}
+              />
             </div>
           </div>
 
-          {/* iOS Downloads Section */}
-          <div className="w-full max-w-md mt-1 animate-fade-in-left animation-delay-400">
+          {/* --- iOS / PWA Section - غیرفعال --- */}
+          {/* <div className="w-full max-w-md mt-1 animate-fade-in-left animation-delay-400">
             <div className="flex items-center gap-4 mb-4 justify-center md:justify-start">
               <span className="text-lg opacity-90">دانلود نسخه ios</span>
               <div className="h-[1px] bg-white/30 flex-1"></div>
             </div>
 
             <div className="w-full">
-              {/* HINT: Add href="your-pwa-link" to make this functional */}
               <button
                 className="w-full bg-white text-gray-900 rounded-xl py-3 px-6 flex items-center justify-center gap-3 hover:bg-gray-100 transition-colors shadow-lg group"
                 onClick={() => onDownloadAction && onDownloadAction('pwa')}
@@ -88,7 +99,7 @@ export default function HeroSection({ scrollToSection, onDirectDownload, onDownl
                 <span className="text-sm text-gray-500 font-medium group-hover:text-gray-700">نسخه وب</span>
               </button>
             </div>
-          </div>
+          </div> */}
         </div>
 
         {/* Phone Mockup - full on md+, clipped top-half on mobile */}

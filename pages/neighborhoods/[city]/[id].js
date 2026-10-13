@@ -444,20 +444,20 @@ const WorkerSingle = (props) => {
 
   const renderRelatedAgents  = useCallback(() => {
     if (!Array.isArray(related_agents) || related_agents.length === 0) {
-      reeturn ();
-      // return (
-      //   <div
-      //     style={{
-      //       textAlign: "center",
-      //       padding: "40px 20px",
-      //       backgroundColor: "#f9f9f9",
-      //       borderRadius: "8px",
-      //       margin: "20px 0",
-      //     }}
-      //   >
-      //     <p style={{ color: "#666", fontSize: "16px" }}>مشاور فعالی برای این محله وجود ندارد</p>
-      //   </div>
-      // );
+      
+      return (
+        <div
+          style={{
+            textAlign: "center",
+            padding: "40px 20px",
+            backgroundColor: "#f9f9f9",
+            borderRadius: "8px",
+            margin: "20px 0",
+          }}
+        >
+          <p style={{ color: "#666", fontSize: "16px" }}>مشاور فعالی برای این محله وجود ندارد</p>
+        </div>
+      );
     }
 
     return (

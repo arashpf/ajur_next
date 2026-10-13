@@ -1,572 +1,697 @@
-.wrapper {
-  margin-top: 0px;
-  position: relative;
-  width: 100%;
-}
+/* ============================================================
+   WorkerMedia.module.css
+   ============================================================ */
 
-.mediaContainer {
-  width: 100%;
-  border-radius: 12px;
-  overflow: hidden;
-}
-
-.mainImageWrapper {
-  position: relative;
-  width: 100%;
-}
-
-.swiperContainer {
-  width: 100%;
-  height: 400px;
-  position: relative;
-  overflow: hidden;
-}
-
-/* Image container with grab cursor */
-.imageContainer {
-  width: 100%;
-  height: 100%;
-  overflow: hidden;
-  position: relative;
-  cursor: grab;
-  user-select: none;
-  -webkit-user-select: none;
-  -moz-user-select: none;
-  -ms-user-select: none;
-  touch-action: pan-y pinch-zoom;
-  -webkit-tap-highlight-color: transparent;
-}
-
-.imageContainer.dragging {
-  cursor: grabbing;
-  touch-action: none;
-}
-
-/* Main image with object-position animation */
-.mainImage {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  border-radius: 12px;
-  transition: none;
-  will-change: transform, object-position;
-  pointer-events: none;
-  display: block;
-  backface-visibility: hidden;
-  -webkit-backface-visibility: hidden;
-  transform: translateZ(0);
-  -webkit-transform: translateZ(0);
-}
-
-/* When dragging, maintain no transition */
-.mainImage.dragging {
-  transition: none;
-}
-
-/* Animation class for JS-driven animations */
-.mainImage.animating {
-  transition: none;
-}
-
-/* Ensure smooth performance during animation */
-.mainImage.animating {
-  pointer-events: none;
-}
-
-/* Restore pointer events when dragging */
-.mainImage.dragging {
-  pointer-events: none;
-}
-
-.iframe {
-  width: 100%;
-  height: 500px;
-  border: none;
-  border-radius: 12px;
-}
-
-.video {
-  width: 100%;
-  height: auto;
-  max-height: 400px;
-  object-fit: contain;
-  background-color: #000;
-  border-radius: 12px;
-  display: block;
-  margin: 0 auto;
-}
-
-/* Media Box Row */
-.mediaBoxRow {
-  display: flex;
-  gap: 12px;
-  margin-top: 16px;
-  justify-content: space-between;
-  flex-wrap: nowrap;
-}
-
-.mediaBox {
-  flex: 1;
-  min-width: 0;
-  background-color: #f9f9f9;
-  border-radius: 10px;
-  overflow: hidden;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
-  text-align: center;
-  padding: 2px;
-  cursor: pointer;
-  transition: transform 0.2s ease;
-}
-
-.mediaBox:hover {
-  transform: scale(1.03);
-}
-
-.thumbnailContainer {
-  position: relative;
-  width: 100%;
-  height: 100px;
-  margin-bottom: 1px;
-}
-
-.thumbnail {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  border-radius: 6px;
-  -webkit-backface-visibility: hidden;
-  backface-visibility: hidden;
-  -webkit-perspective: 1000;
-  perspective: 1000;
-}
-
-.mediaCounter {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -10%);
-  background-color: rgba(0, 0, 0, 0.3);
-  color: white;
-  padding: 4px 2px;
-  border-radius: 20px;
-  font-size: 13px;
-  font-weight: bold;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  min-width: 24px;
-  direction: rtl;
-}
-
-.mediaCounterVideo {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  background-color: rgba(0, 0, 0, 0.3);
-  color: white;
-  padding: 4px 10px;
-  border-radius: 20px;
-  font-size: 14px;
-  font-weight: bold;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  min-width: 24px;
-}
-
-/* Pagination Indicators */
-.paginationIndicators {
-  position: absolute;
-  bottom: 12px;
-  left: 50%;
-  transform: translateX(-50%);
-  display: flex;
-  gap: 6px;
-  z-index: 20;
-}
-
-.indicator {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background-color: rgba(255, 255, 255, 0.5);
-  cursor: pointer;
-  transition: all 0.3s ease;
-  border: 2px solid transparent;
-  padding: 0;
-}
-
-.indicator:hover {
-  background-color: rgba(255, 255, 255, 0.8);
-}
-
-.indicator.active {
-  width: 20px;
-  border-radius: 4px;
-  background-color: rgba(255, 255, 255, 0.95);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
-}
-
-/* Navigation Arrows */
-.navArrow {
-  background: rgba(255, 255, 255, 0.8);
-  border: none;
-  border-radius: 50%;
-  width: 40px;
-  height: 40px;
-  cursor: pointer;
-  font-size: 20px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-  transition: all 0.2s ease;
-  z-index: 10;
-}
-
-.navArrow:hover {
-  background: rgba(255, 255, 255, 0.95);
-  transform: translateY(-50%) scale(1.1);
-}
-
-/* Lightbox Styles */
-.lightboxOverlay {
-  position: fixed;
-  z-index: 4000;
-  left: 0;
-  top: 0;
-  right: 0;
-  bottom: 0;
-  background: #f5f5f5;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: flex-start;
-  padding: 20px;
-  overflow: auto;
-}
-
-.lightboxOverlay.fullscreen {
-  background: #000;
-  padding: 0;
-  overflow: hidden;
-}
-
-.lightboxCloseBtn {
-  position: fixed;
-  top: 20px;
-  right: 20px;
-  z-index: 4002;
-  background: #fff;
-  border: none;
-  border-radius: 50%;
-  width: 44px;
-  height: 44px;
-  cursor: pointer;
-  font-size: 28px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
-  transition: all 0.2s ease;
-}
-
-.lightboxCloseBtn:hover {
-  transform: scale(1.1);
-  background: #f0f0f0;
-}
-
-.lightboxImageContainer {
-  width: 100%;
-  height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  overflow: hidden;
-  cursor: grab;
-  touch-action: none;
-}
-
-.lightboxImageContainer.dragging {
-  cursor: grabbing;
-}
-
-.lightboxImage {
-  max-width: 95vw;
-  max-height: 95vh;
-  object-fit: contain;
-  transition: none;
-  will-change: transform, object-position;
-  pointer-events: none;
-  display: block;
-  backface-visibility: hidden;
-  -webkit-backface-visibility: hidden;
-  transform: translateZ(0);
-  -webkit-transform: translateZ(0);
-}
-
-.lightboxImage.dragging {
-  transition: none;
-  transform: scale(1.02);
-}
-
-.lightboxNavLeft,
-.lightboxNavRight {
-  position: fixed;
-  top: 50%;
-  transform: translateY(-50%);
-  z-index: 4002;
-  background: rgba(255, 255, 255, 0.9);
-  border: none;
-  border-radius: 4px;
-  width: 50px;
-  height: 50px;
-  cursor: pointer;
-  font-size: 28px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.2s ease;
-}
-
-.lightboxNavLeft {
-  left: 20px;
-}
-
-.lightboxNavRight {
-  right: 20px;
-}
-
-.lightboxNavLeft:hover,
-.lightboxNavRight:hover {
-  background: rgba(255, 255, 255, 1);
-  transform: translateY(-50%) scale(1.1);
-}
-
-.lightboxCounter {
-  position: fixed;
-  bottom: 20px;
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 4002;
-  background: rgba(0, 0, 0, 0.6);
-  color: #fff;
-  padding: 10px 20px;
-  border-radius: 4px;
-  font-size: 14px;
-  font-weight: 600;
-}
-
-/* Gallery grid for lightbox */
-.gridGallery {
-  margin-top: 40px;
-  margin-bottom: 40px;
-  width: 100%;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 12px;
-  align-items: flex-start;
-  justify-content: flex-start;
-}
-
-.gridItem {
-  display: inline-block;
-  overflow: hidden;
-  border-radius: 8px;
-  cursor: pointer;
-  background: #fff;
-  transition: all 0.25s ease;
-  box-shadow: 0 6px 18px rgba(0,0,0,0.06);
-  width: calc(50% - 12px);
-  height: 320px;
-}
-
-.gridItem:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 12px 30px rgba(0,102,204,0.12);
-}
-
-.gridImage {
-  display: block;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  -webkit-backface-visibility: hidden;
-  backface-visibility: hidden;
-  -webkit-perspective: 1000;
-  perspective: 1000;
-}
-
-/* No media fallback */
-.noMedia {
-  width: 100%;
-  height: 400px;
-  background-color: #f5f5f5;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 12px;
-}
-
-/* Responsive Design */
-@media (max-width: 1024px) {
-  .gridItem {
-    width: calc(50% - 12px);
-    height: 300px;
+   .wrapper {
+    margin-top: 0px;
+    position: relative;
+    width: 100%;
   }
-}
-
-@media (max-width: 768px) {
+  
+  .mediaContainer {
+    width: 100%;
+    border-radius: 12px;
+    overflow: hidden;
+  }
+  
+  .mainImageWrapper {
+    position: relative;
+    width: 100%;
+  }
+  
+  /* ------------------------------------------------------------
+     Base swiper container. No height here.
+     ------------------------------------------------------------ */
   .swiperContainer {
-    height: 280px;
+    width: 100%;
+    position: relative;
+    overflow: hidden;
+  }
+  
+  /* ------------------------------------------------------------
+     Image carousel — the visible image box owns the height
+     ------------------------------------------------------------ */
+  .imageContainer {
+    width: 100%;
+    height: 400px;
+    overflow: hidden;
+    position: relative;
+    cursor: grab;
+    user-select: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    touch-action: pan-y pinch-zoom;
+    -webkit-tap-highlight-color: transparent;
+  }
+  
+  .imageContainer.dragging {
+    cursor: grabbing;
+    touch-action: none;
   }
   
   .mainImage {
-    height: 280px;
-  }
-  
-  .iframe,
-  .video {
-    height: 280px;
-  }
-}
-
-@media (max-width: 600px) {
-  .gridItem {
-    width: 100%;
-    height: auto;
-    max-height: 60vh;
-    aspect-ratio: auto;
-  }
-  
-  .gridImage {
     width: 100%;
     height: 100%;
-    /* object-fit: cover; */
+    object-fit: cover;
+    border-radius: 12px;
+    transition: none;
+    will-change: transform, object-position;
+    pointer-events: none;
+    display: block;
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+    transform: translateZ(0);
+    -webkit-transform: translateZ(0);
+  }
+  
+  .mainImage.dragging,
+  .mainImage.animating {
+    transition: none;
+    pointer-events: none;
+  }
+  
+  /* ------------------------------------------------------------
+     Virtual tour iframe — height from aspect-ratio
+     ------------------------------------------------------------ */
+  .iframe {
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    max-height: 70vh;
+    min-height: 240px;
+    border: none;
+    border-radius: 12px;
+    display: block;
+    background: #000;
+  }
+  
+  /* ------------------------------------------------------------
+     Video wrapper — height from aspect-ratio
+     ------------------------------------------------------------ */
+  .videoWrapper {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    max-height: 70vh;
+    min-height: 220px;
+    background: #000;
+    border-radius: 12px;
+    overflow: hidden;
+  }
+  
+  /* ------------------------------------------------------------
+     Media thumbnail row
+     ------------------------------------------------------------ */
+  .mediaBoxRow {
+    display: flex;
+    gap: 12px;
+    margin-top: 16px;
+    justify-content: space-between;
+    flex-wrap: nowrap;
+  }
+  
+  .mediaBox {
+    flex: 1;
+    min-width: 0;
+    background-color: #f9f9f9;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+    text-align: center;
+    padding: 2px;
+    cursor: pointer;
+    transition: transform 0.2s ease;
+  }
+  
+  .mediaBox:hover {
+    transform: scale(1.03);
+  }
+  
+  .thumbnailContainer {
+    position: relative;
+    width: 100%;
+    height: 100px;
+    margin-bottom: 1px;
+  }
+  
+  .thumbnail {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 6px;
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+    -webkit-perspective: 1000;
+    perspective: 1000;
+  }
+  
+  .mediaCounter {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -10%);
+    background-color: rgba(0, 0, 0, 0.3);
+    color: white;
+    padding: 4px 2px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: bold;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-width: 24px;
+    direction: rtl;
+  }
+  
+  .mediaCounterVideo {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: rgba(0, 0, 0, 0.3);
+    color: white;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 14px;
+    font-weight: bold;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-width: 24px;
+  }
+  
+  /* ------------------------------------------------------------
+     Pagination indicators
+     ------------------------------------------------------------ */
+  .paginationIndicators {
+    position: absolute;
+    bottom: 12px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 6px;
+    z-index: 20;
+  }
+  
+  .indicator {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background-color: rgba(255, 255, 255, 0.5);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border: 2px solid transparent;
+    padding: 0;
+  }
+  
+  .indicator:hover {
+    background-color: rgba(255, 255, 255, 0.8);
+  }
+  
+  .indicator.active {
+    width: 20px;
+    border-radius: 4px;
+    background-color: rgba(255, 255, 255, 0.95);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  }
+  
+  /* ------------------------------------------------------------
+     Navigation arrows
+     ------------------------------------------------------------ */
+  .navArrow {
+    background: rgba(255, 255, 255, 0.8);
+    border: none;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    cursor: pointer;
+    font-size: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    transition: all 0.2s ease;
+    z-index: 10;
+  }
+  
+  .navArrow:hover {
+    background: rgba(255, 255, 255, 0.95);
+    transform: translateY(-50%) scale(1.1);
+  }
+  
+  /* ------------------------------------------------------------
+     Lightbox
+     ------------------------------------------------------------ */
+  .lightboxOverlay {
+    position: fixed;
+    z-index: 4000;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    background: #f5f5f5;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    padding: 20px;
+    overflow: auto;
+  }
+  
+  .lightboxOverlay.fullscreen {
+    background: #000;
+    padding: 0;
+    overflow: hidden;
+  }
+  
+  .lightboxCloseBtn {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 4002;
+    background: #fff;
+    border: none;
+    border-radius: 50%;
+    width: 44px;
+    height: 44px;
+    cursor: pointer;
+    font-size: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
+    transition: all 0.2s ease;
+  }
+  
+  .lightboxCloseBtn:hover {
+    transform: scale(1.1);
+    background: #f0f0f0;
+  }
+  
+  .lightboxImageContainer {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    cursor: grab;
+    touch-action: none;
+  }
+  
+  .lightboxImageContainer.dragging {
+    cursor: grabbing;
+  }
+  
+  .lightboxImage {
+    max-width: 95vw;
+    max-height: 95vh;
+    object-fit: contain;
+    transition: none;
+    will-change: transform, object-position;
+    pointer-events: none;
+    display: block;
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+    transform: translateZ(0);
+    -webkit-transform: translateZ(0);
+  }
+  
+  .lightboxImage.dragging {
+    transition: none;
+    transform: scale(1.02);
   }
   
   .lightboxNavLeft,
   .lightboxNavRight {
-    width: 40px;
-    height: 40px;
-    font-size: 24px;
+    position: fixed;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 4002;
+    background: rgba(255, 255, 255, 0.9);
+    border: none;
+    border-radius: 4px;
+    width: 50px;
+    height: 50px;
+    cursor: pointer;
+    font-size: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
   }
   
-  .lightboxCloseBtn {
-    width: 40px;
-    height: 40px;
-    font-size: 24px;
-  }
-}
-
-@media (max-width: 480px) {
-  .swiperContainer {
-    height: 330px;
+  .lightboxNavLeft {
+    left: 20px;
   }
   
-  .mainImage {
-    height: 330px;
+  .lightboxNavRight {
+    right: 20px;
   }
   
-  .iframe,
-  .video {
-    height: 330px;
+  .lightboxNavLeft:hover,
+  .lightboxNavRight:hover {
+    background: rgba(255, 255, 255, 1);
+    transform: translateY(-50%) scale(1.1);
   }
-}
-
-@media (min-width: 1400px) {
+  
+  .lightboxCounter {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 4002;
+    background: rgba(0, 0, 0, 0.6);
+    color: #fff;
+    padding: 10px 20px;
+    border-radius: 4px;
+    font-size: 14px;
+    font-weight: 600;
+  }
+  
+  /* ------------------------------------------------------------
+     Lightbox gallery grid
+     ------------------------------------------------------------ */
+  .gridGallery {
+    margin-top: 40px;
+    margin-bottom: 40px;
+    width: 100%;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    align-items: flex-start;
+    justify-content: flex-start;
+  }
+  
   .gridItem {
-    width: calc(33.333% - 12px);
+    display: inline-block;
+    overflow: hidden;
+    border-radius: 8px;
+    cursor: pointer;
+    background: #fff;
+    transition: all 0.25s ease;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.06);
+    width: calc(50% - 12px);
+    height: 320px;
   }
-}
-
-/* Performance optimization for animations */
-@media (prefers-reduced-motion: reduce) {
-  .mainImage.animating,
-  .lightboxImage {
-    animation: none;
-    transition: none;
+  
+  .gridItem:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 30px rgba(0, 102, 204, 0.12);
   }
+  
+  .gridImage {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+    -webkit-perspective: 1000;
+    perspective: 1000;
+  }
+  
+  /* ------------------------------------------------------------
+     No media fallback
+     ------------------------------------------------------------ */
+  .noMedia {
+    width: 100%;
+    height: 400px;
+    background-color: #f5f5f5;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 12px;
+  }
+  
+  /* ------------------------------------------------------------
+     Responsive
+     ------------------------------------------------------------ */
+  @media (max-width: 1024px) {
+    .gridItem {
+      width: calc(50% - 12px);
+      height: 300px;
+    }
+  }
+  
+  @media (max-width: 768px) {
+    .imageContainer {
+      height: 280px;
+    }
+  
+    .iframe {
+      min-height: 220px;
+    }
+  }
+  
+  @media (max-width: 600px) {
+    .gridItem {
+      width: 100%;
+      height: auto;
+      max-height: 60vh;
+      aspect-ratio: auto;
+    }
+  
+    .gridImage {
+      width: 100%;
+      height: 100%;
+    }
+  
+    .lightboxNavLeft,
+    .lightboxNavRight {
+      width: 40px;
+      height: 40px;
+      font-size: 24px;
+    }
+  
+    .lightboxCloseBtn {
+      width: 40px;
+      height: 40px;
+      font-size: 24px;
+    }
+  }
+  
+  @media (max-width: 480px) {
+    .imageContainer {
+      height: 260px;
+    }
+  
+    .iframe {
+      min-height: 200px;
+    }
+  }
+  
+  @media (min-width: 1400px) {
+    .gridItem {
+      width: calc(33.333% - 12px);
+    }
+  }
+  
+  /* ------------------------------------------------------------
+     Performance / accessibility
+     ------------------------------------------------------------ */
+  @media (prefers-reduced-motion: reduce) {
+    .mainImage.animating,
+    .lightboxImage {
+      animation: none;
+      transition: none;
+    }
+  }
+  
+  .mediaContainer,
+  .swiperContainer {
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  .mainImage.loading {
+    opacity: 0;
+  }
+  
+  .mainImage.loaded {
+    opacity: 1;
+    transition: opacity 0.3s ease;
+  }
+  
+  /* ------------------------------------------------------------
+     Video.js container and player sizing
+     ------------------------------------------------------------ */
+  .videoJsContainer {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    background: #000;
+    border-radius: 12px;
+    overflow: hidden;
+  }
+  
+  /* The <video-js> element created by Video.js */
+  .videoJsContainer :global(.ajur-videojs),
+  .videoJsContainer :global(.video-js) {
+    width: 100% !important;
+    height: 100% !important;
+    padding-top: 0 !important;
+    background: #000;
+    border-radius: 12px;
+    font-family: "iransans", Arial, sans-serif;
+  }
+  
+  .videoJsContainer :global(.video-js.vjs-fluid),
+  .videoJsContainer :global(.video-js.vjs-fill) {
+    padding-top: 0 !important;
+    height: 100% !important;
+  }
+  
+  .videoJsContainer :global(.video-js video) {
+    object-fit: contain !important;
+    width: 100% !important;
+    height: 100% !important;
+    background: #000;
+  }
+  
+  /* The <video> poster image (before play) */
+  .videoJsContainer :global(.vjs-poster) {
+    background-size: contain !important;
+    background-repeat: no-repeat !important;
+    background-position: center !important;
+    background-color: #000 !important;
+  }
+  
+  /* Big play button — center on the video area (not the control bar).
+     We subtract 20px (half of the 40px control bar height) from the vertical position. */
+  .videoJsContainer :global(.vjs-big-play-centered .vjs-big-play-button),
+  .videoJsContainer :global(.vjs-big-play-button) {
+    position: absolute !important;
+    top: calc(50% - 20px) !important;
+    left: 50% !important;
+    right: auto !important;
+    bottom: auto !important;
+    margin: 0 !important;
+    transform: translate(-50%, -50%) !important;
+    width: 82px !important;
+    height: 82px !important;
+    line-height: 82px !important;
+    border-radius: 50% !important;
+    border: 0 !important;
+    background-color: rgba(0, 0, 0, 0.68) !important;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.35) !important;
+    display: block !important;
+  }
+  
+  .videoJsContainer :global(.vjs-big-play-centered .vjs-big-play-button:hover),
+  .videoJsContainer :global(.vjs-big-play-button:hover) {
+    background-color: rgba(112, 20, 35, 0.92) !important;
+    transform: translate(-50%, -50%) scale(1.1) !important;
+  }
+  
+  .videoJsContainer :global(.video-js .vjs-big-play-button .vjs-icon-placeholder:before) {
+    font-size: 52px !important;
+    line-height: 82px !important;
+  }
+  
+  /* Progress bar + volume level — brand color */
+  .videoJsContainer :global(.vjs-play-progress),
+  .videoJsContainer :global(.vjs-volume-level) {
+    background-color: #b92a31 !important;
+  }
+  
+  /* Control bar */
+  .videoJsContainer :global(.vjs-control-bar) {
+    background-color: rgba(0, 0, 0, 0.75) !important;
+    height: 40px !important;
+  }
+  
+  .videoJsContainer :global(.vjs-control-bar),
+  .videoJsContainer :global(.vjs-modal-dialog),
+  .videoJsContainer :global(.vjs-error-display) {
+    border-bottom-left-radius: 12px;
+    border-bottom-right-radius: 12px;
+  }
+  
+  /* ------------------------------------------------------------
+     Video hint ("ویدیو ملک")
+     ------------------------------------------------------------ */
+  .videoHint {
+    position: absolute;
+    left: 50%;
+    bottom: 56px; /* above the 40px control bar + a small gap */
+    transform: translateX(-50%);
+    z-index: 4;
+    color: #fff;
+    background: rgba(0, 0, 0, 0.62);
+    padding: 6px 13px;
+    border-radius: 20px;
+    font-size: 13px;
+    white-space: nowrap;
+    pointer-events: none;
+    font-family: "iransans", Arial, sans-serif;
+  }
+
+  /* Hide the big play button during playback */
+.videoJsContainer :global(.video-js.vjs-playing .vjs-big-play-button) {
+  display: none !important;
 }
 
-/* Smooth scrolling for containers */
-.mediaContainer,
-.swiperContainer {
-  -webkit-overflow-scrolling: touch;
+/* Fullscreen image container — must not clip zoomed content */
+.lightboxImageContainer {
+  /* already defined — but make sure it doesn't clip while zoomed */
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
 }
 
-/* Loading state for images */
-.mainImage.loading {
-  opacity: 0;
-}
-
-.mainImage.loaded {
-  opacity: 1;
-  transition: opacity 0.3s ease;
-}
-
-.videoWrapper {
-  position: relative;
-  width: 100%;
-  height: 100%;
-  background: #111;
-  overflow: hidden;
-}
-
-.video {
-  width: 100%;
-  height: 100%;
-  display: block;
-  object-fit: cover;
-}
-
-.bigPlayButton {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 82px;
-  height: 82px;
-  transform: translate(-50%, -50%);
-  border: 0;
-  border-radius: 50%;
-  background: rgba(0, 0, 0, 0.68);
-  color: #fff;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  z-index: 5;
-  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.35);
-  transition: transform 0.2s ease, background 0.2s ease;
-}
-
-.bigPlayButton:hover {
-  background: rgba(112, 20, 35, 0.92);
-  transform: translate(-50%, -50%) scale(1.1);
-}
-
-.bigPlayButton:focus-visible {
-  outline: 3px solid #fff;
-  outline-offset: 4px;
-}
-
-.bigPlayIcon {
-  font-size: 52px !important;
-  margin-left: 4px; /* visually centers the triangle */
-}
-
-.videoHint {
-  position: absolute;
-  left: 50%;
-  bottom: 18px;
-  transform: translateX(-50%);
-  z-index: 4;
-  color: #fff;
-  background: rgba(0, 0, 0, 0.62);
-  padding: 6px 13px;
-  border-radius: 20px;
-  font-size: 13px;
-  white-space: nowrap;
+/* The image inside the fullscreen lightbox */
+.lightboxImage {
+  /* remove max-width / max-height clamps when zoomed so transform works */
+  max-width: none;
+  max-height: none;
+  width: auto;
+  height: auto;
+  /* constrains initial size */
+  max-width: 100vw;
+  max-height: 100vh;
+  object-fit: contain;
+  transform-origin: center center;
+  will-change: transform;
   pointer-events: none;
+}
+
+.lightboxImage.zoomed {
+  max-width: none;
+  max-height: none;
+  cursor: grab;
+}
+
+.lightboxImageContainer.zoomed {
+  cursor: grab;
+}
+
+.lightboxImageContainer.zoomed:active {
+  cursor: grabbing;
+}
+
+.lightboxImageContainer.pinching {
+  cursor: grabbing;
+}
+
+/* Zoom hint — small pill that fades after a moment */
+.zoomHint {
+  position: fixed;
+  bottom: 70px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 4003;
+  background: rgba(0, 0, 0, 0.6);
+  color: #fff;
+  font-family: "iransans", Arial, sans-serif;
+  font-size: 12px;
+  padding: 6px 14px;
+  border-radius: 20px;
+  white-space: nowrap;
+  animation: fadeOutHint 4s forwards;
+  pointer-events: none;
+}
+
+@keyframes fadeOutHint {
+  0%, 60% { opacity: 1; }
+  100% { opacity: 0; }
 }

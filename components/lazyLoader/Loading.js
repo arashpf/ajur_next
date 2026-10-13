@@ -19,7 +19,8 @@ const LazyLoader = ({
   gridPadding = null,
   // make default item width 3 (12/4) on medium+ so we get 4 columns
   itemProps = { xl: 3, lg: 3, md: 3, sm: 6, xs: 12 },
-  emptyComponent = <p>متاسفانه موردی یافت نشد ❌</p>,
+  // emptyComponent = <p>متاسفانه موردی یافت نشد ❌</p>,
+  emptyComponent = null,
   className = "",
 }) => {
   const theme = useTheme();

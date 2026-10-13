@@ -41,6 +41,7 @@ import FeaturesSection from "../../components/download/FeaturesSection"
 import ConsultantsSection from "../../components/download/ConsultantsSection"
 import ContactSection from "../../components/download/ContactSection"
 import PhoneMockup from "../../components/download/PhoneMockup"
+
 export default function LandingPage() {
   const containerRef = useRef(null)
   const router = useRouter()
@@ -105,41 +106,47 @@ export default function LandingPage() {
     setSnackbarOpen(true)
   }
 
-  // Handlers migrated from old download page
-  const handleDownloadAction = async (downloadType = "pwa") => {
+  /**
+   * Handles download clicks.
+   *
+   * ACTIVE:  "bazaar"  → Cafebazaar link
+   * DISABLED: "direct" (APK), "myket"
+   *
+   * If a referral cookie exists, saves the pending download to localStorage
+   * and redirects to the login page. Otherwise opens the store link directly.
+   */
+  const handleDownloadAction = async (downloadType = "bazaar") => {
     if (hasRef) {
       const downloadData = { type: downloadType, timestamp: Date.now() }
-      if (downloadType === "direct") downloadData.url = "https://api.ajur.app/download/ajur.apk"
-      else if (downloadType === "bazaar") downloadData.url = "https://cafebazaar.ir/app/com.Ajour"
-      else if (downloadType === "myket") downloadData.url = "https://myket.ir/app/com.Ajour"
+
+      // --- دانلود مستقیم (APK) - غیرفعال ---
+      // if (downloadType === "direct")
+      //   downloadData.url = "https://api.ajur.app/download/ajur.apk"
+
+      // --- دانلود از بازار - فعال ---
+      if (downloadType === "bazaar")
+        downloadData.url = "https://cafebazaar.ir/app/com.Ajour"
+
+      // --- دانلود از مایکت - غیرفعال ---
+      // else if (downloadType === "myket")
+      //   downloadData.url = "https://myket.ir/app/com.Ajour"
 
       localStorage.setItem("pendingDownload", JSON.stringify(downloadData))
       router.push("/panel/auth/login")
       return
     }
 
-    // No referral — proceed with install flow
-    if (isIOS) {
-      showIOSInstallInstructions()
-      return
-    }
-
-    if (deferredPrompt) {
-      try {
-        deferredPrompt.prompt()
-        const choice = await deferredPrompt.userChoice
-        if (choice && choice.outcome === "accepted") showSnackbar("در حال نصب اپلیکیشن...")
-      } catch (err) {
-        console.warn("PWA prompt failed", err)
-      }
-      setDeferredPrompt(null)
-      return
-    }
-
-    showSnackbar("مرورگر شما از نصب خودکار پشتیبانی نمی‌کند")
+    // No referral — open the Bazaar link directly
+    window.open("https://cafebazaar.ir/app/com.Ajour", "_blank")
   }
 
+  /**
+   * Used by HeroSection's Bazaar button.
+   * ACTIVE only for "bazaar". Direct/Myket are disabled.
+   */
   const handleDirectDownload = (url, type) => {
+    if (type !== "bazaar") return // guard: only Bazaar allowed
+
     if (hasRef) {
       const downloadData = { type, url, timestamp: Date.now() }
       localStorage.setItem("pendingDownload", JSON.stringify(downloadData))
@@ -149,26 +156,27 @@ export default function LandingPage() {
     }
   }
 
-  const handleInstallClick = async () => {
-    if (isIOS) {
-      showIOSInstallInstructions()
-      return
-    }
-
-    if (deferredPrompt) {
-      try {
-        deferredPrompt.prompt()
-        const choice = await deferredPrompt.userChoice
-        if (choice && choice.outcome === "accepted") showSnackbar("در حال نصب اپلیکیشن...")
-      } catch (err) {
-        console.warn(err)
-      }
-      setDeferredPrompt(null)
-      return
-    }
-
-    showSnackbar("مرورگر شما از نصب خودکار پشتیبانی نمی‌کند")
-  }
+  // --- PWA install handler - غیرفعال ---
+  // const handleInstallClick = async () => {
+  //   if (isIOS) {
+  //     showIOSInstallInstructions()
+  //     return
+  //   }
+  //
+  //   if (deferredPrompt) {
+  //     try {
+  //       deferredPrompt.prompt()
+  //       const choice = await deferredPrompt.userChoice
+  //       if (choice && choice.outcome === "accepted") showSnackbar("در حال نصب اپلیکیشن...")
+  //     } catch (err) {
+  //       console.warn(err)
+  //     }
+  //     setDeferredPrompt(null)
+  //     return
+  //   }
+  //
+  //   showSnackbar("مرورگر شما از نصب خودکار پشتیبانی نمی‌کند")
+  // }
 
   const showIOSInstallInstructions = () => {
     if (hasRef) {
@@ -208,7 +216,7 @@ export default function LandingPage() {
       {/* 
         SECTION 1: Hero Section 
         - Red gradient background
-        - Download buttons for Android/iOS
+        - Download button for Bazaar (Android) — direct/Myket/PWA disabled
         - Phone mockup on the right
       */}
       <HeroSection
