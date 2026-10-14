@@ -22,6 +22,8 @@ import { useRouter } from "next/router";
 import Cookies from "js-cookie";
 import Link from "next/link";
 
+import useAuthGate from "../../hooks/useAuthGate";
+
 // Label styling shared by all tabs
 const labelStyle = (isActive) => ({
   fontFamily: "iransans, Arial, sans-serif",
@@ -35,6 +37,7 @@ const labelStyle = (isActive) => ({
 
 const Footer = () => {
   const router = useRouter();
+  const { requireAuth } = useAuthGate();
   const [value, setValue] = React.useState(0);
   const ref = React.useRef(null);
   const prevValueRef = React.useRef(0);
@@ -72,68 +75,59 @@ const Footer = () => {
 
   const renderFixedFooterNav = () => {
     const onClickHome = () => {
-      console.log("home button clicked");
       const base =
         router && router.asPath ? router.asPath.split("?")[0] : router.pathname;
       if (base !== "/") router.push("/");
     };
 
     const onClickSearch = () => {
-      console.log("search (home) button clicked");
       const base =
         router && router.asPath ? router.asPath.split("?")[0] : router.pathname;
       if (base !== "/") router.push("/");
     };
 
     const onClickFavorites = () => {
-      console.log("favorites button clicked");
       const base =
         router && router.asPath ? router.asPath.split("?")[0] : router.pathname;
       if (base !== "/favorites") router.push("/favorites");
     };
 
     const onClickMap = () => {
-      console.log("map button clicked");
       const base =
         router && router.asPath ? router.asPath.split("?")[0] : router.pathname;
       if (base !== "/map") router.push("/map");
     };
 
+    // ─── افزودن: requires login (opens AuthModal for guests) ───
     const onClickNew = () => {
-      const token = Cookies.get("id_token");
-      if (token) {
-        router.push("/panel/new");
-      } else {
-        router.push("/panel/auth/login");
-        Cookies.set("destination_before_auth", "/panel/new", { expires: 14 });
-      }
+      requireAuth(
+        () => {
+          const base =
+            router && router.asPath
+              ? router.asPath.split("?")[0]
+              : router.pathname;
+          if (base !== "/panel/new") router.push("/panel/new");
+        },
+        "برای ثبت آگهی جدید وارد شوید"
+      );
     };
 
+    // ─── پروفایل: requires login (opens AuthModal for guests) ───
     const onClickMyDashboard = () => {
-      console.log("new worker clicked from a person");
-      var token = Cookies.get("id_token");
-      if (!token) {
-        Cookies.set("destination_before_auth", "/panel", { expires: 14 });
-        setValue(0);
-        const base =
-          router && router.asPath
-            ? router.asPath.split("?")[0]
-            : router.pathname;
-        if (base !== "/panel/auth/login") router.push("/panel/auth/login");
-      } else {
-        console.log("you are currently loged in and enjoy");
-        console.log(token);
-        setValue(4);
-        const base =
-          router && router.asPath
-            ? router.asPath.split("?")[0]
-            : router.pathname;
-        if (base !== "/panel") router.push("/panel");
-      }
+      requireAuth(
+        () => {
+          setValue(4);
+          const base =
+            router && router.asPath
+              ? router.asPath.split("?")[0]
+              : router.pathname;
+          if (base !== "/panel") router.push("/panel");
+        },
+        "برای مشاهده پنل شخصی وارد شوید"
+      );
     };
 
     const onClickMarketing = () => {
-      console.log("new worker clicked from a person");
       var token = Cookies.get("id_token");
       const base =
         router && router.asPath ? router.asPath.split("?")[0] : router.pathname;
@@ -372,7 +366,7 @@ const Footer = () => {
               </div>
             </div>
 
-            {/* 4 — ابزارها (was دستیار هوشمند) */}
+            {/* 4 — ابزارها */}
             <div
               role="button"
               aria-label="ابزارها"

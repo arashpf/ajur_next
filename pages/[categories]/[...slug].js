@@ -374,10 +374,6 @@ const SingleCategory = ({
 
   const isFirstRender = useRef(true);
 
-  // AbortController ref — used to cancel in-flight filter fetches
-  // when the component unmounts or a new fetch supersedes the old one.
-  const filterAbortRef = useRef(null);
-
   useEffect(() => {
     setIsClient(true);
     setHydratedKey("csr");
@@ -560,13 +556,6 @@ const SingleCategory = ({
 
     if (routeNeighborhoodSlug && hasMultipleNeighborhoods) return;
 
-    // Cancel any previous in-flight filter fetch before starting a new one.
-    if (filterAbortRef.current) {
-      filterAbortRef.current.abort();
-    }
-    const controller = new AbortController();
-    filterAbortRef.current = controller;
-
     const fetchFilteredWorkers = async () => {
       try {
         setFilterLoading(true);
@@ -590,7 +579,6 @@ const SingleCategory = ({
 
         const response = await axios.get(apiUrl, {
           timeout: 10000,
-          signal: controller.signal,
           headers: { Accept: "application/json" },
         });
 
@@ -647,28 +635,15 @@ const SingleCategory = ({
           __clientIp
         );
       } catch (e) {
-        // Aborted fetches are not errors — ignore them silently.
-        if (axios.isCancel?.(e) || e?.name === "CanceledError" || e?.code === "ERR_CANCELED") {
-          return;
-        }
         console.error("Client filter fetch error:", e);
         setError(true);
         setErrorMessage("خطا در دریافت اطلاعات. لطفا بعدا تلاش کنید.");
       } finally {
-        // Only flip the loading flag if this is still the active fetch.
-        if (filterAbortRef.current === controller) {
-          setFilterLoading(false);
-        }
+        setFilterLoading(false);
       }
     };
 
     fetchFilteredWorkers();
-
-    return () => {
-      // On unmount or dependency change, abort the in-flight request so
-      // it doesn't keep the API connection open while we navigate away.
-      controller.abort();
-    };
   }, [
     router.isReady,
     router.asPath,

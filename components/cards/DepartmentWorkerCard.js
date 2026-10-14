@@ -96,39 +96,46 @@ export default function ImgMediaCard(props) {
 
 
   const rednerPrice = () => {
-    var price_per_m2 = properties.filter((item) => item.name == "قیمت هر متر");
-    var price_item = properties.filter((item) => item.name == "قیمت");
-
-
-    var rent_front = properties.filter((item) => item.name == "پول پیش");
-    var rent_per_mounth = properties.filter(
+    const price_per_m2_arr = properties.filter((item) => item.name == "قیمت هر متر");
+    const price_item_arr = properties.filter((item) => item.name == "قیمت");
+  
+    const rent_front_arr = properties.filter((item) => item.name == "پول پیش");
+    const rent_per_mounth_arr = properties.filter(
       (item) => item.name == "اجاره ماهیانه"
     );
-
-    
-
-    if (price_item[0]) {
-      var price_no_format = price_item[0].value;
-      var price_per_m2 = price_per_m2[0].value;
-
+  
+    // ─── Sale (فروش): price + optional price per m² ───
+    if (price_item_arr[0]) {
+      const price_no_format = price_item_arr[0].value;
+      const price_per_m2_val = price_per_m2_arr[0] ? price_per_m2_arr[0].value : null;
+  
       return (
-        
-        <p style={{direction:'rtl' }}>
-          <strong style={{fontSize:'17px'}}>
-          {" "}
-          {String(price_no_format).replace(/(.)(?=(\d{3})+$)/g, "$1,")}{" "}
-          {"تومان"}{" | "}
+        <p style={{ direction: "rtl" }}>
+          <strong style={{ fontSize: "17px" }}>
+            {" "}
+            {String(price_no_format).replace(/(.)(?=(\d{3})+$)/g, "$1,")}{" "}
+            {"تومان"}
+            {price_per_m2_val ? " | " : ""}
           </strong>
-
-          {' متری '}
-          {String(price_per_m2).replace(/(.)(?=(\d{3})+$)/g, "$1,")}{" "}
-          {"تومان"}{" "}
+  
+          {price_per_m2_val ? (
+            <>
+              {" متری "}
+              {String(price_per_m2_val).replace(/(.)(?=(\d{3})+$)/g, "$1,")}{" "}
+              {"تومان"}{" "}
+            </>
+          ) : null}
         </p>
       );
-    } else if (rent_front[0]) {
-      var rent_front_no_format = rent_front[0].value;
-      var rent_per_mounth_no_format = rent_per_mounth[0].value;
-
+    }
+  
+    // ─── Rent (رهن و اجاره): deposit + optional monthly ───
+    if (rent_front_arr[0]) {
+      const rent_front_no_format = rent_front_arr[0].value;
+      const rent_per_mounth_no_format = rent_per_mounth_arr[0]
+        ? rent_per_mounth_arr[0].value
+        : 0;
+  
       return (
         <div
           style={{
@@ -139,32 +146,35 @@ export default function ImgMediaCard(props) {
         >
           {rent_per_mounth_no_format != 0 ? (
             <p style={{ direction: "rtl", paddingRight: 4 }}>
-              <strong style={{fontSize:'16px'}}>
-              {" "}
-              {String(rent_per_mounth_no_format).replace(
-                /(.)(?=(\d{3})+$)/g,
-                "$1,"
-              )}{" "}
-              {" اجاره "}{" "}
+              <strong style={{ fontSize: "16px" }}>
+                {" "}
+                {String(rent_per_mounth_no_format).replace(
+                  /(.)(?=(\d{3})+$)/g,
+                  "$1,"
+                )}{" "}
+                {" اجاره "}{" "}
               </strong>
             </p>
           ) : (
             <p style={{ direction: "rtl", paddingRight: 4 }}> {"کامل"} </p>
           )}
-
+  
           <p style={{ direction: "rtl" }}>
-          <strong style={{fontSize:'16px'}}>
-            {" "}
-            {String(rent_front_no_format).replace(
-              /(.)(?=(\d{3})+$)/g,
-              "$1,"
-            )}{" "}
-            {" رهن  "}{" "}
+            <strong style={{ fontSize: "16px" }}>
+              {" "}
+              {String(rent_front_no_format).replace(
+                /(.)(?=(\d{3})+$)/g,
+                "$1,"
+              )}{" "}
+              {" رهن  "}{" "}
             </strong>
           </p>
         </div>
       );
     }
+  
+    // ─── No price fields at all → render nothing ───
+    return null;
   };
 
   const renderPropertiesCustomized = (pr) => {

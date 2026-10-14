@@ -23,6 +23,9 @@ import axios from "axios";
 
 import { trackEvent } from "../../lib/track";
 
+import ContactDrawer from "../workers/ContactDrawer";
+import useAuthGate from "../../hooks/useAuthGate";
+
 const emails = ["username@gmail.com", "user02@gmail.com"];
 
 const Item = styled(Paper)(({ theme }) => ({
@@ -62,6 +65,10 @@ function WorkerDetails(props) {
 
   const [open, setOpen] = React.useState(false);
   const [selectedValue, setSelectedValue] = React.useState(emails[1]);
+  const [contactOpen, setContactOpen] = React.useState(false);
+
+  // ─── Auth gate (opens the reusable login modal for guests) ───
+  const { requireAuth } = useAuthGate();
 
   const handleClickOpen = () => {
     setOpen(true);
@@ -70,6 +77,32 @@ function WorkerDetails(props) {
   const handleClose = (value) => {
     setOpen(false);
     setSelectedValue(value);
+  };
+
+  // ─── Phone number helpers ───
+  function maskPhone(phone) {
+    if (!phone) return "";
+    const p = String(phone).replace(/\D/g, "");
+    if (p.length < 7) return p;
+    // Format: 0935 ××× 3202
+    return `${p.slice(0, 4)} ××× ${p.slice(-3)}`;
+  }
+  
+  const formatPhone = (phone) => {
+    if (!phone) return "";
+    const p = String(phone).replace(/\D/g, "");
+    if (p.length !== 11) return p;
+    return p.slice(0, 4) + " " + p.slice(4, 7) + " " + p.slice(7);
+  };
+
+  // ─── Contact click: guests log in first, then drawer opens ───
+  const openContactDrawer = () => setContactOpen(true);
+
+  const handleContactClick = () => {
+    requireAuth(
+      () => openContactDrawer(),
+      "برای مشاهده اطلاعات تماس وارد شوید"
+    );
   };
 
   // Function to calculate time ago
@@ -110,9 +143,6 @@ function WorkerDetails(props) {
     getFeatureValue("اجاره ماهیانه") || getFeatureValue("اجاره");
 
   // -------- Amenities (type === "2") --------
-  // The API returns these as `{ key, value: "0" | "1", type: "2" }`
-  // We look up each key fragment and return:
-  //   "yes" | "no" | null (not present)
   const lookupAmenity = (fragments) => {
     const found = properties.find(
       (p) =>
@@ -127,7 +157,6 @@ function WorkerDetails(props) {
   const parkingState = lookupAmenity(["پارکینگ"]);
   const storageState = lookupAmenity(["انباری", "انبار", "ذخیره"]);
 
-  // Show the amenities row if at least one of the fields exists
   const shouldRenderAmenities =
     elevatorState !== null ||
     parkingState !== null ||
@@ -150,7 +179,6 @@ function WorkerDetails(props) {
   }
 
   function renderPropertiesKinds2(pro) {
-    // Only render positive ticks here; negatives are handled by the highlights row
     if ((pro.type == "2" || pro.kind == "2") && String(pro.value) === "1") {
       return (
         <Button
@@ -244,9 +272,9 @@ function WorkerDetails(props) {
   // -------- Amenity item renderer --------
   const renderAmenityItem = (Icon, label, state) => {
     if (state === null) return null;
-  
+
     const isYes = state === "yes";
-  
+
     return (
       <div
         className={`${Styles["amenity-item"]} ${
@@ -292,7 +320,6 @@ function WorkerDetails(props) {
 
     return (
       <div className={Styles["highlights-section"]}>
-        {/* Main Features Row */}
         {hasMainFeatures && (
           <div className={Styles["highlights-row"]}>
             {area && area !== "0" && (
@@ -318,7 +345,6 @@ function WorkerDetails(props) {
           </div>
         )}
 
-        {/* Amenities Row — only for fields that exist in the data */}
         {shouldRenderAmenities && (
           <div className={Styles["amenities-row"]}>
             {renderAmenityItem(ElevatorIcon, "آسانسور", elevatorState)}
@@ -331,11 +357,8 @@ function WorkerDetails(props) {
   };
 
   const handlePropertyCall = async () => {
-
-
     const phone = realstate?.phone || details.cellphone;
     const workerId = details.id;
-
 
     trackEvent(
       "listing_call",
@@ -369,7 +392,7 @@ function WorkerDetails(props) {
         </p>
       </div>
 
-      {/* Action Buttons Section */}
+      {/* ─── Action Buttons Section — masked contact button ─── */}
       <div
         className={Styles["action-buttons-section"]}
         style={{
@@ -379,29 +402,25 @@ function WorkerDetails(props) {
           marginBottom: "24px",
         }}
       >
-        <a
-          href={`tel:${realstate?.phone || details.cellphone}`}
-          onClick={(e) => {
-            e.preventDefault();
-            handlePropertyCall();
-          }}
+        <button
+          onClick={handleContactClick}
           style={{
             flex: 1,
             padding: "12px 16px",
             background: "#fff",
             border: "1px solid #ddd",
             borderRadius: "8px",
-            textDecoration: "none",
             textAlign: "center",
             fontWeight: "600",
             color: "#222",
-            fontSize: "20px",
+            fontSize: "18px",
             cursor: "pointer",
             transition: "all 0.2s",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
             gap: "8px",
+            fontFamily: "iransans, Arial, sans-serif",
           }}
           onMouseOver={(e) => {
             e.currentTarget.style.background = "#f9f9f9";
@@ -412,8 +431,9 @@ function WorkerDetails(props) {
             e.currentTarget.style.borderColor = "#ddd";
           }}
         >
-          {realstate?.phone || details.cellphone}
-
+          <span style={{ direction: "ltr" }}>
+  {maskPhone(realstate?.phone || details.cellphone)}
+</span>
           <div
             style={{
               width: "32px",
@@ -423,11 +443,12 @@ function WorkerDetails(props) {
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
+              flexShrink: 0,
             }}
           >
             <CallIcon style={{ fontSize: "18px", color: "#fff" }} />
           </div>
-        </a>
+        </button>
 
         <button
           style={{
@@ -441,6 +462,7 @@ function WorkerDetails(props) {
             fontSize: "16px",
             cursor: "not-allowed",
             transition: "all 0.2s",
+            fontFamily: "iransans, Arial, sans-serif",
           }}
           disabled
         >
@@ -448,81 +470,79 @@ function WorkerDetails(props) {
         </button>
       </div>
 
-     
-
-      {/* Price/Rent Section */}
+      {/* ─── Price/Rent Section ─── */}
       {(price || monthlyRent) && (
-  <div
-    style={{
-      marginBottom: "24px",
-      marginTop: "24px",
-      padding: "16px",
-      background: "#f9f9f9",
-      borderRadius: "12px",
-      textAlign: "right",
-      direction: "rtl",
-    }}
-  >
-    {price && (
-      <>
         <div
           style={{
-            fontSize: "20px",
-            fontWeight: "700",
-            color: "#222",
-            marginBottom: "12px",
+            marginBottom: "24px",
+            marginTop: "24px",
+            padding: "16px",
+            background: "#f9f9f9",
+            borderRadius: "12px",
+            textAlign: "right",
+            direction: "rtl",
           }}
         >
-          قیمت : {Number(price).toLocaleString("en-US")} تومان
-        </div>
-        {price_per_m && (
-          <div
-            style={{
-              fontSize: "16px",
-              fontWeight: "700",
-              color: "#666",
-              marginBottom: "4px",
-            }}
-          >
-            قیمت هر متر :{" "}
-            {parseInt(price_per_m).toLocaleString("en-US", {
-              maximumFractionDigits: 0,
-            })}
-          </div>
-        )}
-      </>
-    )}
+          {price && (
+            <>
+              <div
+                style={{
+                  fontSize: "20px",
+                  fontWeight: "700",
+                  color: "#222",
+                  marginBottom: "12px",
+                }}
+              >
+                قیمت : {Number(price).toLocaleString("en-US")} تومان
+              </div>
+              {price_per_m && (
+                <div
+                  style={{
+                    fontSize: "16px",
+                    fontWeight: "700",
+                    color: "#666",
+                    marginBottom: "4px",
+                  }}
+                >
+                  قیمت هر متر :{" "}
+                  {parseInt(price_per_m).toLocaleString("en-US", {
+                    maximumFractionDigits: 0,
+                  })}
+                </div>
+              )}
+            </>
+          )}
 
-    {monthlyRent && (
-      <>
-        {deposit && (
-          <div
-            style={{
-              fontSize: "20px",
-              fontWeight: "700",
-              color: "#222",
-              marginBottom: "12px",
-            }}
-          >
-            پول پیش: {Number(deposit).toLocaleString("en-US")} تومان
-          </div>
-        )}
-        <div
-          style={{
-            fontSize: "16px",
-            fontWeight: "700",
-            color: "#666",
-          }}
-        >
-          اجاره ماهیانه: {Number(monthlyRent).toLocaleString("en-US")} تومان
+          {monthlyRent && (
+            <>
+              {deposit && (
+                <div
+                  style={{
+                    fontSize: "20px",
+                    fontWeight: "700",
+                    color: "#222",
+                    marginBottom: "12px",
+                  }}
+                >
+                  پول پیش: {Number(deposit).toLocaleString("en-US")} تومان
+                </div>
+              )}
+              <div
+                style={{
+                  fontSize: "16px",
+                  fontWeight: "700",
+                  color: "#666",
+                }}
+              >
+                اجاره ماهیانه: {Number(monthlyRent).toLocaleString("en-US")} تومان
+              </div>
+            </>
+          )}
         </div>
-      </>
-    )}
-  </div>
-)}
+      )}
 
- {/* Highlights Section */}
- {renderHighlights()}
+      {/* ─── Highlights Section ─── */}
+      {renderHighlights()}
 
       <Box component="div">{renderProperties1()}</Box>
 
@@ -543,47 +563,46 @@ function WorkerDetails(props) {
         total_day={details.total_day}
       />
 
-      {/* Description Section */}
-      {/* Description Section */}
-{details.description && (
-  <div
-    style={{
-      marginBottom: "24px",
-      padding: "16px",
-      background: "#f9f9f9",
-      borderRadius: "12px",
-      textAlign: "right",
-      direction: "rtl",
-    }}
-  >
-    <div
-      style={{
-        fontSize: "13px",
-        color: "#888",
-        fontWeight: "500",
-        marginBottom: "8px",
-      }}
-    >
-      توضیحات
-    </div>
-    <p
-      style={{
-        fontSize: "14px",
-        color: "#444",
-        lineHeight: "1.8",
-        margin: "0",
-        whiteSpace: "pre-wrap",
-        wordBreak: "break-word",
-        textAlign: "right",
-        direction: "rtl",
-      }}
-    >
-      {details.description}
-    </p>
-  </div>
-)}
+      {/* ─── Description Section ─── */}
+      {details.description && (
+        <div
+          style={{
+            marginBottom: "24px",
+            padding: "16px",
+            background: "#f9f9f9",
+            borderRadius: "12px",
+            textAlign: "right",
+            direction: "rtl",
+          }}
+        >
+          <div
+            style={{
+              fontSize: "13px",
+              color: "#888",
+              fontWeight: "500",
+              marginBottom: "8px",
+            }}
+          >
+            توضیحات
+          </div>
+          <p
+            style={{
+              fontSize: "14px",
+              color: "#444",
+              lineHeight: "1.8",
+              margin: "0",
+              whiteSpace: "pre-wrap",
+              wordBreak: "break-word",
+              textAlign: "right",
+              direction: "rtl",
+            }}
+          >
+            {details.description}
+          </p>
+        </div>
+      )}
 
-      {/* Address Section */}
+      {/* ─── Address Section ─── */}
       {details.formatted && (
         <div
           style={{
@@ -624,6 +643,15 @@ function WorkerDetails(props) {
         onClose={handleClose}
         realstate={realstate}
         details={details}
+      />
+
+      {/* ─── Contact Drawer (reveals full number + agent card) ─── */}
+      <ContactDrawer
+        open={contactOpen}
+        onClose={() => setContactOpen(false)}
+        details={details}
+        realstate={realstate}
+        onCallTracked={handlePropertyCall}
       />
     </div>
   );

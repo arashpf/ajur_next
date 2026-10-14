@@ -1,24 +1,12 @@
 import * as React from 'react';
 import { styled } from '@mui/material/styles';
-import Card from '@mui/material/Card';
-import CardHeader from '@mui/material/CardHeader';
-import CardMedia from '@mui/material/CardMedia';
-import CardContent from '@mui/material/CardContent';
-import CardActions from '@mui/material/CardActions';
-import Collapse from '@mui/material/Collapse';
 import Avatar from '@mui/material/Avatar';
 import IconButton from '@mui/material/IconButton';
-import Typography from '@mui/material/Typography';
-import { red } from '@mui/material/colors';
-import FavoriteIcon from '@mui/icons-material/Favorite';
-import ShareIcon from '@mui/icons-material/Share';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import MoreVertIcon from '@mui/icons-material/MoreVert';
 import Styles from '../../styles/WorkerRealstate.module.css';
 import Link from 'next/link';
-import Stars from  '../../others/Stars';
-import RealEstateShare from  './RealEstateShare'; 
+import Stars from '../../others/Stars';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import axios from "axios";
 
 const ExpandMore = styled((props) => {
   const { expand, ...other } = props;
@@ -36,6 +24,23 @@ export default function WorkerRealstateCard(props) {
   const realstate = props.realstate;
   const slug = props.slug;
 
+  // Track call + trigger phone dial
+  const handleCall = async () => {
+    const agentId = realstate?.id;
+    const phone = realstate?.phone;
+
+    try {
+      await axios.post("https://api.ajur.app/api/track/agent-call", {
+        agent_id: agentId,
+      });
+    } catch (error) {
+      console.error("Call tracking failed:", error);
+    }
+
+    // Always trigger phone call
+    window.location.href = `tel:${phone}`;
+  };
+
   return (
     <div className={Styles['worker-realstate-card-wrapper']} style={{
       background: "#fff",
@@ -46,7 +51,8 @@ export default function WorkerRealstateCard(props) {
       direction: "rtl",
       textAlign: "right",
     }}>
-      {/* Header with title */}
+      
+      {/* Header */}
       <div style={{
         padding: "16px",
         borderBottom: "1px solid #f0f0f0",
@@ -59,18 +65,21 @@ export default function WorkerRealstateCard(props) {
         }}>
           لیست شده توسط
         </div>
+
         <div style={{
           display: "flex",
           alignItems: "center",
           gap: "12px",
           direction: "rtl",
         }}>
+
           <div style={{ position: 'relative', width: 50, height: 50 }}>
             <Avatar
               alt={realstate.name + ' ' + realstate.family}
               src={realstate.profile_url}
               sx={{ width: 50, height: 50 }}
             />
+
             {realstate && realstate.is_verified && (
               <CheckCircleIcon style={{
                 color: '#1E88E5',
@@ -85,6 +94,7 @@ export default function WorkerRealstateCard(props) {
               }} />
             )}
           </div>
+
           <div>
             <div style={{
               fontSize: "16px",
@@ -93,24 +103,28 @@ export default function WorkerRealstateCard(props) {
             }}>
               {realstate.name} {realstate.family}
             </div>
+
             <div style={{ marginTop: 4 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, direction: 'ltr' }}>
-                <Stars amount={ Math.round(realstate.stars || 0) } />
+                <Stars amount={Math.round(realstate.stars || 0)} />
               </div>
             </div>
+
           </div>
         </div>
       </div>
 
-      {/* Action Buttons Section */}
+      {/* Action Buttons */}
       <div style={{
         display: "flex",
         gap: "12px",
         direction: "rtl",
         padding: "16px",
       }}>
-        <a
-          href={`tel:${realstate?.phone}`}
+
+        {/* Updated CALL BUTTON with tracking */}
+        <div
+          onClick={handleCall}
           style={{
             flex: 1,
             padding: "12px 16px",
@@ -135,10 +149,10 @@ export default function WorkerRealstateCard(props) {
           }}
         >
           {realstate?.phone}
-        </a>
-        
-        {/* Fixed Link component - remove the <a> tag */}
-        <Link 
+        </div>
+
+        {/* Agent Page Link */}
+        <Link
           href={`/realestates/${realstate.id}?slug=${realstate.slug}`}
           style={{
             flex: 1,
@@ -161,8 +175,9 @@ export default function WorkerRealstateCard(props) {
             e.target.style.background = '#0066cc';
           }}
         >
-           صفحه مشاور
+          صفحه مشاور
         </Link>
+
       </div>
     </div>
   );

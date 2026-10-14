@@ -1,7 +1,7 @@
+// pages/favorites/index.js
 import React, { useState, useEffect } from "react";
 import Head from "next/head";
 import Image from "next/image";
-import styles from "../../styles/Home.module.css";
 import Cookies from "js-cookie";
 import axios from "axios";
 import { useRouter } from "next/router";
@@ -10,39 +10,131 @@ import Box from "@mui/material/Box";
 import Container from "@mui/material/Container";
 import WorkerCard from "../../components/cards/WorkerCard";
 
+const API_BASE = "https://api.ajur.app/api";
+const COOKIE_KEY = "favorited";
+
+// ─────────────────────────────────────────────────────────────
+// Local (cookie) helpers — kept for logged-out users
+// ─────────────────────────────────────────────────────────────
+const readLocalFavorites = () => {
+  try {
+    const raw = Cookies.get(COOKIE_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed.map(Number) : [];
+  } catch {
+    return [];
+  }
+};
+
+const writeLocalFavorites = (ids) => {
+  try {
+    Cookies.set(COOKIE_KEY, JSON.stringify(ids), { expires: 365 });
+  } catch {
+    // ignore
+  }
+};
+
 const favoritesIndex = () => {
   const router = useRouter();
   const [is_have_favorited, set_is_have_favorited] = useState(false);
   const [loading, set_loading] = useState(true);
   const [workers, set_workers] = useState([]);
+  const [favoriteIds, set_favoriteIds] = useState([]);
 
+  // ─────────────────────────────────────────────────────────────
+  // 1. Resolve favorites: server (if logged in) merged with cookie
+  // ─────────────────────────────────────────────────────────────
   useEffect(() => {
-    let favorited = Cookies.get("favorited");
-    if (!favorited) {
-      set_loading(false);
-      set_is_have_favorited(false);
+    const token = Cookies.get("id_token");
+    const localIds = readLocalFavorites();
+
+    const fetchWorkers = (ids) => {
+      if (!ids || ids.length === 0) {
+        set_workers([]);
+        set_is_have_favorited(false);
+        set_loading(false);
+        return;
+      }
+
+      axios({
+        method: "get",
+        url: `${API_BASE}/history-workers`,
+        params: { workers_holder: ids },
+      })
+        .then((response) => {
+          const list = Array.isArray(response.data) ? response.data : [];
+          set_workers(list);
+          set_is_have_favorited(list.length > 0);
+        })
+        .catch((error) => {
+          console.error("Error fetching favorites:", error);
+          set_workers([]);
+          set_is_have_favorited(false);
+        })
+        .finally(() => set_loading(false));
+    };
+
+    // No auth → fall back to cookie only
+    if (!token) {
+      set_favoriteIds(localIds);
+      fetchWorkers(localIds);
       return;
     }
 
-    const ids = JSON.parse(favorited);
-
+    // Logged in → ask server, then merge any local-only IDs
     axios({
       method: "get",
-      url: "https://api.ajur.app/api/history-workers",
-      params: { workers_holder: ids },
+      url: `${API_BASE}/favorites`,
+      params: { token },
     })
-      .then((response) => {
-        set_workers(response.data);
-        set_loading(false);
-        set_is_have_favorited(response.data.length > 0);
+      .then((res) => {
+        const serverIds = Array.isArray(res.data.favorites)
+          ? res.data.favorites.map(Number)
+          : [];
+
+        const serverSet = new Set(serverIds);
+        const localOnly = localIds.filter((id) => !serverSet.has(id));
+
+        // Merge local-only favorites up to the server (one-time)
+        if (localOnly.length > 0) {
+          axios({
+            method: "post",
+            url: `${API_BASE}/favorites/sync`,
+            params: { token },
+            data: { worker_ids: localOnly },
+          })
+            .then((syncRes) => {
+              const merged = Array.isArray(syncRes.data.favorites)
+                ? syncRes.data.favorites.map(Number)
+                : serverIds;
+              set_favoriteIds(merged);
+              writeLocalFavorites(merged);
+              fetchWorkers(merged);
+            })
+            .catch(() => {
+              // Sync failed → just use server list
+              set_favoriteIds(serverIds);
+              writeLocalFavorites(serverIds);
+              fetchWorkers(serverIds);
+            });
+        } else {
+          set_favoriteIds(serverIds);
+          writeLocalFavorites(serverIds);
+          fetchWorkers(serverIds);
+        }
       })
-      .catch((error) => {
-        console.error("Error fetching favorites:", error);
-        set_loading(false);
-        set_is_have_favorited(false);
+      .catch((err) => {
+        // Server unreachable / token invalid → fall back to cookie
+        console.warn("Server favorites fetch failed, using cookie:", err?.message);
+        set_favoriteIds(localIds);
+        fetchWorkers(localIds);
       });
   }, []);
 
+  // ─────────────────────────────────────────────────────────────
+  // 2. UI handlers (unchanged)
+  // ─────────────────────────────────────────────────────────────
   const searchOnFiles = () => {
     router.push("/");
   };
@@ -194,46 +286,26 @@ const favoritesIndex = () => {
     );
   };
 
-  // const renderSpinner = () => {
-  //   return (
-  //     <Box
-  //       sx={{
-  //         width: "100%",
-  //         height: "100vh",
-  //         display: "flex",
-  //         justifyContent: "center",
-  //         alignItems: "center",
-  //         flexDirection: "column",
-  //         backgroundColor: "white", // optional
-  //       }}
-  //     >
-  //       <img
-  //         src="/logo/ajour-gif.gif"
-  //         alt="در حال بارگذاری"
-  //         style={{ width: 100, height: 100 }}
-  //       />
-  //       <p style={{ marginTop: 15, color: "#666" }}>
-  //         در حال بارگذاری علاقه‌مندی‌ها...
-  //       </p>
-  //     </Box>
-  //   );
-  // };
-
   const renderSpinner = () => (
-    <div className="spinnerImageView" style={{
-      minHeight: "60vh",
-      display: "flex",
-      flexDirection: "column",
-      alignItems: "center",
-      justifyContent: "center",
-      backgroundColor: "white"
-    }}>
-      <div style={{
-        position: 'relative',
-        width: '400px',
-        height: '400px',
-        marginBottom: '20px'
-      }}>
+    <div
+      className="spinnerImageView"
+      style={{
+        minHeight: "60vh",
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
+        backgroundColor: "white",
+      }}
+    >
+      <div
+        style={{
+          position: "relative",
+          width: "400px",
+          height: "400px",
+          marginBottom: "20px",
+        }}
+      >
         <Image
           src="/logo/ajour-gif.gif"
           alt="در حال بارگذاری"
@@ -245,7 +317,6 @@ const favoritesIndex = () => {
       </div>
     </div>
   );
-  
 
   return (
     <div style={{ minHeight: "100vh" }}>

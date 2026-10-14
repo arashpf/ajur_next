@@ -34,6 +34,9 @@ import RealstateSkeleton from "../../components/skeleton/RealstateSkeleton";
 import SpinnerModalLoader from "../../components/panel/SpinnerModalLoader";
 import LazyLoader from "../../components/lazyLoader/Loading";
 
+import ContactDrawer from "../../components/workers/ContactDrawer";
+import useAuthGate from "../../hooks/useAuthGate";
+
 const SITE_URL = "https://ajur.app";
 
 const API_URL =
@@ -50,6 +53,17 @@ const DEFAULT_META_IMAGE =
 
 const REQUEST_TIMEOUT = 15000;
 const WORKERS_PER_PAGE = 6;
+
+/**
+ * Mask a phone number for display before login.
+ * 09358457933 → 0935 ××× 7933
+ */
+const maskPhone = (phone) => {
+  if (!phone) return "";
+  const p = String(phone).replace(/\D/g, "");
+  if (p.length < 7) return p;
+  return `${p.slice(0, 4)} ××× ${p.slice(-3)}`;
+};
 
 /**
  * Convert values returned by Laravel into JSON-safe Next.js props.
@@ -192,9 +206,6 @@ const buildPersonName = (
 
 /**
  * Determine the agent's personal name.
- *
- * Person fields have priority because the person is the primary
- * entity of this page. Agency-related fields must not be used here.
  */
 const getAgentName = (realstate) => {
   if (!realstate) {
@@ -238,8 +249,6 @@ const getAgentName = (realstate) => {
 
 /**
  * Determine the associated real-estate agency name.
- *
- * The agency is a secondary entity connected to the person.
  */
 const getAgencyName = (realstate) => {
   if (!realstate) {
@@ -301,8 +310,6 @@ const getNeighborhoodName = (
 
 /**
  * Determine the agent's actual profile image.
- *
- * The default Ajur social image is deliberately excluded here.
  */
 const getAgentImage = (realstate) => {
   if (!realstate) {
@@ -365,6 +372,9 @@ const RealestateSingle = ({
   initialServerError,
 }) => {
   const realstate = initialRealstate;
+
+  const { requireAuth } = useAuthGate();
+  const [contactOpen, setContactOpen] = useState(false);
 
   const [loading] = useState(false);
 
@@ -435,27 +445,21 @@ const RealestateSingle = ({
   const canonical = useMemo(() => {
     const normalizedPath =
       canonicalPath &&
-      canonicalPath !== "/"
+        canonicalPath !== "/"
         ? canonicalPath.replace(
-            /\/+$/,
-            ""
-          )
+          /\/+$/,
+          ""
+        )
         : canonicalPath || "/";
 
     return `${SITE_URL}${normalizedPath}`;
   }, [canonicalPath]);
 
-  /**
-   * Personal name of the agent.
-   */
   const agentName = useMemo(
     () => getAgentName(realstate),
     [realstate]
   );
 
-  /**
-   * Agency/office name associated with the person.
-   */
   const agencyName = useMemo(
     () => getAgencyName(realstate),
     [realstate]
@@ -472,12 +476,6 @@ const RealestateSingle = ({
     [realstate]
   );
 
-  /**
-   * Keep the actual agent image separate from Ajur's default image.
-   *
-   * The default image may be used for social sharing, but it must not
-   * be presented to Google as the person's actual photograph.
-   */
   const agentProfileImage = useMemo(
     () => getAgentImage(realstate),
     [realstate]
@@ -512,12 +510,6 @@ const RealestateSingle = ({
     Boolean(realstate?.id) &&
     Boolean(agentName);
 
-  /**
-   * Descriptive text for the actual profile image.
-   *
-   * Example:
-   * رضا ترکمان، مشاور املاک هخامنش در پرند
-   */
   const agentImageAlt = useMemo(() => {
     if (!agentName) {
       return "مشاور املاک در آجر";
@@ -542,9 +534,6 @@ const RealestateSingle = ({
     cityName,
   ]);
 
-  /**
-   * Human-readable page heading.
-   */
   const pageHeading = useMemo(() => {
     if (agencyName) {
       return `${agentName}، ${agencyName}`;
@@ -561,12 +550,6 @@ const RealestateSingle = ({
     cityName,
   ]);
 
-  /**
-   * SEO title and description are fully available during SSR.
-   *
-   * Primary entity: person
-   * Secondary entity: agency
-   */
   const seoData = useMemo(() => {
     if (!pageAvailable) {
       return {
@@ -580,10 +563,6 @@ const RealestateSingle = ({
       };
     }
 
-    /**
-     * Preferred result:
-     * رضا ترکمان، مشاور املاک هخامنش | آجر
-     */
     let title = "";
 
     if (agencyName) {
@@ -617,16 +596,13 @@ const RealestateSingle = ({
         `را در سامانه املاک آجر مشاهده کنید.`;
     }
 
-    /**
-     * Append a short biography only when enough metadata space remains.
-     */
     if (agentDescription) {
       const remainingLength =
         Math.max(
           0,
           155 -
-            description.length -
-            1
+          description.length -
+          1
         );
 
       if (remainingLength >= 30) {
@@ -725,18 +701,18 @@ const RealestateSingle = ({
               returnedNormalFields
             )
               ? returnedNormalFields.map(
-                  (field) => ({
-                    ...field,
-                    low: toNumber(
-                      field?.low,
-                      0
-                    ),
-                    high: toNumber(
-                      field?.high,
-                      0
-                    ),
-                  })
-                )
+                (field) => ({
+                  ...field,
+                  low: toNumber(
+                    field?.low,
+                    0
+                  ),
+                  high: toNumber(
+                    field?.high,
+                    0
+                  ),
+                })
+              )
               : []
           );
 
@@ -746,7 +722,7 @@ const RealestateSingle = ({
                 ?.tick_fields
             )
               ? response.data
-                  .tick_fields
+                .tick_fields
               : []
           );
 
@@ -756,15 +732,15 @@ const RealestateSingle = ({
                 ?.predefine_fields
             )
               ? response.data
-                  .predefine_fields
+                .predefine_fields
               : []
           );
         } catch (error) {
           const requestWasCanceled =
             error?.code ===
-              "ERR_CANCELED" ||
+            "ERR_CANCELED" ||
             error?.name ===
-              "CanceledError" ||
+            "CanceledError" ||
             axios.isCancel?.(error);
 
           if (
@@ -818,7 +794,7 @@ const RealestateSingle = ({
       normalFields.filter(
         (field) =>
           Number(field?.special) ===
-            1 &&
+          1 &&
           (toNumber(
             field?.low,
             0
@@ -829,9 +805,6 @@ const RealestateSingle = ({
             ) > 0)
       );
 
-    /**
-     * No active numeric filter means the property remains visible.
-     */
     if (
       selectedRangeFields.length === 0
     ) {
@@ -847,10 +820,10 @@ const RealestateSingle = ({
     try {
       const decodedProperties =
         typeof worker.json_properties ===
-        "string"
+          "string"
           ? JSON.parse(
-              worker.json_properties
-            )
+            worker.json_properties
+          )
           : worker.json_properties;
 
       if (
@@ -903,9 +876,9 @@ const RealestateSingle = ({
             ) > 0
               ? toNumber(field.low)
               : toNumber(
-                  field?.min_range,
-                  Number.NEGATIVE_INFINITY
-                );
+                field?.min_range,
+                Number.NEGATIVE_INFINITY
+              );
 
           const higher =
             toNumber(
@@ -914,9 +887,9 @@ const RealestateSingle = ({
             ) > 0
               ? toNumber(field.high)
               : toNumber(
-                  field?.max_range,
-                  Number.POSITIVE_INFINITY
-                );
+                field?.max_range,
+                Number.POSITIVE_INFINITY
+              );
 
           return (
             workerValue >= lower &&
@@ -934,9 +907,6 @@ const RealestateSingle = ({
     }
   };
 
-  /**
-   * The displayed property list is derived from the SSR list.
-   */
   const filteredWorkers =
     useMemo(() => {
       let result = [...allWorkers];
@@ -1042,8 +1012,8 @@ const RealestateSingle = ({
 
     setSelectedCategoryName(
       category.name ||
-        category.title ||
-        ""
+      category.title ||
+      ""
     );
 
     setShowFiltersStatus(true);
@@ -1056,12 +1026,12 @@ const RealestateSingle = ({
       (currentFields) =>
         currentFields.map((field) =>
           String(field.id) ===
-          String(fieldId)
+            String(fieldId)
             ? {
-                ...field,
-                low: 0,
-                high: 0,
-              }
+              ...field,
+              low: 0,
+              high: 0,
+            }
             : field
         )
     );
@@ -1082,12 +1052,12 @@ const RealestateSingle = ({
       (currentFields) =>
         currentFields.map((field) =>
           String(field.id) ===
-          String(fieldId)
+            String(fieldId)
             ? {
-                ...field,
-                low: newValue[0],
-                high: newValue[1],
-              }
+              ...field,
+              low: newValue[0],
+              high: newValue[1],
+            }
             : field
         )
     );
@@ -1145,9 +1115,6 @@ const RealestateSingle = ({
         }
       );
     } catch (error) {
-      /**
-       * Tracking failure must never prevent the call.
-       */
       console.error(
         "Call tracking error:",
         error
@@ -1159,10 +1126,45 @@ const RealestateSingle = ({
   };
 
   /**
+   * Tracking-only version (no `tel:` navigation).
+   * Used as the `onCallTracked` callback from the ContactDrawer,
+   * since the drawer itself handles the `tel:` link.
+   */
+  const handleCallTrackedOnly = async (
+    agentId
+  ) => {
+    try {
+      await axios.post(
+        TRACK_CALL_API,
+        { agent_id: agentId },
+        {
+          timeout: REQUEST_TIMEOUT,
+          headers: {
+            Accept: "application/json",
+          },
+        }
+      );
+    } catch (error) {
+      console.error(
+        "Call tracking error:",
+        error
+      );
+    }
+  };
+
+  /**
+   * Contact click — gate behind login for guests.
+   * Logged-in users go straight to the drawer.
+   */
+  const handleContactClick = () => {
+    requireAuth(
+      () => setContactOpen(true),
+      "برای مشاهده شماره تماس وارد شوید"
+    );
+  };
+
+  /**
    * Structured data.
-   *
-   * Person is the primary entity.
-   * RealEstateAgent represents the associated agency.
    */
   const jsonLd = useMemo(() => {
     if (!pageAvailable) {
@@ -1193,23 +1195,23 @@ const RealestateSingle = ({
 
       ...(cityName
         ? {
-            addressLocality:
-              cityName,
-          }
+          addressLocality:
+            cityName,
+        }
         : {}),
 
       ...(neighborhoodName
         ? {
-            addressRegion:
-              neighborhoodName,
-          }
+          addressRegion:
+            neighborhoodName,
+        }
         : {}),
 
       ...(address
         ? {
-            streetAddress:
-              address,
-          }
+          streetAddress:
+            address,
+        }
         : {}),
     };
 
@@ -1230,8 +1232,8 @@ const RealestateSingle = ({
 
               ...(workerUrl
                 ? {
-                    url: workerUrl,
-                  }
+                  url: workerUrl,
+                }
                 : {}),
             };
           }
@@ -1262,31 +1264,28 @@ const RealestateSingle = ({
 
       ...(agentProfileImage
         ? {
-            primaryImageOfPage: {
-              "@id":
-                profileImageId,
-            },
-          }
+          primaryImageOfPage: {
+            "@id":
+              profileImageId,
+          },
+        }
         : {}),
 
       ...(realstate?.created_at
         ? {
-            dateCreated:
-              realstate.created_at,
-          }
+          dateCreated:
+            realstate.created_at,
+        }
         : {}),
 
       ...(realstate?.updated_at
         ? {
-            dateModified:
-              realstate.updated_at,
-          }
+          dateModified:
+            realstate.updated_at,
+        }
         : {}),
     };
 
-    /**
-     * Person is the primary indexed entity.
-     */
     const personSchema = {
       "@type": "Person",
       "@id": personId,
@@ -1302,45 +1301,45 @@ const RealestateSingle = ({
 
       ...(phone
         ? {
-            telephone: phone,
-          }
+          telephone: phone,
+        }
         : {}),
 
       ...(agentProfileImage
         ? {
-            image: {
-              "@id":
-                profileImageId,
-            },
-          }
+          image: {
+            "@id":
+              profileImageId,
+          },
+        }
         : {}),
 
       ...(agencyName
         ? {
-            worksFor: {
-              "@id": agencyId,
-            },
+          worksFor: {
+            "@id": agencyId,
+          },
 
-            affiliation: {
-              "@id": agencyId,
-            },
-          }
+          affiliation: {
+            "@id": agencyId,
+          },
+        }
         : {}),
 
       ...(cityName
         ? {
-            workLocation: {
-              "@type": "Place",
-              name: cityName,
+          workLocation: {
+            "@type": "Place",
+            name: cityName,
 
-              ...(address
-                ? {
-                    address:
-                      postalAddress,
-                  }
-                : {}),
-            },
-          }
+            ...(address
+              ? {
+                address:
+                  postalAddress,
+              }
+              : {}),
+          },
+        }
         : {}),
 
       subjectOf: {
@@ -1348,94 +1347,83 @@ const RealestateSingle = ({
       },
     };
 
-    /**
-     * There is no separate agency page yet.
-     *
-     * Therefore, this agency receives a fragment ID on the person's
-     * canonical page instead of receiving the person's URL as its own URL.
-     */
     const agencySchema =
       agencyName
         ? {
-            "@type":
-              "RealEstateAgent",
-            "@id": agencyId,
-            name: agencyName,
+          "@type":
+            "RealEstateAgent",
+          "@id": agencyId,
+          name: agencyName,
 
-            ...(phone
-              ? {
-                  telephone:
-                    phone,
-                }
-              : {}),
+          ...(phone
+            ? {
+              telephone:
+                phone,
+            }
+            : {}),
 
-            ...(cityName ||
+          ...(cityName ||
             neighborhoodName ||
             address
-              ? {
-                  address:
-                    postalAddress,
-                }
-              : {}),
+            ? {
+              address:
+                postalAddress,
+            }
+            : {}),
 
-            ...(cityName
-              ? {
-                  areaServed: {
-                    "@type":
-                      "City",
-                    name: cityName,
-                  },
-                }
-              : {}),
+          ...(cityName
+            ? {
+              areaServed: {
+                "@type":
+                  "City",
+                name: cityName,
+              },
+            }
+            : {}),
 
-            ...(realstate?.latitude &&
+          ...(realstate?.latitude &&
             realstate?.longitude
-              ? {
-                  geo: {
-                    "@type":
-                      "GeoCoordinates",
-                    latitude:
-                      toNumber(
-                        realstate.latitude
-                      ),
-                    longitude:
-                      toNumber(
-                        realstate.longitude
-                      ),
-                  },
-                }
-              : {}),
+            ? {
+              geo: {
+                "@type":
+                  "GeoCoordinates",
+                latitude:
+                  toNumber(
+                    realstate.latitude
+                  ),
+                longitude:
+                  toNumber(
+                    realstate.longitude
+                  ),
+              },
+            }
+            : {}),
 
-            employee: {
-              "@id": personId,
-            },
-          }
+          employee: {
+            "@id": personId,
+          },
+        }
         : null;
 
-    /**
-     * Only the actual agent photo receives ImageObject schema.
-     *
-     * Ajur's default social image is not described as the person's image.
-     */
     const profileImageSchema =
       agentProfileImage
         ? {
-            "@type":
-              "ImageObject",
-            "@id": profileImageId,
-            url: agentProfileImage,
-            contentUrl:
-              agentProfileImage,
-            name: agentImageAlt,
-            caption: agentImageAlt,
-            inLanguage: "fa-IR",
-            representativeOfPage:
-              true,
+          "@type":
+            "ImageObject",
+          "@id": profileImageId,
+          url: agentProfileImage,
+          contentUrl:
+            agentProfileImage,
+          name: agentImageAlt,
+          caption: agentImageAlt,
+          inLanguage: "fa-IR",
+          representativeOfPage:
+            true,
 
-            about: {
-              "@id": personId,
-            },
-          }
+          about: {
+            "@id": personId,
+          },
+        }
         : null;
 
     const itemListSchema = {
@@ -1482,45 +1470,42 @@ const RealestateSingle = ({
 
         ...(cityName
           ? [
-              {
-                "@type":
-                  "ListItem",
-                position: 3,
-                name:
-                  `مشاورین املاک ${cityName}`,
+            {
+              "@type":
+                "ListItem",
+              position: 3,
+              name:
+                `مشاورین املاک ${cityName}`,
 
-                /**
-                 * If city.slug is unavailable, no false URL is guessed.
-                 */
-                ...(realstate?.city
-                  ?.slug
-                  ? {
-                      item:
-                        `${SITE_URL}/agents/${encodeURIComponent(
-                          realstate
-                            .city
-                            .slug
-                        )}`,
-                    }
-                  : {}),
-              },
-              {
-                "@type":
-                  "ListItem",
-                position: 4,
-                name: pageHeading,
-                item: canonical,
-              },
-            ]
+              ...(realstate?.city
+                ?.slug
+                ? {
+                  item:
+                    `${SITE_URL}/agents/${encodeURIComponent(
+                      realstate
+                        .city
+                        .slug
+                    )}`,
+                }
+                : {}),
+            },
+            {
+              "@type":
+                "ListItem",
+              position: 4,
+              name: pageHeading,
+              item: canonical,
+            },
+          ]
           : [
-              {
-                "@type":
-                  "ListItem",
-                position: 3,
-                name: pageHeading,
-                item: canonical,
-              },
-            ]),
+            {
+              "@type":
+                "ListItem",
+              position: 3,
+              name: pageHeading,
+              item: canonical,
+            },
+          ]),
       ],
     };
 
@@ -1571,9 +1556,6 @@ const RealestateSingle = ({
     seoData.title,
   ]);
 
-  /**
-   * Replacing "<" prevents API data from breaking out of JSON-LD.
-   */
   const serializedJsonLd =
     useMemo(() => {
       if (!jsonLd) {
@@ -1639,8 +1621,8 @@ const RealestateSingle = ({
           const workerPath =
             worker?.id
               ? `/worker/${encodeURIComponent(
-                  String(worker.id)
-                )}`
+                String(worker.id)
+              )}`
               : "#";
 
           return (
@@ -1714,7 +1696,7 @@ const RealestateSingle = ({
         <div
           className={
             Styles[
-              "header-wrapper"
+            "header-wrapper"
             ]
           }
         >
@@ -1802,7 +1784,7 @@ const RealestateSingle = ({
       if (
         !selectedCategoryId ||
         selectedCategoryId ===
-          "all"
+        "all"
       ) {
         return null;
       }
@@ -1811,7 +1793,7 @@ const RealestateSingle = ({
         <div
           className={
             Styles[
-              "neighborhood-icon-wrapper"
+            "neighborhood-icon-wrapper"
             ]
           }
         >
@@ -1832,7 +1814,7 @@ const RealestateSingle = ({
             <div>
               فیلترهای بیشتر
               {activeFiltersCount >
-              0
+                0
                 ? ` (${activeFiltersCount})`
                 : ""}
             </div>
@@ -1851,56 +1833,53 @@ const RealestateSingle = ({
 
       return (
         <Container
-  maxWidth="lg"
-  sx={{
-    mt: 3,
-    mb: 1,
-    paddingTop: 2,
-    textAlign: "center",
-    paddingX: { xs: 1, sm: 2 },
-  }}
->
-  <Box
-    sx={{
-      display: "flex",
-      gap: 1,
-      overflowX: "auto",
-      overflowY: "hidden",
-      paddingBottom: 1,
-      direction: "rtl",
-      // prevent buttons from shrinking
-      "& > *": { flexShrink: 0 },
-      // hide the scrollbar visually (mobile scroll still works)
-      "&::-webkit-scrollbar": { display: "none" },
-      scrollbarWidth: "none",
-      msOverflowStyle: "none",
-      // give the row a fixed height so it doesn't collapse
-      minHeight: 48,
-      alignItems: "center",
-    }}
-  >
-    <Button
-      variant={!selectedCategoryId || selectedCategoryId === "all" ? "contained" : "outlined"}
-      onClick={() => handleCategorySelect("all")}
-      sx={{ whiteSpace: "nowrap", flexShrink: 0 }}
-    >
-      همه فایل‌ها
-    </Button>
+          maxWidth="lg"
+          sx={{
+            mt: 3,
+            mb: 1,
+            paddingTop: 2,
+            textAlign: "center",
+            paddingX: { xs: 1, sm: 2 },
+          }}
+        >
+          <Box
+            sx={{
+              display: "flex",
+              gap: 1,
+              overflowX: "auto",
+              overflowY: "hidden",
+              paddingBottom: 1,
+              direction: "rtl",
+              "& > *": { flexShrink: 0 },
+              "&::-webkit-scrollbar": { display: "none" },
+              scrollbarWidth: "none",
+              msOverflowStyle: "none",
+              minHeight: 48,
+              alignItems: "center",
+            }}
+          >
+            <Button
+              variant={!selectedCategoryId || selectedCategoryId === "all" ? "contained" : "outlined"}
+              onClick={() => handleCategorySelect("all")}
+              sx={{ whiteSpace: "nowrap", flexShrink: 0 }}
+            >
+              همه فایل‌ها
+            </Button>
 
-    {categories.map((category) => (
-      <Button
-        key={category.id}
-        variant={String(selectedCategoryId) === String(category.id) ? "contained" : "outlined"}
-        onClick={() => handleCategorySelect(category)}
-        sx={{ whiteSpace: "nowrap", flexShrink: 0 }}
-      >
-        {category.name || category.title}
-      </Button>
-    ))}
-  </Box>
+            {categories.map((category) => (
+              <Button
+                key={category.id}
+                variant={String(selectedCategoryId) === String(category.id) ? "contained" : "outlined"}
+                onClick={() => handleCategorySelect(category)}
+                sx={{ whiteSpace: "nowrap", flexShrink: 0 }}
+              >
+                {category.name || category.title}
+              </Button>
+            ))}
+          </Box>
 
-  {renderFiltersButton()}
-</Container>
+          {renderFiltersButton()}
+        </Container>
       );
     };
 
@@ -1917,7 +1896,7 @@ const RealestateSingle = ({
           id="filters-modal-title"
           className={
             Styles[
-              "modal-header-title"
+            "modal-header-title"
             ]
           }
         >
@@ -1985,8 +1964,8 @@ const RealestateSingle = ({
               0
             ) > 0
               ? toNumber(
-                  field.low
-                )
+                field.low
+              )
               : minimum;
 
           const high =
@@ -1995,8 +1974,8 @@ const RealestateSingle = ({
               0
             ) > 0
               ? toNumber(
-                  field.high
-                )
+                field.high
+              )
               : maximum;
 
           const filterIsActive =
@@ -2136,7 +2115,7 @@ const RealestateSingle = ({
           <div
             className={
               Styles[
-                "modal-header"
+              "modal-header"
               ]
             }
           >
@@ -2164,7 +2143,7 @@ const RealestateSingle = ({
                     <CloseIcon
                       className={
                         Styles[
-                          "modal-header-close-button"
+                        "modal-header-close-button"
                         ]
                       }
                     />
@@ -2187,7 +2166,7 @@ const RealestateSingle = ({
           <div
             className={
               Styles[
-                "neighborhood-modal-footer-wrapper"
+              "neighborhood-modal-footer-wrapper"
               ]
             }
           >
@@ -2240,7 +2219,7 @@ const RealestateSingle = ({
       <Box
         className={
           Styles[
-            "modal-wrapper"
+          "modal-wrapper"
           ]
         }
       >
@@ -2304,18 +2283,10 @@ const RealestateSingle = ({
           <div
             className={
               Styles[
-                "realstate-items-wrapper"
+              "realstate-items-wrapper"
               ]
             }
           >
-            {/*
-              This header is part of the initial server-rendered HTML.
-
-              Keep only one H1 on the page. If RealstateCard currently
-              renders another H1, change that internal heading to H2/div.
-            */}
-            
-
             <div>
               <Box
                 sx={{
@@ -2352,14 +2323,14 @@ const RealestateSingle = ({
             <div
               className={
                 Styles[
-                  "contact-wrapper"
+                "contact-wrapper"
                 ]
               }
             >
               <Box
                 component="div"
                 sx={{
-                  p: 2,
+                  p: 0,
                   border:
                     "1px dashed grey",
                   margin: "5px",
@@ -2371,44 +2342,20 @@ const RealestateSingle = ({
                   container
                   spacing={1}
                 >
-                  <Grid
-                    item
-                    xs={6}
-                    md={6}
-                  >
-                    <Button
-                      fullWidth
-                      className={
-                        Styles[
-                          "worker-detail-button"
-                        ]
-                      }
-                      variant="contained"
-                      startIcon={
-                        <TourOutlinedIcon />
-                      }
-                    >
-                      درخواست فایل
-                    </Button>
-                  </Grid>
+                  
 
                   <Grid
                     item
-                    xs={6}
-                    md={6}
+                    xs={12}
+                    md={12}
                   >
                     <Button
                       fullWidth
                       disabled={!phone}
-                      onClick={() =>
-                        handleCall(
-                          realstate.id,
-                          phone
-                        )
-                      }
+                      onClick={handleContactClick}
                       className={
                         Styles[
-                          "worker-detail-button"
+                        "worker-detail-button"
                         ]
                       }
                       variant="outlined"
@@ -2417,12 +2364,21 @@ const RealestateSingle = ({
                       }
                       aria-label={
                         phone
-                          ? `تماس با ${agentName}`
+                          ? `نمایش شماره تماس ${agentName}`
                           : "شماره تماس موجود نیست"
                       }
                     >
-                      {phone ||
-                        "شماره تماس"}
+                      <span
+                        style={{
+                          direction: "ltr",
+                          fontFamily:
+                            "monospace, iransans",
+                        }}
+                      >
+                        {phone
+                          ? maskPhone(phone)
+                          : "شماره تماس"}
+                      </span>
                     </Button>
                   </Grid>
                 </Grid>
@@ -2589,6 +2545,19 @@ const RealestateSingle = ({
 
       {renderContent()}
       {renderModal()}
+
+      <ContactDrawer
+        open={contactOpen}
+        onClose={() => setContactOpen(false)}
+        details={{
+          id: realstate?.id,
+          name: agentName,
+          cellphone: phone,
+          phone: phone,
+        }}
+        realstate={realstate}
+        onCallTracked={() => handleCallTrackedOnly(realstate?.id)}
+      />
     </div>
   );
 };
@@ -2630,12 +2599,6 @@ export async function getServerSideProps(
   const normalizedPageId =
     pageId.trim();
 
-  /**
-   * Use the requested path for canonical but remove:
-   * - query parameters
-   * - URL fragments
-   * - trailing slashes
-   */
   const rawResolvedUrl =
     context.resolvedUrl || "";
 
@@ -2646,9 +2609,6 @@ export async function getServerSideProps(
       .replace(/\/+$/, "") ||
     "/";
 
-  /**
-   * Avoid serving stale agent information.
-   */
   context.res.setHeader(
     "Cache-Control",
     "no-store, no-cache, max-age=0, must-revalidate"
@@ -2686,22 +2646,15 @@ export async function getServerSideProps(
           ?.subcategories
       )
         ? response.data
-            .subcategories
+          .subcategories
         : [];
 
-    /**
-     * Missing agent data must result in a real 404.
-     */
     if (!realstate?.id) {
       return {
         notFound: true,
       };
     }
 
-    /**
-     * A profile without a personal name should not become an
-     * indexable agency-only page accidentally.
-     */
     const serverAgentName =
       getAgentName(realstate);
 
@@ -2743,9 +2696,6 @@ export async function getServerSideProps(
     const status =
       error?.response?.status;
 
-    /**
-     * API 404 means the agent does not exist.
-     */
     if (status === 404) {
       return {
         notFound: true,
@@ -2757,9 +2707,6 @@ export async function getServerSideProps(
       error?.message || error
     );
 
-    /**
-     * Temporary API failures receive HTTP 503 so Google retries later.
-     */
     context.res.statusCode = 503;
 
     context.res.setHeader(

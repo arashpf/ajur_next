@@ -218,6 +218,9 @@ const DashboardContent = () => {
   // Fetch user + workers
   useEffect(() => {
     var token = Cookies.get("id_token");
+
+    console.log('---------- the token is ---------------------');
+    console.log(token);
     if (!token) {
       router.push("/panel/auth/login");
       return;
@@ -248,6 +251,8 @@ const DashboardContent = () => {
       },
     })
       .then((response) => {
+
+        
         set_workers(response.data.workers);
         set_all_workers(response.data.workers);
         set_subcategories(response.data.subcategories);

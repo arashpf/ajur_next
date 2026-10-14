@@ -3321,7 +3321,6 @@ function Home(props) {
   const neighborhoodSwiperRef = useRef(null);
   const router = useRouter();
 
-  // Use CityContext for dynamic city data
   const { allCities, findCityBySlug, findCityByTitle } = useContext(CityContext);
 
   const [persianCity, setPersianCity] = useState(props.url_persian_city || "تهران");
@@ -4372,13 +4371,38 @@ function Home(props) {
 export async function getServerSideProps(context) {
   const { req, res } = context;
 
-  // ─── City from URL ───
-  let city = "tehran";
+  // ─── City from URL first ───
+  let city = null;
   const path = req.url || "";
-  const pathParts = path.split('?')[0].split('/');
+  const pathParts = path.split("?")[0].split("/");
 
   if (pathParts.length > 1 && pathParts[1] !== "") {
     city = decodeURIComponent(pathParts[1]);
+  }
+
+  // ─── If no city in URL, check cookie before defaulting ───
+  if (!city) {
+    const cookieHeader = req.headers.cookie || "";
+    const cookies = Object.fromEntries(
+      cookieHeader
+        .split(";")
+        .map((c) => c.trim().split("="))
+        .filter(([k]) => k)
+    );
+
+    const cookieCity = cookies["city"];
+
+    if (cookieCity) {
+      // Real SSR 302 redirect — no client hop, no error flash
+      return {
+        redirect: {
+          destination: `/${cookieCity}`,
+          permanent: false,
+        },
+      };
+    }
+
+    city = "tehran";
   }
 
   // ─── Cache control (SSR cache, 5 min) ───
@@ -4390,7 +4414,7 @@ export async function getServerSideProps(context) {
 
   try {
     // ─── Fetch cities list (for Persian name lookup) ───
-    const citiesResponse = await fetch('https://api.ajur.app/api/search-cities', {
+    const citiesResponse = await fetch("https://api.ajur.app/api/search-cities", {
       headers: {
         Accept: "application/json",
         "User-Agent": req.headers["user-agent"] || "Ajur-SSR",
@@ -4402,7 +4426,7 @@ export async function getServerSideProps(context) {
 
     if (citiesResponse.ok) {
       const citiesData = await citiesResponse.json();
-      const cityData = citiesData.items?.find(c => c.slug === city);
+      const cityData = citiesData.items?.find((c) => c.slug === city);
 
       if (cityData) {
         url_persian_city = cityData.title;
@@ -4427,7 +4451,7 @@ export async function getServerSideProps(context) {
           url_city: city,
           url_persian_city,
           initialData: null,
-          error: true,
+          error: false, // ← spinner instead of error page
           __clientIp: clientContext.clientIp,
         },
       };
@@ -4441,7 +4465,7 @@ export async function getServerSideProps(context) {
           url_city: city,
           url_persian_city,
           initialData: null,
-          error: true,
+          error: false,
           __clientIp: clientContext.clientIp,
         },
       };
@@ -4450,9 +4474,6 @@ export async function getServerSideProps(context) {
     const data = await response.json();
 
     // ─── Analytics: fire city_view ───
-    // Total inventory in this city = sum of special + urgent workers,
-    // since the API doesn't return a single count. Adjust if you have
-    // a better number available.
     const specialCount = Array.isArray(data?.the_city_specials)
       ? data.the_city_specials.length
       : 0;
@@ -4463,27 +4484,20 @@ export async function getServerSideProps(context) {
       ? data.the_neighborhoods.length
       : 0;
 
-
-    console.log("[ssr] city_view DEBUG", {
-      city,
-      clientIp: clientContext.clientIp,
-      userAgent: clientContext.userAgent,
-      hasReq: !!context.req,
-      reqHeaders: context.req?.headers ? Object.keys(context.req.headers).slice(0, 10) : null,
-      rawUserAgent: context.req?.headers?.["user-agent"],
-      socketRemote: context.req?.socket?.remoteAddress,
-    });
     if (clientContext.clientIp || clientContext.userAgent) {
-      console.log("[ssr] city_view firing");
       fireSsrEvent(
         "city_view",
-        { city_slug: city, city_id: cityId, special_count: specialCount, urgent_count: urgentCount, neighborhoods_count: neighborhoodsCount },
+        {
+          city_slug: city,
+          city_id: cityId,
+          special_count: specialCount,
+          urgent_count: urgentCount,
+          neighborhoods_count: neighborhoodsCount,
+        },
         clientContext
       ).catch((err) => {
         console.warn("[ssr] city_view failed:", err?.response?.status || err?.message || err);
       });
-    } else {
-      console.log("[ssr] city_view SKIPPED — empty context");
     }
 
     return {
@@ -4491,7 +4505,7 @@ export async function getServerSideProps(context) {
         url_city: city,
         url_persian_city,
         initialData: data || null,
-        __clientIp: clientContext.clientIp,   // ← ADD
+        __clientIp: clientContext.clientIp,
       },
     };
   } catch (error) {
@@ -4501,8 +4515,8 @@ export async function getServerSideProps(context) {
         url_city: city,
         url_persian_city: city,
         initialData: null,
-        error: true,
-        __clientIp: clientContext.clientIp,   // ← ADD
+        error: false, // ← spinner instead of error page
+        __clientIp: clientContext.clientIp,
       },
     };
   }

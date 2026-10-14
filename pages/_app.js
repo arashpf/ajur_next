@@ -19,6 +19,7 @@ import SmartAppBanner from "../components/banner/SmartAppBanner";
 
 import { ensureIdentity } from "../lib/identity";
 import { captureAttribution } from "../lib/utm";
+import { AuthProvider } from "../components/auth/AuthProvider"; // ← ADDED
 
 export default function MyApp({ Component, pageProps }) {
   const router = useRouter();
@@ -30,7 +31,7 @@ export default function MyApp({ Component, pageProps }) {
   useEffect(() => {
     captureAttribution();
   }, []);
-  
+
   // Setup global axios error interceptor
   useEffect(() => {
     const responseInterceptor = axios.interceptors.response.use(
@@ -58,24 +59,15 @@ export default function MyApp({ Component, pageProps }) {
         <Head>
           <link rel="manifest" href="/manifest.json" />
           <meta name="theme-color" content="#000000" />
-          {/* <script
-            async
-            src="https://www.googletagmanager.com/gtag/js?id=AW-11545772692"
-          ></script>
-          <script
-            dangerouslySetInnerHTML={{
-              __html: `
-                window.dataLayer = window.dataLayer || [];
-                function gtag(){dataLayer.push(arguments);}
-                gtag('js', new Date());
-                gtag('config', 'AW-11545772692');
-              `,
-            }}
-          ></script> */}
         </Head>
         {/* <CookieConsent /> */}
         <SmartAppBanner />
       </FrontLayout>;
     };
-  return renderWithLayout(<Component {...pageProps} />);
+
+  return (
+    <AuthProvider>
+      {renderWithLayout(<Component {...pageProps} />)}
+    </AuthProvider>
+  );
 }

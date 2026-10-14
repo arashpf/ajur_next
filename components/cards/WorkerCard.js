@@ -6,20 +6,82 @@ import CameraIndoorIcon from "@mui/icons-material/CameraIndoor";
 import CollectionsIcon from "@mui/icons-material/Collections";
 import FavoriteBorderIcon from "@mui/icons-material/FavoriteBorder";
 import FavoriteIcon from "@mui/icons-material/Favorite";
+import Snackbar from "@mui/material/Snackbar";
+import Alert from "@mui/material/Alert";
 import Cookies from "js-cookie";
+import axios from "axios";
 import { Box, Chip } from "@mui/material";
 import CheckIcon from "@mui/icons-material/Check";
 import { parseISO, differenceInDays } from "date-fns";
 
 import Styles from "../styles/WorkerCard.module.css";
+import { trackEvent } from "../lib/track";
+import useAuthGate from "../../hooks/useAuthGate"; // ← ADDED
+
+const API_BASE = "https://api.ajur.app/api";
+
+// ─── Local favorites helpers (cookie) ───
+const readLocalFavorites = () => {
+  try {
+    const raw = Cookies.get("favorited");
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed.map(Number) : [];
+  } catch {
+    return [];
+  }
+};
+
+const writeLocalFavorites = (ids) => {
+  try {
+    const trimmed = ids.slice(-20);
+    Cookies.set("favorited", JSON.stringify(trimmed), { expires: 365 });
+  } catch {
+    /* ignore */
+  }
+};
+
+// ─────────────────────────────────────────────────────────────
+// Module-level toast pub/sub (avoids a Context provider)
+// ─────────────────────────────────────────────────────────────
+let toastListeners = [];
+const emitToast = (message, severity = "success") => {
+  toastListeners.forEach((fn) => fn({ message, severity }));
+};
 
 export default function ImgMediaCard(props) {
   const worker = props.worker;
+  const { requireAuth } = useAuthGate(); // ← ADDED
   const [imageLoaded, setImageLoaded] = useState(false);
   const [properties, set_properties] = useState([]);
   const [hasQuickHints, setHasQuickHints] = useState(false);
   const [isfavorite, set_isfavorite] = useState("off");
+  const [heartAnimating, setHeartAnimating] = useState(false);
 
+  const [toast, setToast] = useState({
+    open: false,
+    message: "",
+    severity: "success",
+  });
+
+  useEffect(() => {
+    const listener = ({ message, severity }) => {
+      setToast({ open: true, message, severity });
+    };
+    toastListeners.push(listener);
+    return () => {
+      toastListeners = toastListeners.filter((fn) => fn !== listener);
+    };
+  }, []);
+
+  const closeToast = (event, reason) => {
+    if (reason === "clickaway") return;
+    setToast((t) => ({ ...t, open: false }));
+  };
+
+  // ─────────────────────────────────────────────────────────────
+  // Parse json_properties
+  // ─────────────────────────────────────────────────────────────
   useEffect(() => {
     try {
       if (worker?.json_properties) {
@@ -28,6 +90,8 @@ export default function ImgMediaCard(props) {
             ? JSON.parse(worker.json_properties)
             : worker.json_properties
         );
+      } else {
+        set_properties([]);
       }
     } catch {
       set_properties([]);
@@ -41,60 +105,114 @@ export default function ImgMediaCard(props) {
     setHasQuickHints(hints.length > 0);
   }, [properties]);
 
+  // ─────────────────────────────────────────────────────────────
+  // Favorite state — cookie only for instant UI
+  // ─────────────────────────────────────────────────────────────
   useEffect(() => {
-    var faviorited = Cookies.get("favorited");
-    if (!faviorited) return;
+    if (!worker?.id) return;
+    const id = Number(worker.id);
+    const localIds = readLocalFavorites();
+    set_isfavorite(localIds.includes(id) ? "on" : "off");
+  }, [worker?.id]);
 
-    const productToBeSaved = worker.id;
-    let newProduct = [];
-    try {
-      newProduct = JSON.parse(faviorited) || [];
-    } catch {
-      newProduct = [];
+  // ─────────────────────────────────────────────────────────────
+  // Toggle handlers
+  // ─────────────────────────────────────────────────────────────
+  const triggerHeartAnimation = () => {
+    setHeartAnimating(true);
+    setTimeout(() => setHeartAnimating(false), 600);
+  };
+
+  // The actual add-to-favorites work — runs ONLY when logged in
+  const doAddFavorite = () => {
+    const id = Number(worker.id);
+    const localIds = readLocalFavorites();
+
+    if (!localIds.includes(id)) {
+      localIds.push(id);
+      writeLocalFavorites(localIds);
     }
 
-    if (newProduct.includes(productToBeSaved)) {
-      set_isfavorite("on");
-    }
-  }, [worker.id]);
-
-  const onPressMakeWorkerfavorite = () => {
-    var faviorited = Cookies.get("favorited");
-    const productToBeSaved = worker.id;
-    let newProduct = [];
-    if (faviorited) {
-      try {
-        newProduct = JSON.parse(faviorited) || [];
-      } catch {
-        newProduct = [];
-      }
-    }
-    if (!newProduct.includes(productToBeSaved)) {
-      newProduct.push(productToBeSaved);
-    }
-    if (newProduct.length > 20) {
-      newProduct = newProduct.slice(newProduct.length - 20);
-    }
-    Cookies.set("favorited", JSON.stringify(newProduct));
     set_isfavorite("on");
+    triggerHeartAnimation();
+    emitToast("ملک به علاقه‌مندی‌های شما اضافه شد", "success");
+
+    // Analytics
+    trackEvent("listing_favorite", {
+      listing_id: id,
+      action: "add",
+      creator_user_id: worker.user_id ?? null,
+      city_id: worker.city_id ?? null,
+      category_id: worker.category_id ?? null,
+      source: "worker-card",
+    });
+
+    const token = Cookies.get("id_token");
+    if (token) {
+      axios({
+        method: "post",
+        url: `${API_BASE}/favorites/toggle`,
+        params: { token },
+        data: { worker_id: id },
+      }).catch((err) => {
+        if (process.env.NODE_ENV !== "production") {
+          console.warn("[WorkerCard] favorite toggle failed:", err?.message);
+        }
+      });
+    }
+  };
+
+  // The actual remove-from-favorites work
+  const doRemoveFavorite = () => {
+    const id = Number(worker.id);
+    const localIds = readLocalFavorites();
+    const filtered = localIds.filter((x) => x !== id);
+    writeLocalFavorites(filtered);
+
+    set_isfavorite("off");
+    emitToast("ملک از علاقه‌مندی‌های شما حذف شد", "info");
+
+    // Analytics
+    trackEvent("listing_favorite", {
+      listing_id: id,
+      action: "remove",
+      creator_user_id: worker.user_id ?? null,
+      city_id: worker.city_id ?? null,
+      category_id: worker.category_id ?? null,
+      source: "worker-card",
+    });
+
+    const token = Cookies.get("id_token");
+    if (token) {
+      axios({
+        method: "post",
+        url: `${API_BASE}/favorites/toggle`,
+        params: { token },
+        data: { worker_id: id },
+      }).catch((err) => {
+        if (process.env.NODE_ENV !== "production") {
+          console.warn("[WorkerCard] favorite toggle-off failed:", err?.message);
+        }
+      });
+    }
+  };
+
+  // Public handlers — favorite requires auth, unfavorite doesn't
+  const onPressMakeWorkerfavorite = () => {
+    requireAuth(
+      () => doAddFavorite(),
+      "برای افزودن به علاقه‌مندی‌ها وارد شوید"
+    );
   };
 
   const onPressMakeWorkerUnfavorite = () => {
-    var faviorited = Cookies.get("favorited");
-    const productToBeSaved = worker.id;
-    let newProduct = [];
-    if (faviorited) {
-      try {
-        newProduct = JSON.parse(faviorited) || [];
-      } catch {
-        newProduct = [];
-      }
-    }
-    const filterProduct = newProduct.filter((item) => item !== productToBeSaved);
-    Cookies.set("favorited", JSON.stringify(filterProduct));
-    set_isfavorite("off");
+    // Removing is always allowed — even guests can clear their own local list
+    doRemoveFavorite();
   };
 
+  // ─────────────────────────────────────────────────────────────
+  // PriceBubble
+  // ─────────────────────────────────────────────────────────────
   const PriceBubble = ({ children }) => {
     const summaryRef = useRef(null);
     const [truncated, setTruncated] = useState(false);
@@ -160,7 +278,10 @@ export default function ImgMediaCard(props) {
         tabIndex={0}
         className={Styles["card-inside-heart"]}
       >
-        <FavoriteIcon style={{ color: "#b92a31" }} />
+        <FavoriteIcon
+          className={heartAnimating ? Styles["heart-pop"] : ""}
+          style={{ color: "#b92a31" }}
+        />
       </div>
     ) : (
       <div
@@ -195,14 +316,26 @@ export default function ImgMediaCard(props) {
       );
     } else if (rent_front[0]) {
       var rent_front_no_format = rent_front[0].value ?? 0;
-      var rent_per_mounth_no_format = rent_per_mounth[0] ? rent_per_mounth[0].value : 0;
+      var rent_per_mounth_no_format = rent_per_mounth[0]
+        ? rent_per_mounth[0].value
+        : 0;
       return (
         <PriceBubble>
-          <div style={{ display: "flex", flexDirection: "row", justifyContent: "flex-end" }}>
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "row",
+              justifyContent: "flex-end",
+            }}
+          >
             {rent_per_mounth_no_format != 0 ? (
               <p style={{ direction: "rtl", paddingRight: 4 }}>
                 <strong style={{ fontSize: "16px" }}>
-                  {String(rent_per_mounth_no_format).replace(/(.)(?=(\d{3})+$)/g, "$1,")} اجاره
+                  {String(rent_per_mounth_no_format).replace(
+                    /(.)(?=(\d{3})+$)/g,
+                    "$1,"
+                  )}{" "}
+                  اجاره
                 </strong>
               </p>
             ) : (
@@ -212,7 +345,11 @@ export default function ImgMediaCard(props) {
             )}
             <p style={{ direction: "rtl" }}>
               <strong style={{ fontSize: "16px" }}>
-                {String(rent_front_no_format).replace(/(.)(?=(\d{3})+$)/g, "$1,")} رهن
+                {String(rent_front_no_format).replace(
+                  /(.)(?=(\d{3})+$)/g,
+                  "$1,"
+                )}{" "}
+                رهن
               </strong>
             </p>
           </div>
@@ -223,13 +360,15 @@ export default function ImgMediaCard(props) {
   };
 
   const renderPropertiesCustomized = (pr) => {
-    if (["قیمت", "پول پیش", "اجاره ماهیانه", "قیمت هر متر"].includes(pr.name)) return;
+    if (["قیمت", "پول پیش", "اجاره ماهیانه", "قیمت هر متر"].includes(pr.name))
+      return;
     if (pr.kind == 1) {
       return (
         <span key={pr.id}>
           {" "}
           <span>
-            | {pr.name} {String(pr.value).replace(/(.)(?=(\d{3})+$)/g, "$1,")}
+            | {pr.name}{" "}
+            {String(pr.value).replace(/(.)(?=(\d{3})+$)/g, "$1,")}
           </span>
           {"."}
         </span>
@@ -265,16 +404,37 @@ export default function ImgMediaCard(props) {
     const hints = properties
       .filter((pr) => pr.special === "1" && pr.kind === 2)
       .map((pr, index) => (
-        <Box key={index} sx={{ display: "flex", flexDirection: "row", width: 100, justifyContent: "space-around" }}>
+        <Box
+          key={index}
+          sx={{
+            display: "flex",
+            flexDirection: "row",
+            justifyContent: "space-around",
+          }}
+        >
           {pr.value == 1 && (
             <Chip
               label={
-                <Box component="span" sx={{ display: "flex", alignItems: "center" }}>
+                <Box
+                  component="span"
+                  sx={{ display: "flex", alignItems: "center" }}
+                >
                   {pr.name}
                   <CheckIcon sx={{ fontSize: 13, color: "white", ml: 0.5 }} />
                 </Box>
               }
-              sx={{ px: 0.5, py: 0, m: 0, bgcolor: "#b9272e", color: "white", borderRadius: 1, width: 90, fontSize: 13, height: 24, "& .MuiChip-label": { px: 0.5 } }}
+              sx={{
+                px: 0.5,
+                py: 0,
+                m: 0,
+                bgcolor: "#b9272e",
+                color: "white",
+                borderRadius: 1,
+                width: 90,
+                fontSize: 13,
+                height: 24,
+                "& .MuiChip-label": { px: 0.5 },
+              }}
             />
           )}
         </Box>
@@ -286,14 +446,50 @@ export default function ImgMediaCard(props) {
     <div>
       <Card
         sx={{ width: "100%", borderRadius: "10px" }}
-        className={`notailwind ${Styles["card-wrapper"]} ${worker.is_special ? Styles["card-wrapper-special"] : ""} ${worker.is_urgent ? Styles["card-wrapper-urgent"] : ""}`}
+        className={`notailwind ${Styles["card-wrapper"]} ${
+          worker.is_special ? Styles["card-wrapper-special"] : ""
+        } ${worker.is_urgent ? Styles["card-wrapper-urgent"] : ""}`}
       >
+        <Snackbar
+          open={toast.open}
+          autoHideDuration={2500}
+          onClose={closeToast}
+          anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+          sx={{
+            zIndex: 9999,
+            bottom: { xs: "100px !important", sm: "70px !important" },
+            "& .MuiSnackbar-root": { bottom: "50px" },
+          }}
+        >
+          <Alert
+            onClose={closeToast}
+            severity={toast.severity}
+            variant="filled"
+            sx={{
+              fontFamily: "iransans, Arial, sans-serif",
+              fontSize: 14,
+              borderRadius: "10px",
+              direction: "rtl",
+              textAlign: "right",
+              minWidth: 280,
+            }}
+          >
+            {toast.message}
+          </Alert>
+        </Snackbar>
+
         {renderNeighborHoodRibbon()}
         {renderHeart()}
 
         <div style={{ position: "relative" }}>
-          {worker.is_urgent && <div className={Styles["urgent-ribbon"]}><p>فوری</p></div>}
-          {!imageLoaded && <div className={Styles["image-skeleton"]} aria-hidden="true" />}
+          {worker.is_urgent && (
+            <div className={Styles["urgent-ribbon"]}>
+              <p>فوری</p>
+            </div>
+          )}
+          {!imageLoaded && (
+            <div className={Styles["image-skeleton"]} aria-hidden="true" />
+          )}
           <CardMedia
             component="img"
             alt={worker.name}
@@ -306,19 +502,29 @@ export default function ImgMediaCard(props) {
         </div>
 
         <div className={Styles["card-inside-top"]}>
-          <div className={Styles["inside-top-left"]}>{renderVideoOrImageIcon()}</div>
+          <div className={Styles["inside-top-left"]}>
+            {renderVideoOrImageIcon()}
+          </div>
           <div className={Styles["inside-top-right"]}>
             <p className={Styles["worker-title"]}>
               {worker.name}
-              {worker.is_special && <span className={Styles["ad-badge"]}> آگهی </span>}
+              {worker.is_special && (
+                <span className={Styles["ad-badge"]}> آگهی </span>
+              )}
             </p>
           </div>
         </div>
 
         <CardContent className={Styles["card-content"]}>
           <div className={Styles["price-wrapper"]}>{rednerPrice()}</div>
-          <div className={Styles["properties-wrapper"]}>{rednerProperties()}</div>
-          <div className={`${Styles["properties-hint"]} ${!hasQuickHints ? Styles["no-hints"] : ""}`}>
+          <div className={Styles["properties-wrapper"]}>
+            {rednerProperties()}
+          </div>
+          <div
+            className={`${Styles["properties-hint"]} ${
+              !hasQuickHints ? Styles["no-hints"] : ""
+            }`}
+          >
             {hasQuickHints && renderQuickHint()}
           </div>
         </CardContent>

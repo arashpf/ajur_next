@@ -5,9 +5,16 @@
 .card-wrapper {
   position: relative;
   border-radius: 10px;
-  
   box-shadow: rgba(0, 0, 0, 0.35) 0px 5px 15px;
-  margin: 0; /* keep card itself margin-free; page container will provide symmetric gutters */
+  margin: 0;
+
+  /* stack content, clip the ribbon corners */
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+
+  /* consistent min-height, but let cards grow if content needs it */
+  min-height: 260px;
 }
 
 .card-wrapper-urgent {
@@ -15,34 +22,21 @@
   border-radius: 10px;
   background: #e5e5e5;
   box-shadow: rgba(0, 0, 0, 0.35) 0px 5px 15px;
-  margin: 0; /* keep card itself margin-free; page container will provide symmetric gutters */
+  margin: 0;
 }
 
 .card-wrapper-special {
-  /* background: #e89a5a !important; */
-  /* background: linear-gradient(135deg, #8e44ad 0%, #f39c12 100%) !important; */
   background: linear-gradient(135deg, #8e44ad 0%, #c9a227 50%, #f39c12 100%) !important;
-  /* background: linear-gradient(135deg, #9b59b6 0%, #d4af37 100%) !important; */
-  /* background: #c9a227 !important; */
-  /* background: #8e44ad !important; */
-  /* border: 2px solid rgba(0,0,0,0.05); */
-}
-
-/* make card a column flex container so media + content size predictably */
-.card-wrapper {
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
 }
 
 .card-media {
   width: 100%;
-  max-height: 140px; /* decreased image height for a tighter card */
+  max-height: 140px;
   object-fit: cover;
   flex: 0 0 auto;
 }
 
-/* image loading skeleton (subtle shimmer) */
+/* image loading skeleton */
 .image-skeleton {
   width: 100%;
   height: 160px;
@@ -53,7 +47,7 @@
 }
 
 @keyframes shimmer {
-  0% { background-position: 200% 0; }
+  0%   { background-position: 200% 0; }
   100% { background-position: -200% 0; }
 }
 
@@ -64,94 +58,60 @@
   justify-content: flex-start;
 }
 
-.card-inside-neighbor{
-  position: absolute;
-  /* place heart over the lower-right of the image area */
-  top: 170px; /* adjusted to align with smaller image */
-  left: 5px;
+/* ─── overlay ribbons/labels over the image area ─── */
 
-  /* width: 360px; */
-  /* height: 8%; */
-  /* top: 1px; */
+.card-inside-neighbor {
+  position: absolute;
+  top: 170px;
+  left: 5px;
   display: flex;
   flex-direction: row;
   justify-content: space-between;
-  /* height: 30px;
-  width: 30px; */
-
   padding: 6px;
-
   background-color: rgba(255, 255, 255, 0.7);
-
-  /* margin: 0 5px; */
-  /* padding: 0 10px; */
   border-radius: 6px;
   z-index: 1;
 }
 
 .card-inside-heart {
   position: absolute;
-  /* place heart over the lower-right of the image area */
-  top: 165px; /* adjusted to align with smaller image */
+  top: 165px;
   right: 10px;
-
-  /* width: 360px; */
-  /* height: 8%; */
-  /* top: 1px; */
   display: flex;
   flex-direction: row;
   justify-content: space-between;
-  /* height: 30px;
-  width: 30px; */
-
   padding: 6px;
-
   background-color: rgba(255, 255, 255, 0.7);
-
-  /* margin: 0 5px; */
-  /* padding: 0 10px; */
   border-radius: 6px;
   z-index: 1;
+  cursor: pointer;
 }
 
 .card-inside-date {
   position: absolute;
-  /* position to the left of the heart at the same vertical level */
   top: 175px;
-  right: 55px; /* leaves space for the heart (adjust if heart width changes) */
-
-  /* width: 360px; */
-  /* height: 8%; */
-  /* top: 1px; */
+  right: 55px;
   display: flex;
   flex-direction: row;
   justify-content: space-between;
-  /* height: 30px;
-  width: 30px; */
-
   padding: 0 6px;
-
   background-color: rgba(255, 255, 255, 0.7);
-
-  /* margin: 0 5px; */
-  /* padding: 0 10px; */
   border-radius: 6px;
   z-index: 1;
 }
 
 .price-wrapper {
-  font-size: 14px; /* slightly smaller to reduce wrapping */
+  font-size: 14px;
   text-align: right;
   color: #444;
   margin-bottom: -20px;
-  white-space: nowrap; /* prevent wrapping */
+  white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
   display: block;
   max-width: 100%;
 }
 
-/* on hover show full price (allow wrapping / full visibility) */
 .card-wrapper:hover .price-wrapper {
   white-space: normal;
   overflow: visible;
@@ -165,55 +125,16 @@
   font-size: 14px;
   text-align: right;
 }
-.card-inside-top {
-  position: relative;
-}
-
-.properties-hint {
-  margin-top: 1px;
-  display: flex;
-  flex-direction: row;
-  flex-wrap: nowrap; /* keep badges on a single row */
-  justify-content: flex-start;
-  gap: 6px;
-  width: 100%;
-  overflow-x: auto; /* allow horizontal scroll instead of wrapping */
-  -webkit-overflow-scrolling: touch;
-  padding-bottom: 0px;
-}
-
-/* reserve space when there are no bottom tags: insert an invisible placeholder
-   so card heights remain consistent (acts like a skeleton but hidden) */
-.properties-hint:empty::after {
-  content: "";
-  display: block;
-  height: 24px; /* same approximate height as a tag */
-  visibility: hidden;
-}
-
-.absolute-center {
-  position: absolute;
-  left: 50%;
-  transform: translateX(-50%);
-}
 
 .card-inside-top {
-  justify-content: flex-end;
-  width: 100%;
-}
-
-.card-inside-top {
-  /* background-color: blue; */
   position: absolute;
   top: 0%;
   left: 0%;
-  /* width: 360px; */
-  /* height: 8%; */
-  /* top: 1px; */
   display: flex;
   flex-direction: row;
   justify-content: space-between;
   height: 30px;
+  width: 100%;
 }
 
 .inside-top-right {
@@ -230,7 +151,6 @@
 }
 
 .card-top-icon-wrapper {
-  /* background: white; */
   border: 1px solid white;
   background: rgba(255, 255, 255, 0.746);
   text-align: center;
@@ -240,7 +160,7 @@
   font-size: 12px;
 }
 
-/* price bubble: summary + bubble shown on hover */
+/* ─── price bubble (hover) ─── */
 .price-container {
   position: relative;
   display: inline-block;
@@ -248,7 +168,7 @@
 }
 
 .price-summary {
-  font-size: 13px; /* slightly smaller */
+  font-size: 13px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -261,18 +181,18 @@
   top: 0;
   transform: translateY(-8px);
   background: white;
-  box-shadow: 0 6px 16px rgba(0,0,0,0.2);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
   padding: 8px 10px;
   border-radius: 8px;
   white-space: nowrap;
   z-index: 60;
 }
 
-/* show the bubble on card hover, and keep the summary truncated */
 .card-wrapper:hover .price-bubble {
   display: block;
 }
 
+/* ─── specials rows ─── */
 .specials-wrapper {
   display: flex;
   flex-direction: row;
@@ -294,10 +214,42 @@
   justify-content: space-between;
 }
 
+/* ─── hints row ─── */
+.properties-hint {
+  margin-top: 1px;
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  justify-content: flex-start;
+  gap: 6px;
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: 0px;
+  min-height: 24px;
+  align-items: center;
+  margin-bottom: -15px;
+}
+
+.properties-hint:empty::after {
+  content: "";
+  display: block;
+  height: 24px;
+  visibility: hidden;
+}
+
+.no-hints {
+  margin-bottom: 0;
+  min-height: 9px;
+  height: 9px;
+  overflow: hidden;
+}
+
+/* ─── mobile ─── */
 @media (max-width: 600px) {
   .card-wrapper {
-    margin: 3px auto; /* Center the card horizontally */
-    width: calc(100% - 1px); /* Control left/right spacing - adjust this value */
+    margin: 3px auto;
+    width: calc(100% - 1px);
     max-width: 100%;
   }
 
@@ -313,8 +265,7 @@
 
   .card-inside-bottom {
     position: absolute;
-    /* lift bottom ribbon up to overlap the image bottom */
-    top: 155px; /* slightly below the image (image height 120px) */
+    top: 155px;
     left: 8px;
     right: 8px;
     display: flex;
@@ -347,42 +298,23 @@
 .card-inside-bottom {
   position: absolute;
   top: 135px;
-
-  /* width: 360px; */
-  /* height: 8%; */
-  /* top: 1px; */
   display: flex;
   flex-direction: row;
   justify-content: space-between;
   height: 20px;
   background-color: rgba(255, 255, 255, 0.7);
-
   margin: 0 5px;
   padding: 0 10px;
   border-radius: 5px;
   z-index: 1;
 }
 
-.properties-hint {
-  min-height: 24px;
-  display: flex;
-  align-items: center;
-  margin-bottom: -15px;
-}
-
-.no-hints {
-  margin-bottom: 0;
-  min-height: 9px;
-  height: 9px;
-  overflow: hidden;
-}
-
+/* ─── urgent / special ribbons ─── */
 .urgent-ribbon {
   position: absolute;
   top: 12px;
   left: -34px;
   background: #a92b31;
-  
   color: #fff;
   font-weight: 700;
   font-size: 13px;
@@ -391,14 +323,14 @@
   transform: rotate(-45deg);
   z-index: 10;
   border-radius: 4px;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.25);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
   pointer-events: none;
 }
 
 .urgent-ribbon p {
-  
   font-size: 17px;
-  font-family: 'iransans',
+  font-family: 'iransans', sans-serif;
+  margin: 0;
 }
 
 .ad-badge {
@@ -409,7 +341,23 @@
   padding: 2px 10px;
   margin-right: 5px;
   border-radius: 4px;
-  font-family: 'iransans',
-  
-  
+  font-family: 'iransans', sans-serif;
+}
+
+/* ───────────────────────────────────────────── */
+/* Heart fill animation                          */
+/* ───────────────────────────────────────────── */
+.heart-pop {
+  animation: heartPop 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+  transform-origin: center;
+}
+
+@keyframes heartPop {
+  0%   { transform: scale(1); }
+  15%  { transform: scale(1.45) rotate(-12deg); }
+  30%  { transform: scale(0.9)  rotate(10deg); }
+  45%  { transform: scale(1.25) rotate(-6deg); }
+  60%  { transform: scale(1.05) rotate(3deg); }
+  75%  { transform: scale(1.1)  rotate(-2deg); }
+  100% { transform: scale(1)    rotate(0); }
 }

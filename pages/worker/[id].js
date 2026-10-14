@@ -23,6 +23,7 @@ import Link from "next/link";
 import axios from "axios";
 import CallIcon from "@mui/icons-material/Call";
 
+
 // -------------------- Helpers --------------------
 const cleanText = (text) => {
   if (!text || typeof text !== "string") return "";
@@ -40,6 +41,14 @@ const cleanNumber = (value) => {
   const n = Number(num);
   return Number.isFinite(n) ? n : null;
 };
+
+// ─── Phone helpers (module scope) ───
+function maskPhone(phone) {
+  if (!phone) return "";
+  const p = String(phone).replace(/\D/g, "");
+  if (p.length < 7) return p;
+  return `${p.slice(0, 4)} ××× ${p.slice(-3)}`;
+}
 
 const generateMetaDescription = (details) => {
   if (details.seo_description) return details.seo_description;
@@ -120,6 +129,9 @@ import WorkerCard from "../../components/cards/WorkerCard";
 import WorkerRealstateCard from "../../components/cards/realestate/WorkerRealstateCard";
 import LazyLoader from "../../components/lazyLoader/Loading";
 import Breadcrumb from "../../components/common/Breadcrumb";
+
+import ContactDrawer from "../../components/workers/ContactDrawer";
+import useAuthGate from "../../hooks/useAuthGate";
 
 // Styles
 import Styles from "../../components/styles/WorkerSingle.module.css";
@@ -498,6 +510,9 @@ const WorkerSingle = (props) => {
   const [shareFeedback, setShareFeedback] = useState("");
   const [isActionsPinned, setIsActionsPinned] = useState(false);
 
+  const [contactOpen, setContactOpen] = useState(false);
+  const { requireAuth } = useAuthGate();
+
   const mediaWrapperRef = useRef(null);
 
   const router = useRouter();
@@ -535,10 +550,10 @@ const WorkerSingle = (props) => {
 
     const cleanedRealstate = rawRealstate
       ? {
-          ...rawRealstate,
-          name: cleanText(rawRealstate.name || ""),
-          slug: rawRealstate.slug || "",
-        }
+        ...rawRealstate,
+        name: cleanText(rawRealstate.name || ""),
+        slug: rawRealstate.slug || "",
+      }
       : {};
 
     return {
@@ -594,11 +609,11 @@ const WorkerSingle = (props) => {
 
     const imagesForSchema = Array.isArray(images)
       ? images
-          .map((img) => {
-            if (typeof img === "string") return img;
-            return img?.url || img?.image || img?.thumb || null;
-          })
-          .filter(Boolean)
+        .map((img) => {
+          if (typeof img === "string") return img;
+          return img?.url || img?.image || img?.thumb || null;
+        })
+        .filter(Boolean)
       : [];
 
     if (details.thumb && !imagesForSchema.includes(details.thumb)) {
@@ -629,6 +644,31 @@ const WorkerSingle = (props) => {
       ...(details.updated_at ? { dateModified: new Date(details.updated_at).toISOString() } : {}),
       ...(details.address || details.city
         ? {
+          address: {
+            "@type": "PostalAddress",
+            streetAddress: details.address || details.neighbourhood || "",
+            addressLocality: details.city || "",
+            addressRegion: details.region || "",
+            addressCountry: "IR",
+          },
+        }
+        : {}),
+      ...(hasGeo
+        ? {
+          geo: {
+            "@type": "GeoCoordinates",
+            latitude: lat,
+            longitude: lng,
+          },
+          hasMap: `https://maps.google.com/?q=${lat},${lng}`,
+        }
+        : {}),
+      mainEntity: {
+        "@type": propertyType,
+        name: details.name || undefined,
+        ...(imagesForSchema.length ? { image: imagesForSchema.slice(0, 10) } : {}),
+        ...(details.address || details.city
+          ? {
             address: {
               "@type": "PostalAddress",
               streetAddress: details.address || details.neighbourhood || "",
@@ -637,52 +677,27 @@ const WorkerSingle = (props) => {
               addressCountry: "IR",
             },
           }
-        : {}),
-      ...(hasGeo
-        ? {
+          : {}),
+        ...(hasGeo
+          ? {
             geo: {
               "@type": "GeoCoordinates",
               latitude: lat,
               longitude: lng,
             },
-            hasMap: `https://maps.google.com/?q=${lat},${lng}`,
           }
-        : {}),
-      mainEntity: {
-        "@type": propertyType,
-        name: details.name || undefined,
-        ...(imagesForSchema.length ? { image: imagesForSchema.slice(0, 10) } : {}),
-        ...(details.address || details.city
-          ? {
-              address: {
-                "@type": "PostalAddress",
-                streetAddress: details.address || details.neighbourhood || "",
-                addressLocality: details.city || "",
-                addressRegion: details.region || "",
-                addressCountry: "IR",
-              },
-            }
-          : {}),
-        ...(hasGeo
-          ? {
-              geo: {
-                "@type": "GeoCoordinates",
-                latitude: lat,
-                longitude: lng,
-              },
-            }
           : {}),
       },
       ...(priceValue
         ? {
-            offers: {
-              "@type": "Offer",
-              price: priceValue,
-              priceCurrency: "IRR",
-              availability: "https://schema.org/InStock",
-              url: canonicalUrl,
-            },
-          }
+          offers: {
+            "@type": "Offer",
+            price: priceValue,
+            priceCurrency: "IRR",
+            availability: "https://schema.org/InStock",
+            url: canonicalUrl,
+          },
+        }
         : {}),
     };
 
@@ -709,13 +724,13 @@ const WorkerSingle = (props) => {
 
     const agentSchema = cleanRealstate?.id
       ? {
-          "@context": "https://schema.org",
-          "@type": "RealEstateAgent",
-          "@id": `${canonicalUrl}#agent`,
-          name: cleanRealstate.name || "مشاور املاک",
-          ...(cleanRealstate.phone ? { telephone: cleanRealstate.phone } : {}),
-          url: `https://ajur.app/realestates/${cleanRealstate.id}?slug=${cleanRealstate.slug || ""}`,
-        }
+        "@context": "https://schema.org",
+        "@type": "RealEstateAgent",
+        "@id": `${canonicalUrl}#agent`,
+        name: cleanRealstate.name || "مشاور املاک",
+        ...(cleanRealstate.phone ? { telephone: cleanRealstate.phone } : {}),
+        url: `https://ajur.app/realestates/${cleanRealstate.id}?slug=${cleanRealstate.slug || ""}`,
+      }
       : null;
 
     return { listingSchema, breadcrumbSchema, agentSchema };
@@ -792,9 +807,10 @@ const WorkerSingle = (props) => {
   }, [props.unavailableReason, props.__transientError]);
 
   const handlePropertyCall = async () => {
+    // Kept for backward compat — called from StaleListingModal's "تماس با مشاور"
+    // and from the drawer's onCallTracked. The actual tel: click happens in the drawer.
     const phone = cleanRealstate?.phone || details.cellphone;
 
-    // ─── Analytics: fire before navigation (sendBeacon survives unload) ───
     trackEvent(
       "listing_call",
       {
@@ -806,7 +822,6 @@ const WorkerSingle = (props) => {
       props.__clientIp
     );
 
-    // ─── Existing server-side call log — keep for backward compat ───
     try {
       await axios.post("https://api.ajur.app/api/track/worker-call", {
         worker_id: details.id,
@@ -814,9 +829,14 @@ const WorkerSingle = (props) => {
     } catch (error) {
       console.error("Worker call tracking failed:", error);
     }
+  };
 
-    // ─── Trigger the dialer ───
-    if (phone) window.location.href = `tel:${phone}`;
+  // New: guests log in first, then the ContactDrawer opens
+  const handleContactClick = () => {
+    requireAuth(
+      () => setContactOpen(true),
+      "برای مشاهده اطلاعات تماس وارد شوید"
+    );
   };
 
   const toggleFavorite = useCallback(() => {
@@ -865,8 +885,7 @@ const WorkerSingle = (props) => {
 
     const shareTitle = details.name || seoData.pageTitle || "آگهی ملک در آجر";
     const shareText = details.name
-      ? `${details.name} - ${details.category_name || ""} در ${
-          details.city || ""
+      ? `${details.name} - ${details.category_name || ""} در ${details.city || ""
         }`.trim()
       : seoData.metaDescription;
 
@@ -1359,7 +1378,7 @@ const WorkerSingle = (props) => {
           </Grid>
         </Box>
 
-        {(cleanRealstate?.phone || details.cellphone) && (
+        {!contactOpen && (cleanRealstate?.phone || details.cellphone) && (
           <Box
             sx={{
               display: { xs: "block", md: "none" },
@@ -1379,7 +1398,7 @@ const WorkerSingle = (props) => {
             <div
               onClick={(e) => {
                 e.preventDefault();
-                handlePropertyCall();
+                handleContactClick();
               }}
               style={{
                 display: "flex",
@@ -1418,8 +1437,20 @@ const WorkerSingle = (props) => {
                 <CallIcon style={{ fontSize: "20px", color: "#fff" }} />
               </div>
 
-              <span style={{ lineHeight: 1 }}>
-                تماس: {cleanRealstate?.phone || details.cellphone}
+              <span
+                style={{
+                  lineHeight: 1,
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 6,
+                  direction: "ltr",
+                }}
+              >
+                
+                <span style={{ direction: "ltr", fontFamily: "monospace, iransans" }}>
+                  {maskPhone(cleanRealstate?.phone || details.cellphone)}
+                </span>
+                {/* <span style={{ direction: "rtl" }}>تماس : </span> */}
               </span>
             </div>
           </Box>
@@ -1448,11 +1479,19 @@ const WorkerSingle = (props) => {
         onCall={
           cleanRealstate?.phone || details.cellphone
             ? () => {
-                setStaleModalOpen(false);
-                handlePropertyCall();
-              }
+              setStaleModalOpen(false);
+              handlePropertyCall();
+            }
             : null
         }
+      />
+
+      <ContactDrawer
+        open={contactOpen}
+        onClose={() => setContactOpen(false)}
+        details={details}
+        realstate={cleanRealstate}
+        onCallTracked={handlePropertyCall}
       />
 
       {isNavigating && (
