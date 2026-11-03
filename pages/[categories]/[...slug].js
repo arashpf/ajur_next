@@ -1689,7 +1689,18 @@ export async function getServerSideProps(context) {
       : {};
 
     // ─── Analytics: fire category_view (fire-and-forget) ───
-    if (clientContext.clientIp || clientContext.userAgent) {
+        // ─── Analytics: fire category_view (fire-and-forget) ───
+    // The Fix: Only track if the category looks real.
+    // 1. No dots (blocks favicon.png, .php, .well-known)
+    // 2. Length < 30 (blocks long IPFS hashes like bafkreic...)
+    // 3. The API actually returned a valid category name/id
+    const isRealCategory = 
+      catname && 
+      !catname.includes(".") && 
+      catname.length < 30 &&
+      initialDetails?.id;
+
+    if (isRealCategory && (clientContext.clientIp || clientContext.userAgent)) {
       fireSsrEvent(
         "category_view",
         {

@@ -164,6 +164,7 @@ const ALLOWED_EVENTS = new Set([
   "city_view",
   "contact_intent",
   "contact_call_click",
+  "contact_sms_click",
   "contact_form_started",
   "contact_form_submitted",
   "contact_form_verified",

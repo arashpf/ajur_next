@@ -161,32 +161,37 @@ export default function WorkerRealstateCard(props) {
       <div
         style={{
           display: "flex",
-          gap: "12px",
+          gap: "10px", // slightly reduced from 12px to save space
           direction: "rtl",
           padding: "16px",
+          flexWrap: "nowrap", // FIX: Prevents buttons from falling to two lines
+          width: "100%",
+          boxSizing: "border-box",
         }}
       >
         {/* Call button — masked, auth-gated */}
-        <button
+        {/* <button
           type="button"
           onClick={handleCallClick}
           style={{
             flex: 1,
-            padding: "12px 16px",
+            padding: "12px 8px", // reduced horizontal padding
             background: "#fff",
             border: "1px solid #ddd",
             borderRadius: "8px",
             textAlign: "center",
             fontWeight: "600",
             color: "#222",
-            fontSize: "16px",
+            fontSize: "14px", // slightly reduced font size
             cursor: "pointer",
             transition: "all 0.2s",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            gap: 8,
+            gap: 6,
             fontFamily: "iransans, Arial, sans-serif",
+            whiteSpace: "nowrap", // FIX: Keeps text on one line
+            overflow: "hidden",
           }}
           onMouseEnter={(e) => {
             e.currentTarget.style.borderColor = "#0066cc";
@@ -202,24 +207,28 @@ export default function WorkerRealstateCard(props) {
             {maskPhone(realstate?.phone)}
           </span>
           <CallIcon style={{ fontSize: 18 }} />
-        </button>
+        </button> */}
 
         {/* Agent Page Link — unchanged */}
         <Link
           href={`/realestates/${realstate?.id}?slug=${realstate?.slug || ""}`}
           style={{
             flex: 1,
-            padding: "12px 16px",
+            padding: "12px 8px", // reduced horizontal padding
             background: "#0066cc",
             border: "1px solid #0066cc",
             borderRadius: "8px",
             fontWeight: "600",
             color: "#fff",
-            fontSize: "16px",
+            fontSize: "14px", // slightly reduced font size
             textAlign: "center",
             textDecoration: "none",
             cursor: "pointer",
             transition: "all 0.15s",
+            display: "flex", // added to center text perfectly
+            alignItems: "center",
+            justifyContent: "center",
+            whiteSpace: "nowrap", // FIX: Keeps text on one line
           }}
           onMouseEnter={(e) => {
             e.currentTarget.style.background = "#005bb5";
@@ -228,18 +237,53 @@ export default function WorkerRealstateCard(props) {
             e.currentTarget.style.background = "#0066cc";
           }}
         >
-          صفحه مشاور
+          مشاهده صفحه مشاور
         </Link>
       </div>
 
       {/* Contact drawer (reveals full number + call/SMS) */}
-      <ContactDrawer
-        open={contactOpen}
-        onClose={() => setContactOpen(false)}
-        details={drawerDetails}
-        realstate={realstate}
-        onCallTracked={handleCallTracked}
-      />
+      {/* FIX: We wrap the Drawer in a container that forces it to the center of the page */}
+      {contactOpen && (
+        <div
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            width: "100vw",
+            height: "100vh",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            zIndex: 99999,
+            backgroundColor: "rgba(0, 0, 0, 0.5)", // Adds a nice dark backdrop
+          }}
+          onClick={(e) => {
+            // Close if clicking outside the modal
+            if (e.target === e.currentTarget) setContactOpen(false);
+          }}
+        >
+          {/* We constrain the drawer's width and height so it acts like a modal */}
+          <div
+            style={{
+              width: "90%",
+              maxWidth: "400px",
+              background: "#fff",
+              borderRadius: "16px",
+              overflow: "hidden",
+              position: "relative",
+              boxShadow: "0 10px 40px rgba(0,0,0,0.2)",
+            }}
+          >
+            <ContactDrawer
+              open={contactOpen}
+              onClose={() => setContactOpen(false)}
+              details={drawerDetails}
+              realstate={realstate}
+              onCallTracked={handleCallTracked}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 }

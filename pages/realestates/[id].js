@@ -2320,70 +2320,94 @@ const RealestateSingle = ({
               </Box>
             </div>
 
-            <div
-              className={
-                Styles[
-                "contact-wrapper"
-                ]
-              }
-            >
-              <Box
-                component="div"
-                sx={{
-                  p: 0,
-                  border:
-                    "1px dashed grey",
-                  margin: "5px",
-                  textAlign:
-                    "center",
+            {!contactOpen && (
+              <div
+                className={
+                  Styles[
+                  "contact-wrapper"
+                  ]
+                }
+                style={{ 
+                  position: "fixed", 
+                  bottom: 0,         
+                  left: 0,           
+                  right: 0,          
+                  zIndex: 9999999,      
+                  background: "#fff", 
+                  padding: "10px 0",  
+                  margin: 0, 
+                  width: "100%", 
+                  display: "block",
+                  boxShadow: "0 -2px 10px rgba(0,0,0,0.05)" 
                 }}
               >
-                <Grid
-                  container
-                  spacing={1}
+                <Button
+                  fullWidth
+                  disabled={!phone}
+                  onClick={handleContactClick}
+                  variant="contained"
+                  aria-label={
+                    phone
+                      ? `نمایش شماره تماس ${agentName}`
+                      : "شماره تماس موجود نیست"
+                  }
+                  sx={{
+                    width: "90%", 
+                    margin: "0 auto", 
+                    display: "flex", 
+                    background: phone
+                      ? "linear-gradient(135deg, #0066cc 0%, #004a99 100%)"
+                      : "#e0e0e0",
+                    color: "#fff",
+                    borderRadius: "8px",
+                    padding: "8px 16px",
+                    minHeight: "44px",
+                    fontSize: "16px",
+                    fontWeight: "700",
+                    textTransform: "none",
+                    boxShadow: "none",
+                    transition: "all 0.2s ease",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: "8px",
+                    "&:hover": {
+                      background: phone
+                        ? "linear-gradient(135deg, #0077ee 0%, #005bb5 100%)"
+                        : "#e0e0e0",
+                    },
+                  }}
                 >
-                  
-
-                  <Grid
-                    item
-                    xs={12}
-                    md={12}
+                  {/* White icon badge */}
+                  <span
+                    style={{
+                      display: "inline-flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      backgroundColor: "rgba(255,255,255,0.2)",
+                      borderRadius: "50%",
+                      width: 28,
+                      height: 28,
+                      flexShrink: 0,
+                    }}
                   >
-                    <Button
-                      fullWidth
-                      disabled={!phone}
-                      onClick={handleContactClick}
-                      className={
-                        Styles[
-                        "worker-detail-button"
-                        ]
-                      }
-                      variant="outlined"
-                      startIcon={
-                        <CallIcon />
-                      }
-                      aria-label={
-                        phone
-                          ? `نمایش شماره تماس ${agentName}`
-                          : "شماره تماس موجود نیست"
-                      }
-                    >
-                      <span
-                        style={{
-                          direction: "ltr",
-                          fontFamily:
-                            "monospace, iransans",
-                        }}
-                      >
-                        {phone
-                          ? maskPhone(phone)
-                          : "شماره تماس"}
-                      </span>
-                    </Button>
-                  </Grid>
-                </Grid>
-              </Box>
-            </div>
+                    <CallIcon style={{ fontSize: 16 }} />
+                  </span>
+
+                  <span
+                    style={{
+                      direction: "ltr",
+                      fontFamily: "monospace, iransans",
+                      letterSpacing: "0.5px",
+                      fontSize: 18,
+                    }}
+                  >
+                    {phone
+                      ? maskPhone(phone)
+                      : "شماره تماس ثبت نشده"}
+                  </span>
+                </Button>
+              </div>
+            )}
 
             {renderCategoryButtons()}
             {renderFilteringHeader()}

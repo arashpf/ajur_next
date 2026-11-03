@@ -11,6 +11,7 @@ import CloseIcon from "@mui/icons-material/Close";
 import CallIcon from "@mui/icons-material/Call";
 import SmsIcon from "@mui/icons-material/Sms";
 import axios from "axios";
+import { trackEvent } from "../lib/track"; // ← ADDED
 
 const DrawerSX = {
   "& .MuiDrawer-paper": {
@@ -52,6 +53,14 @@ export default function ContactDrawer({
 
   const handleCall = async (phone) => {
     if (!phone) return;
+
+    // ─── Analytics: client-side event with attribution ─── // ← ADDED
+    trackEvent("contact_call_click", {
+      listing_id: details?.id ?? null,
+      phone: phone,
+      source: "contact-drawer",
+    });
+
     try {
       await axios.post("https://api.ajur.app/api/track/worker-call", {
         worker_id: details?.id,
@@ -65,7 +74,18 @@ export default function ContactDrawer({
 
   const handleSms = (phone) => {
     if (!phone) return;
-    window.location.href = `sms:${phone}`;
+
+    // 1. Fire the analytics event
+    trackEvent("contact_sms_click", {
+      listing_id: details?.id ?? null,
+      phone: phone,
+      source: "contact-drawer",
+    });
+
+    // 2. Wait 500ms for the request to finish before opening SMS app
+    setTimeout(() => {
+      window.location.href = `sms:${phone}`;
+    }, 500);
   };
 
   return (

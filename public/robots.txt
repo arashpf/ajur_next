@@ -15,5 +15,4 @@ Sitemap: https://ajur.app/complex-sitmap.xml
 Sitemap: https://ajur.app/image-sitmap.xml
 Sitemap: https://ajur.app/agent-sitmap.xml
 Sitemap: https://ajur.app/agents-sitmap.xml
-Sitemap: https://ajur.app/cat-city-sitmap.xml
 Sitemap: https://ajur.app/neighborhoods-sitmap.xml

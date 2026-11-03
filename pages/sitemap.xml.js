@@ -65,7 +65,6 @@ export async function getServerSideProps({ res }) {
       'image-sitmap.xml',
       'agent-sitmap.xml',
       'agents-sitmap.xml',
-      'cat-city-sitmap.xml',
       'neighborhoods-sitmap.xml'
   ];
   

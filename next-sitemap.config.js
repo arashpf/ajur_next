@@ -16,7 +16,6 @@
 // //     "/cities-categories-sitemap.xml", // Dynamic sitemap
 // //     "/complex-sitmap.xml", // Dynamic sitemap
 // //     "/image-sitmap.xml", // Dynamic sitemap
-// //     "/cat-city-sitmap.xml", // Dynamic sitemap
 // //     "/neighborhoods-sitmap.xml", // Dynamic sitemap
 // //     "/agents-sitmap.xml", // Dynamic sitemap
 // //     "/agent-sitmap.xml", // Dynamic sitemap
@@ -41,8 +40,7 @@
 // //       `${siteUrl}/complex-sitmap.xml`,
 // //       `${siteUrl}/image-sitmap.xml`,
 // //       `${siteUrl}/agent-sitmap.xml`,
-// //       `${siteUrl}/agents-sitmap.xml`,
-// //       `${siteUrl}/cat-city-sitmap.xml`,
+// //       `${siteUrl}/agents-sitmap.xml`,,
 // //       `${siteUrl}/neighborhoods-sitmap.xml`,
 // //     ],
 // //   },
@@ -73,7 +71,6 @@
 //     "/cities-categories-sitemap.xml",
 //     "/complex-sitmap.xml",
 //     "/image-sitmap.xml",
-//     "/cat-city-sitmap.xml",
 //     "/neighborhoods-sitmap.xml",
 //     "/agents-sitmap.xml",
 //     "/agent-sitmap.xml",
@@ -103,7 +100,6 @@
 //       `${siteUrl}/image-sitmap.xml`,
 //       `${siteUrl}/agent-sitmap.xml`,
 //       `${siteUrl}/agents-sitmap.xml`,
-//       `${siteUrl}/cat-city-sitmap.xml`,
 //       `${siteUrl}/neighborhoods-sitmap.xml`,
 //     ],
 //   },
@@ -128,7 +124,6 @@ module.exports = {
         "/image-sitmap.xml",
         "/agent-sitmap.xml",
         "/agents-sitmap.xml",
-        "/cat-city-sitmap.xml",
         "/neighborhoods-sitmap.xml",
         // ⚠️ DO NOT exclude sitemap-static.xml - it should be served as a static file
     ],
@@ -153,7 +148,6 @@ module.exports = {
             `${siteUrl}/image-sitmap.xml`,
             `${siteUrl}/agent-sitmap.xml`,
             `${siteUrl}/agents-sitmap.xml`,
-            `${siteUrl}/cat-city-sitmap.xml`,
             `${siteUrl}/neighborhoods-sitmap.xml`,
         ],
     },
